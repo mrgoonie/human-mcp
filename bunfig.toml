@@ -1,0 +1,15 @@
+[install]
+auto = "fallback"
+peer = false
+exact = false
+
+[install.cache]
+dir = "~/.bun/install/cache"
+disable = false
+disableManifest = false
+
+[test]
+preload = ["./tests/setup.ts"]
+
+[run]
+bun = true
