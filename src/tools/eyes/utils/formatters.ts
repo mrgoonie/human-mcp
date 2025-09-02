@@ -26,9 +26,8 @@ export function createPrompt(options: AnalysisOptions): string {
   }
   
   const detailInstructions = {
-    basic: "Provide a concise analysis focusing on the most important findings.",
-    detailed: "Provide a thorough analysis with specific details about each finding.",
-    extreme: "Provide an exhaustive analysis with pixel-level precision and comprehensive technical details."
+    quick: "Provide a concise analysis focusing on the most important findings.",
+    detailed: "Provide a thorough analysis with specific details about each finding."
   };
   
   const focusInstruction = specific_focus 

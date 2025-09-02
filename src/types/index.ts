@@ -1,11 +1,12 @@
 export interface AnalysisOptions {
   analysis_type: "general" | "ui_debug" | "error_detection" | "accessibility" | "performance" | "layout";
-  detail_level: "basic" | "detailed" | "extreme";
+  detail_level: "quick" | "detailed";
   specific_focus?: string;
   extract_text?: boolean;
   detect_ui_elements?: boolean;
   analyze_colors?: boolean;
   check_accessibility?: boolean;
+  fetchTimeout?: number;
 }
 
 export interface ProcessingResult {

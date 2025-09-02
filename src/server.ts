@@ -1,4 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerEyesTool } from "./tools/eyes/index.js";
 import { registerPrompts } from "./prompts/index.js";
@@ -9,27 +9,15 @@ import { loadConfig } from "./utils/config.js";
 export async function createServer() {
   const config = loadConfig();
   
-  const server = new Server(
-    {
-      name: "human-mcp",
-      version: "1.0.0",
-    },
-    {
-      capabilities: {
-        tools: {},
-        prompts: {},
-        resources: {},
-      },
-    }
-  );
+  const server = new McpServer({
+    name: "human-mcp",
+    version: "1.0.0",
+  });
 
   await registerEyesTool(server, config);
   await registerPrompts(server);
   await registerResources(server);
 
-  server.onerror = (error) => {
-    logger.error("MCP Server error:", error);
-  };
 
   return server;
 }

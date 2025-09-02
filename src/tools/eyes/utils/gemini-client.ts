@@ -13,10 +13,10 @@ export class GeminiClient {
     this.genAI = new GoogleGenerativeAI(config.gemini.apiKey);
   }
   
-  getModel(detailLevel: "basic" | "detailed" | "extreme"): GenerativeModel {
-    const modelName = detailLevel === "extreme" 
-      ? "gemini-2.0-flash-exp" 
-      : this.config.gemini.model;
+  getModel(detailLevel: "quick" | "detailed"): GenerativeModel {
+    const modelName = detailLevel === "detailed" 
+      ? this.config.gemini.model
+      : "gemini-2.5-flash";
     
     return this.genAI.getGenerativeModel({ 
       model: modelName,
@@ -47,7 +47,13 @@ export class GeminiClient {
         }))
       ];
       
-      const result = await model.generateContent(parts);
+      // Add timeout wrapper
+      const analysisPromise = model.generateContent(parts);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new APIError("Gemini API request timed out")), this.config.server.requestTimeout);
+      });
+      
+      const result = await Promise.race([analysisPromise, timeoutPromise]);
       const response = await result.response;
       const text = response.text();
       

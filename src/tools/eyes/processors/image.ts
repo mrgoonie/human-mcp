@@ -16,7 +16,7 @@ export async function processImage(
   try {
     logger.debug(`Processing image: ${source.substring(0, 50)}...`);
     
-    const { imageData, mimeType } = await loadImage(source);
+    const { imageData, mimeType } = await loadImage(source, options.fetchTimeout);
     const prompt = createPrompt(options);
     
     const response = await model.generateContent([
@@ -57,7 +57,7 @@ export async function processImage(
   }
 }
 
-async function loadImage(source: string): Promise<{ imageData: string; mimeType: string }> {
+async function loadImage(source: string, fetchTimeout?: number): Promise<{ imageData: string; mimeType: string }> {
   if (source.startsWith('data:image/')) {
     const [header, data] = source.split(',');
     if (!header || !data) {
@@ -74,23 +74,36 @@ async function loadImage(source: string): Promise<{ imageData: string; mimeType:
   }
   
   if (source.startsWith('http://') || source.startsWith('https://')) {
-    const response = await fetch(source);
-    if (!response.ok) {
-      throw new ProcessingError(`Failed to fetch image: ${response.statusText}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), fetchTimeout || 30000);
+    
+    try {
+      const response = await fetch(source, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new ProcessingError(`Failed to fetch image: ${response.statusText}`);
+      }
+      
+      const buffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(buffer);
+    
+      const processedImage = await sharp(uint8Array)
+        .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+      
+      return {
+        imageData: processedImage.toString('base64'),
+        mimeType: 'image/jpeg'
+      };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new ProcessingError(`Fetch timeout: Failed to download image from ${source}`);
+      }
+      throw new ProcessingError(`Failed to fetch image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    const buffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(buffer);
-    
-    const processedImage = await sharp(uint8Array)
-      .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality: 85 })
-      .toBuffer();
-    
-    return {
-      imageData: processedImage.toString('base64'),
-      mimeType: 'image/jpeg'
-    };
   }
   
   try {

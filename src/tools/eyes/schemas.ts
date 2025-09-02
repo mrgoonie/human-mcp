@@ -11,7 +11,7 @@ export const EyesInputSchema = z.object({
     "performance",
     "layout"
   ]).default("general"),
-  detail_level: z.enum(["basic", "detailed", "extreme"]).default("detailed"),
+  detail_level: z.enum(["quick", "detailed"]).default("detailed"),
   specific_focus: z.string().optional().describe("Specific areas or elements to focus on"),
   extract_text: z.boolean().default(true),
   detect_ui_elements: z.boolean().default(true),

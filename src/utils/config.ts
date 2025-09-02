@@ -10,6 +10,8 @@ const ConfigSchema = z.object({
     maxRequestSize: z.string().default("50MB"),
     enableCaching: z.boolean().default(true),
     cacheTTL: z.number().default(3600),
+    requestTimeout: z.number().default(300000), // 5 minutes
+    fetchTimeout: z.number().default(60000), // 60 seconds for HTTP requests
   }),
   security: z.object({
     secret: z.string().optional(),
@@ -27,13 +29,15 @@ export function loadConfig(): Config {
   return ConfigSchema.parse({
     gemini: {
       apiKey: process.env.GOOGLE_GEMINI_API_KEY || "",
-      model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.0-flash-latest",
+      model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.5-flash",
     },
     server: {
       port: parseInt(process.env.PORT || "3000"),
       maxRequestSize: process.env.MAX_REQUEST_SIZE || "50MB",
       enableCaching: process.env.ENABLE_CACHING !== "false",
       cacheTTL: parseInt(process.env.CACHE_TTL || "3600"),
+      requestTimeout: parseInt(process.env.REQUEST_TIMEOUT || "300000"),
+      fetchTimeout: parseInt(process.env.FETCH_TIMEOUT || "60000"),
     },
     security: {
       secret: process.env.MCP_SECRET,

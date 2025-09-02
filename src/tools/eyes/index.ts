@@ -1,9 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { 
-  CallToolRequestSchema,
-  ErrorCode,
-  McpError
-} from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { processImage } from "./processors/image.js";
 import { processVideo } from "./processors/video.js";
@@ -19,59 +14,98 @@ import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
 
-export async function registerEyesTool(server: Server, config: Config) {
+export async function registerEyesTool(server: McpServer, config: Config) {
   const geminiClient = new GeminiClient(config);
   
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-    
-    try {
-      switch (name) {
-        case "eyes.analyze":
-          return await handleAnalyze(geminiClient, args);
-        case "eyes.compare":
-          return await handleCompare(geminiClient, args);
-        default:
-          throw new McpError(
-            ErrorCode.MethodNotFound,
-            `Unknown tool: ${name}`
-          );
+  // Register eyes.analyze tool
+  server.registerTool(
+    "eyes.analyze",
+    {
+      title: "Vision Analysis Tool",
+      description: "Analyze images, videos, and GIFs using AI vision capabilities",
+      inputSchema: {
+        source: z.string().describe("Path, URL, or base64 data URI of the media to analyze"),
+        type: z.enum(["image", "video", "gif"]).describe("Type of media to analyze"),
+        detail_level: z.enum(["quick", "detailed"]).optional().default("detailed").describe("Level of detail in analysis"),
+        prompt: z.string().optional().describe("Custom prompt for analysis"),
+        max_frames: z.number().optional().describe("Maximum number of frames to analyze for videos/GIFs")
       }
-    } catch (error) {
-      const mcpError = handleError(error);
-      logger.error(`Tool ${name} error:`, mcpError);
-      
-      throw new McpError(
-        ErrorCode.InternalError,
-        mcpError.message
-      );
+    },
+    async (args) => {
+      try {
+        return await handleAnalyze(geminiClient, args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool eyes.analyze error:`, mcpError);
+        
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
     }
-  });
-  
-  // Tools are registered via setRequestHandler above
+  );
+
+  // Register eyes.compare tool
+  server.registerTool(
+    "eyes.compare",
+    {
+      title: "Image Comparison Tool", 
+      description: "Compare two images and identify differences",
+      inputSchema: {
+        source1: z.string().describe("Path, URL, or base64 data URI of the first image"),
+        source2: z.string().describe("Path, URL, or base64 data URI of the second image"),
+        comparison_type: z.enum(["pixel", "structural", "semantic"]).optional().default("semantic").describe("Type of comparison to perform")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleCompare(geminiClient, args);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool eyes.compare error:`, mcpError);
+        
+        return {
+          content: [{
+            type: "text" as const, 
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
 }
 
 async function handleAnalyze(
   geminiClient: GeminiClient, 
-  args: unknown
+  args: unknown,
+  config: Config
 ) {
   const input = EyesInputSchema.parse(args) as EyesInput;
   const { source, type, detail_level } = input;
   
   logger.info(`Analyzing ${type} with detail level: ${detail_level}`);
   
-  const model = geminiClient.getModel(detail_level);
+  const model = geminiClient.getModel(detail_level || "detailed");
+  const options = {
+    ...input,
+    fetchTimeout: config.server.fetchTimeout
+  };
   let result;
   
   switch (type) {
     case "image":
-      result = await processImage(model, source, input);
+      result = await processImage(model, source, options);
       break;
     case "video":
-      result = await processVideo(model, source, input);
+      result = await processVideo(model, source, options);
       break;
     case "gif":
-      result = await processGif(model, source, input);
+      result = await processGif(model, source, options);
       break;
     default:
       throw new Error(`Unsupported media type: ${type}`);
@@ -80,7 +114,7 @@ async function handleAnalyze(
   return {
     content: [
       {
-        type: "text",
+        type: "text" as const,
         text: result.analysis
       }
     ],
@@ -145,7 +179,7 @@ Be precise with locations and measurements where possible.`;
     return {
       content: [
         {
-          type: "text",
+          type: "text" as const,
           text: comparisonText || "No differences detected or analysis failed"
         }
       ],
