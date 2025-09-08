@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mrgoonie/human-mcp/compare/v1.1.0...v1.2.0) (2025-09-08)
+
+
+### Features
+
+* make HTTP transport config options configurable via config object ([d9da0f1](https://github.com/mrgoonie/human-mcp/commit/d9da0f1ec01b53dd21ace64e781d6bec269bd763))
+
 # [1.1.0](https://github.com/mrgoonie/human-mcp/compare/v1.0.2...v1.1.0) (2025-09-08)
 
 
