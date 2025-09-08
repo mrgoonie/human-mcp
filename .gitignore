@@ -49,3 +49,6 @@ coverage/
 *.pid
 *.seed
 *.pid.lock
+
+# Claude Code
+plans/reports/

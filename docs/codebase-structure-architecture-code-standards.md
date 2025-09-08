@@ -4,12 +4,13 @@
 
 ### High-Level Architecture
 
-Human MCP follows a modular, event-driven architecture built around the Model Context Protocol (MCP). The system is designed as a server that exposes visual analysis capabilities through standardized MCP tools.
+Human MCP follows a modular, event-driven architecture built around the Model Context Protocol (MCP). The system is designed as a server that exposes multimodal analysis capabilities through standardized MCP tools.
 
+#### Current Architecture (Phase 1 - v1.2.1)
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   MCP Client    │◄──►│   Human MCP      │◄──►│  Google Gemini  │
-│   (AI Agent)    │    │   Server         │    │     API         │
+│   (AI Agent)    │    │   Server         │    │   Vision API    │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                               │
                               ▼
@@ -24,6 +25,16 @@ Human MCP follows a modular, event-driven architecture built around the Model Co
                     │ (ffmpeg/sharp)   │
                     └──────────────────┘
 ```
+
+#### Target Architecture (Full Roadmap - v2.0.0 by End 2025)
+
+For complete architectural evolution and development phases, see **[Project Roadmap](project-roadmap.md)** - Target Architecture section.
+
+The roadmap extends the current visual analysis foundation to include:
+- **Phase 2**: Document Understanding (Eyes extension for PDFs, Word docs, Excel)
+- **Phase 3**: Audio Processing (Ears - speech-to-text, audio analysis)
+- **Phase 4**: Speech Generation (Mouth - text-to-speech, narration)
+- **Phase 5**: Content Generation (Hands - image/video creation)
 
 ### Core Components
 
@@ -45,9 +56,10 @@ human-mcp/
 │   └── workflows/             # GitHub Actions for CI/CD
 ├── .serena/                   # Serena MCP tool configuration
 ├── docs/                      # Project documentation
-│   ├── project-overview-pdr.md
-│   ├── codebase-summary.md
-│   └── codebase-structure-architecture-code-standards.md
+│   ├── project-roadmap.md    # Development roadmap and future vision
+│   ├── project-overview-pdr.md # Project overview and requirements
+│   ├── codebase-summary.md   # Generated codebase overview
+│   └── codebase-structure-architecture-code-standards.md # This file
 ├── examples/                  # Usage examples and demonstrations
 │   └── debugging-session.ts
 ├── src/                       # Source code

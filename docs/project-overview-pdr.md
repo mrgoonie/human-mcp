@@ -5,12 +5,18 @@
 **Human MCP** is a Model Context Protocol (MCP) server that provides AI coding agents with advanced visual analysis capabilities for debugging UI issues, processing screenshots, videos, and GIFs using Google Gemini AI. It bridges the gap between AI agents and human-like visual perception, enabling sophisticated multimodal debugging workflows.
 
 ### Vision Statement
-To empower AI coding agents with human-level visual analysis capabilities, enabling them to debug UI issues, analyze visual content, and provide meaningful insights through advanced computer vision and AI.
+**"Bringing Human Capabilities to Coding Agents"**
+
+To transform AI coding agents with comprehensive human-like sensory capabilities, enabling sophisticated multimodal analysis, debugging workflows, and content understanding. Human MCP bridges the gap between artificial intelligence and human perception through advanced visual analysis, document understanding, audio processing, speech generation, and content creation capabilities.
 
 ### Core Purpose
-- **Primary Goal**: Provide AI agents with sophisticated visual analysis tools for debugging and development workflows
-- **Secondary Goal**: Enable multimodal content processing for images, videos, and GIFs with contextual understanding
-- **Tertiary Goal**: Offer pre-built debugging prompts and workflows to accelerate development processes
+- **Phase 1 (Complete)**: Advanced visual analysis capabilities for images, videos, and GIFs
+- **Phase 2 (Q1 2025)**: Document understanding and structured data extraction  
+- **Phase 3 (Q2 2025)**: Audio processing and speech-to-text capabilities
+- **Phase 4 (Q3 2025)**: Speech generation and text-to-speech features
+- **Phase 5 (Q4 2025)**: Content generation including image and video creation
+
+For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 
 ### Google Gemini Documentation
 - [Gemini API](https://ai.google.dev/gemini-api/docs?hl=en)
@@ -229,23 +235,33 @@ To empower AI coding agents with human-level visual analysis capabilities, enabl
 
 ### 8. Future Roadmap
 
-#### 8.1 Near-term Enhancements (Next 3 months)
-- Additional AI model support (OpenAI GPT-4V, Claude 3)
-- Enhanced video processing with scene detection
-- Batch processing capabilities for multiple files
-- Performance optimization for large media files
+**Current Status**: Phase 1 Complete - Visual Analysis Foundation (v1.2.1)
 
-#### 8.2 Medium-term Features (3-6 months)
-- Local AI model integration for privacy-conscious deployments
-- Advanced accessibility testing with automated WCAG validation
-- Custom prompt template system for specialized debugging workflows
-- Integration with popular development tools (VS Code, browser extensions)
+#### 8.1 Phase 2: Document Understanding (Q1 2025)
+- **Document Analysis**: PDF, Word, Excel, PowerPoint processing
+- **Structured Data Extraction**: Schema-based data extraction from documents
+- **Multi-format Support**: Text, markdown, and document format analysis
+- **Document Comparison**: Cross-document analysis and comparison
 
-#### 8.3 Long-term Vision (6+ months)
-- Real-time screen capture and analysis capabilities
-- Machine learning model for pattern recognition in UI issues
-- Collaborative debugging workflows with human-AI interaction
-- Enterprise deployment options with on-premises AI models
+#### 8.2 Phase 3: Audio Processing (Q2 2025)
+- **Speech-to-Text**: Advanced transcription with speaker identification
+- **Audio Analysis**: Content classification and quality assessment  
+- **Audio Comparison**: A/B testing and regression detection for audio content
+- **Multi-format Support**: WAV, MP3, AAC, OGG, FLAC processing
+
+#### 8.3 Phase 4: Speech Generation (Q3 2025)
+- **Text-to-Speech**: High-quality speech synthesis with customizable voices
+- **Technical Narration**: Code explanation and documentation narration
+- **Multi-language Support**: International speech generation capabilities
+- **Voice Customization**: Configurable speech parameters and effects
+
+#### 8.4 Phase 5: Content Generation (Q4 2025)
+- **Image Generation**: AI-powered image creation using Google Imagen
+- **Video Generation**: Video content creation using Google Veo3
+- **Batch Processing**: Automated content generation workflows
+- **Style Customization**: Artistic and technical style controls
+
+For complete roadmap details, timeline, and technical specifications, see **[Project Roadmap](project-roadmap.md)**.
 
 ### 9. Risk Assessment
 

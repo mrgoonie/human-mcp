@@ -20,17 +20,108 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 - **Layout**: Responsive design, positioning, visual hierarchy
 
 🤖 **AI-Powered**
-- Uses Google Gemini 2.0 Flash for fast, accurate analysis
+- Uses Google Gemini 2.5 Flash for fast, accurate analysis
 - Detailed technical insights for developers
 - Actionable recommendations for fixing issues
 - Structured output with detected elements and coordinates
 
 ## Quick Start
 
+### Getting Your Google Gemini API Key
+
+Before installation, you'll need a Google Gemini API key to enable visual analysis capabilities.
+
+#### Step 1: Access Google AI Studio
+1. Visit [Google AI Studio](https://aistudio.google.com/) in your web browser
+2. Sign in with your Google account (create one if needed)
+3. Accept the terms of service when prompted
+
+#### Step 2: Create an API Key
+1. In the Google AI Studio interface, look for the "Get API Key" button or navigate to the API keys section
+2. Click "Create API key" or "Generate API key"
+3. Choose "Create API key in new project" (recommended) or select an existing Google Cloud project
+4. Your API key will be generated and displayed
+5. **Important**: Copy the API key immediately as it may not be shown again
+
+#### Step 3: Secure Your API Key
+⚠️ **Security Warning**: Treat your API key like a password. Never share it publicly or commit it to version control.
+
+**Best Practices:**
+- Store the key in environment variables (not in code)
+- Don't include it in screenshots or documentation
+- Regenerate the key if accidentally exposed
+- Set usage quotas and monitoring in Google Cloud Console
+- Restrict API key usage to specific services if possible
+
+#### Step 4: Set Up Environment Variable
+Configure your API key using one of these methods:
+
+**Method 1: Shell Environment (Recommended)**
+```bash
+# Add to your shell profile (.bashrc, .zshrc, .bash_profile)
+export GOOGLE_GEMINI_API_KEY="your_api_key_here"
+
+# Reload your shell configuration
+source ~/.zshrc  # or ~/.bashrc
+```
+
+**Method 2: Project-specific .env File**
+```bash
+# Create a .env file in your project directory
+echo "GOOGLE_GEMINI_API_KEY=your_api_key_here" > .env
+
+# Add .env to your .gitignore file
+echo ".env" >> .gitignore
+```
+
+**Method 3: MCP Client Configuration**
+You can also provide the API key directly in your MCP client configuration (shown in setup examples below).
+
+#### Step 5: Verify API Access
+Test your API key works correctly:
+
+```bash
+# Test with curl (optional verification)
+curl -H "Content-Type: application/json" \
+     -d '{"contents":[{"parts":[{"text":"Hello"}]}]}' \
+     -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY"
+```
+
+#### Alternative Methods for API Key
+
+**Using Google Cloud Console:**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the "Generative AI API" 
+4. Go to "Credentials" > "Create Credentials" > "API Key"
+5. Optionally restrict the key to specific APIs and IPs
+
+**API Key Restrictions (Recommended):**
+- Restrict to "Generative AI API" only
+- Set IP restrictions if using from specific locations
+- Configure usage quotas to prevent unexpected charges
+- Enable API key monitoring and alerts
+
+#### Troubleshooting API Key Issues
+
+**Common Problems:**
+- **Invalid API Key**: Ensure you copied the complete key without extra spaces
+- **API Not Enabled**: Make sure Generative AI API is enabled in your Google Cloud project
+- **Quota Exceeded**: Check your usage limits in Google Cloud Console  
+- **Authentication Errors**: Verify the key hasn't expired or been revoked
+
+**Testing Your Setup:**
+```bash
+# Verify environment variable is set
+echo $GOOGLE_GEMINI_API_KEY
+
+# Should output your API key (first few characters)
+```
+
 ### Prerequisites
 
 - Node.js v18+ or [Bun](https://bun.sh) v1.2+
-- Google Gemini API key
+- Google Gemini API key (configured as shown above)
 
 ### Installation
 
@@ -150,6 +241,47 @@ Claude Desktop is a desktop application that provides a user-friendly interface 
 
 Claude Code is the official CLI for Claude that supports MCP servers for enhanced coding workflows.
 
+**Prerequisites:**
+- Node.js v18+ or Bun v1.2+
+- Google Gemini API key
+- Claude Code CLI installed
+
+**Installation:**
+
+```bash
+# Install Claude Code CLI
+npm install -g @anthropic-ai/claude-code
+
+# Install Human MCP server
+npm install -g @goonnguyen/human-mcp
+
+# Verify installations
+claude --version
+human-mcp --version  # or: npx @goonnguyen/human-mcp --version
+```
+
+**Configuration Methods:**
+
+Claude Code offers multiple ways to configure MCP servers. Choose the method that best fits your workflow:
+
+**Method 1: Using Claude Code CLI (Recommended)**
+
+```bash
+# Add Human MCP server with automatic configuration
+claude mcp add --scope user human-mcp npx @goonnguyen/human-mcp --env GOOGLE_GEMINI_API_KEY=your_api_key_here
+
+# Alternative: Add globally installed version
+claude mcp add --scope user human-mcp human-mcp --env GOOGLE_GEMINI_API_KEY=your_api_key_here
+
+# List configured MCP servers
+claude mcp list
+
+# Remove server if needed
+claude mcp remove human-mcp
+```
+
+**Method 2: Manual JSON Configuration**
+
 **Configuration Location:**
 - **All platforms**: `~/.config/claude/config.json`
 
@@ -163,7 +295,8 @@ Claude Code is the official CLI for Claude that supports MCP servers for enhance
       "args": ["@goonnguyen/human-mcp"],
       "env": {
         "GOOGLE_GEMINI_API_KEY": "your_gemini_api_key_here",
-        "LOG_LEVEL": "info"
+        "LOG_LEVEL": "info",
+        "MCP_TIMEOUT": "30000"
       }
     }
   }
@@ -179,27 +312,90 @@ Claude Code is the official CLI for Claude that supports MCP servers for enhance
       "command": "human-mcp",
       "env": {
         "GOOGLE_GEMINI_API_KEY": "your_gemini_api_key_here",
-        "LOG_LEVEL": "info"
+        "LOG_LEVEL": "info",
+        "MCP_TIMEOUT": "30000"
       }
     }
   }
 }
 ```
 
-**Setup Steps:**
-1. Install Claude Code CLI: `npm install -g @anthropic-ai/claude`
-2. Install Human MCP: `npm install -g @goonnguyen/human-mcp`
-3. Initialize configuration: `claude configure`
-4. Edit the config file to add Human MCP server
-5. Test connection: `claude --list-mcp-servers`
+**Configuration Scopes:**
 
-**Usage:**
+Claude Code supports different configuration scopes:
+
+- **User Scope** (`--scope user`): Available across all projects (default)
+- **Project Scope** (`--scope project`): Shared via `.mcp.json`, checked into version control
+- **Local Scope** (`--scope local`): Private to current project only
+
 ```bash
-# Start Claude Code with MCP servers
+# Project-wide configuration (team sharing)
+claude mcp add --scope project human-mcp npx @goonnguyen/human-mcp --env GOOGLE_GEMINI_API_KEY=your_api_key_here
+
+# Local project configuration (private)
+claude mcp add --scope local human-mcp npx @goonnguyen/human-mcp --env GOOGLE_GEMINI_API_KEY=your_api_key_here
+```
+
+**Setup Steps:**
+1. Install Claude Code CLI: `npm install -g @anthropic-ai/claude-code`
+2. Install Human MCP: `npm install -g @goonnguyen/human-mcp`
+3. Configure your Google Gemini API key (see Environment Setup section)
+4. Add Human MCP server using CLI or manual configuration
+5. Verify configuration: `claude mcp list`
+
+**Verification:**
+```bash
+# List all configured MCP servers
+claude mcp list
+
+# Test Human MCP connection
+claude mcp test human-mcp
+
+# Start Claude with MCP servers enabled
+claude --enable-mcp
+
+# Check server logs for debugging
+claude mcp logs human-mcp
+```
+
+**Usage Examples:**
+```bash
+# Start Claude Code with MCP servers enabled
 claude --enable-mcp
 
 # Analyze a screenshot in your current project
 claude "Analyze this screenshot for UI issues" --attach screenshot.png
+
+# Use Human MCP tools in conversation
+claude "Use eyes_analyze to check this UI screenshot for accessibility issues"
+
+# Pass additional arguments to the MCP server
+claude -- --server-arg value "Analyze this image"
+```
+
+**Windows-Specific Configuration:**
+
+For Windows users, wrap `npx` commands with `cmd /c`:
+
+```bash
+# Windows configuration
+claude mcp add --scope user human-mcp cmd /c npx @goonnguyen/human-mcp --env GOOGLE_GEMINI_API_KEY=your_api_key_here
+```
+
+Or via JSON configuration:
+
+```json
+{
+  "mcpServers": {
+    "human-mcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@goonnguyen/human-mcp"],
+      "env": {
+        "GOOGLE_GEMINI_API_KEY": "your_gemini_api_key_here"
+      }
+    }
+  }
+}
 ```
 
 #### Gemini CLI
@@ -577,6 +773,121 @@ Human MCP Server
 └── Documentation Resources
 ```
 
+For detailed architecture information and future development plans, see:
+- **[Project Roadmap](docs/project-roadmap.md)** - Complete development roadmap and future vision
+- **[Architecture Documentation](docs/codebase-structure-architecture-code-standards.md)** - Technical architecture and code standards
+
+## Development Roadmap & Vision
+
+**Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
+
+### Current Status: Phase 1 Complete ✅
+
+**Eyes (Visual Analysis)** - Production Ready (v1.2.1)
+- Advanced image, video, and GIF analysis capabilities
+- UI debugging, error detection, accessibility auditing
+- Image comparison with pixel, structural, and semantic analysis
+- Processing 20+ visual formats with 98.5% success rate
+- Sub-30 second response times for detailed analysis
+
+### Upcoming Development Phases
+
+#### Phase 2: Document Understanding (Q4 2025)
+**Expanding Eyes Capabilities**
+- PDF, Word, Excel, PowerPoint document analysis
+- Text extraction with 95%+ accuracy and formatting preservation
+- Structured data extraction and cross-document comparison
+- Integration with Gemini's Document Understanding API
+- Processing time under 60 seconds for typical documents
+
+#### Phase 3: Audio Processing - Ears (Q4 2025)
+**Advanced Audio Intelligence**
+- Speech-to-text transcription with speaker identification
+- Audio content analysis (music, speech, noise classification)
+- Audio quality assessment and debugging capabilities
+- Support for 20+ audio formats (WAV, MP3, AAC, OGG, FLAC)
+- Real-time audio processing capabilities
+
+#### Phase 4: Speech Generation - Mouth (Q4 2025)
+**AI Voice Capabilities**
+- High-quality text-to-speech with customizable voice parameters
+- Code explanation and technical content narration
+- Multi-language speech generation (10+ languages)
+- Long-form content narration with natural pacing
+- Professional-quality audio export in multiple formats
+
+#### Phase 5: Content Generation - Hands (Q4 2025)
+**Creative Content Creation**
+- Image generation from text descriptions using Imagen API
+- Advanced image editing (inpainting, style transfer, enhancement)
+- Video generation up to 30 seconds using Veo3 API
+- Animation creation with motion graphics
+- Batch content generation for workflow automation
+
+### Target Architecture (End 2025)
+
+The evolution from single-capability visual analysis to comprehensive human-like sensory intelligence:
+
+```
+┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
+│   AI Agent      │◄──►│    Human MCP         │◄──►│  Google AI Services     │
+│  (MCP Client)   │    │    Server            │    │ • Gemini Vision API     │
+└─────────────────┘    │                      │    │ • Gemini Audio API      │
+                       │  👁️ Eyes (Vision)   │    │ • Gemini Speech API     │
+                       │  • Images/Video      │    │ • Imagen API (Images)   │
+                       │  • Documents         │    │ • Veo3 API (Video)      │
+                       │                      │    └─────────────────────────┘
+                       │  👂 Ears (Audio)     │
+                       │  • Speech-to-Text    │
+                       │  • Audio Analysis    │
+                       │                      │
+                       │  👄 Mouth (Speech)   │
+                       │  • Text-to-Speech    │
+                       │  • Narration         │
+                       │                      │
+                       │  ✋ Hands (Creation) │
+                       │  • Image Generation  │
+                       │  • Video Generation  │
+                       └──────────────────────┘
+```
+
+### Key Benefits by 2025
+
+**For Developers:**
+- Complete multimodal debugging and analysis workflows
+- Automated accessibility auditing and compliance checking
+- Visual regression testing and quality assurance
+- Document analysis for technical specifications
+- Audio processing for voice interfaces and content
+
+**For AI Agents:**
+- Human-like understanding of visual, audio, and document content
+- Ability to generate explanatory content in multiple formats
+- Sophisticated analysis capabilities beyond text processing
+- Enhanced debugging and problem-solving workflows
+- Creative content generation and editing capabilities
+
+### Success Metrics & Timeline
+
+- **Phase 2 (Document Understanding)**: January - March 2025
+- **Phase 3 (Audio Processing)**: April - June 2025  
+- **Phase 4 (Speech Generation)**: September - October 2025
+- **Phase 5 (Content Generation)**: October - December 2025
+
+**Target Goals:**
+- Support 50+ file formats across all modalities
+- 99%+ success rate with sub-60 second processing times
+- 1000+ MCP client integrations and 100K+ monthly API calls
+- Comprehensive documentation with real-world examples
+
+### Getting Involved
+
+Human MCP is built for the developer community. Whether you're integrating with MCP clients, contributing to core development, or providing feedback, your involvement shapes the future of AI agent capabilities.
+
+- **Beta Testing**: Early access to new phases and features
+- **Integration Partners**: Work with us to optimize for your MCP client
+- **Community Feedback**: Help prioritize features and improvements
+
 ## Supported Formats
 
 **Images**: PNG, JPEG, WebP, GIF (static)  
@@ -596,12 +907,21 @@ Human MCP Server
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+## Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- **[Project Roadmap](docs/project-roadmap.md)** - Development roadmap and future vision through 2025
+- **[Project Overview & PDR](docs/project-overview-pdr.md)** - Project overview and product requirements
+- **[Architecture & Code Standards](docs/codebase-structure-architecture-code-standards.md)** - Technical architecture and coding standards
+- **[Codebase Summary](docs/codebase-summary.md)** - Comprehensive codebase overview
+
 ## Support
 
-- 📖 [Documentation](humanmcp://docs/api)
-- 💡 [Examples](humanmcp://examples/debugging)  
-- 🐛 [Issues](https://github.com/human-mcp/human-mcp/issues)
-- 💬 [Discussions](https://github.com/human-mcp/human-mcp/discussions)
+- 📖 [Documentation](docs/) - Complete project documentation
+- 💡 [Examples](humanmcp://examples/debugging) - Usage examples and debugging workflows
+- 🐛 [Issues](https://github.com/human-mcp/human-mcp/issues) - Report bugs and request features
+- 💬 [Discussions](https://github.com/human-mcp/human-mcp/discussions) - Community discussions
 
 ---
 
