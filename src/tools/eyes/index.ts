@@ -17,9 +17,9 @@ import type { Config } from "@/utils/config.js";
 export async function registerEyesTool(server: McpServer, config: Config) {
   const geminiClient = new GeminiClient(config);
   
-  // Register eyes.analyze tool
+  // Register eyes_analyze tool
   server.registerTool(
-    "eyes.analyze",
+    "eyes_analyze",
     {
       title: "Vision Analysis Tool",
       description: "Analyze images, videos, and GIFs using AI vision capabilities",
@@ -36,7 +36,7 @@ export async function registerEyesTool(server: McpServer, config: Config) {
         return await handleAnalyze(geminiClient, args, config);
       } catch (error) {
         const mcpError = handleError(error);
-        logger.error(`Tool eyes.analyze error:`, mcpError);
+        logger.error(`Tool eyes_analyze error:`, mcpError);
         
         return {
           content: [{
@@ -49,9 +49,9 @@ export async function registerEyesTool(server: McpServer, config: Config) {
     }
   );
 
-  // Register eyes.compare tool
+  // Register eyes_compare tool
   server.registerTool(
-    "eyes.compare",
+    "eyes_compare",
     {
       title: "Image Comparison Tool", 
       description: "Compare two images and identify differences",
@@ -66,7 +66,7 @@ export async function registerEyesTool(server: McpServer, config: Config) {
         return await handleCompare(geminiClient, args);
       } catch (error) {
         const mcpError = handleError(error);
-        logger.error(`Tool eyes.compare error:`, mcpError);
+        logger.error(`Tool eyes_compare error:`, mcpError);
         
         return {
           content: [{
