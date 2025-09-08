@@ -182,7 +182,7 @@ Environment variables:
 GOOGLE_GEMINI_API_KEY=your_api_key
 
 # Optional  
-GOOGLE_GEMINI_MODEL=gemini-2.0-flash-latest
+GOOGLE_GEMINI_MODEL=gemini-2.5-flash
 LOG_LEVEL=info
 PORT=3000
 MAX_REQUEST_SIZE=50MB
