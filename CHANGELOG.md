@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/mrgoonie/human-mcp/compare/v1.0.2...v1.1.0) (2025-09-08)
+
+
+### Features
+
+* add HTTP transport with Docker deployment ([971af50](https://github.com/mrgoonie/human-mcp/commit/971af50cae5ccb50b83a70c29099e4c801b8fcad))
+
 ## [1.0.2](https://github.com/mrgoonie/human-mcp/compare/v1.0.1...v1.0.2) (2025-09-08)
 
 
