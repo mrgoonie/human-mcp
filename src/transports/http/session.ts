@@ -1,16 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type { SessionStore, TransportSession } from "../types.js";
+import type { SessionStore, TransportSession, HttpTransportConfig } from "../types.js";
 
 export class SessionManager {
   private transports: Map<string, StreamableHTTPServerTransport>;
   private sessionMode: 'stateful' | 'stateless';
   private store?: SessionStore;
+  private config: HttpTransportConfig;
 
-  constructor(sessionMode: 'stateful' | 'stateless', store?: SessionStore) {
+  constructor(sessionMode: 'stateful' | 'stateless', config: HttpTransportConfig, store?: SessionStore) {
     this.transports = new Map();
     this.sessionMode = sessionMode;
+    this.config = config;
     this.store = store;
   }
 
@@ -19,9 +21,9 @@ export class SessionManager {
     
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => sessionId,
-      enableJsonResponse: true,
-      enableDnsRebindingProtection: true,
-      allowedHosts: ['127.0.0.1', 'localhost', '127.0.0.1:3001', 'localhost:3001'],
+      enableJsonResponse: this.config.enableJsonResponse,
+      enableDnsRebindingProtection: this.config.security?.enableDnsRebindingProtection ?? true,
+      allowedHosts: this.config.security?.allowedHosts ?? ['127.0.0.1', 'localhost'],
     });
 
     // Store the transport by the generated session ID

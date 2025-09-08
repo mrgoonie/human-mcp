@@ -13,7 +13,7 @@ export async function startHttpTransport(
   config: HttpTransportConfig
 ): Promise<void> {
   const app = express();
-  const sessionManager = new SessionManager(config.sessionMode);
+  const sessionManager = new SessionManager(config.sessionMode, config);
 
   // Apply middleware
   app.use(express.json({ limit: '50mb' }));
