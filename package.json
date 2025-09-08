@@ -1,6 +1,6 @@
 {
   "name": "@goonnguyen/human-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Human MCP: Bringing Human Capabilities to Coding Agents",
   "type": "module",
   "main": "dist/index.js",
