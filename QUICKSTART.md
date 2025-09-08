@@ -61,7 +61,7 @@ Human MCP should analyze the image and provide detailed debugging insights!
 
 ### Debug UI Issues
 ```
-Use the eyes.analyze tool with this screenshot:
+Use the eyes_analyze tool with this screenshot:
 - Type: image
 - Analysis type: ui_debug  
 - Detail level: detailed
@@ -69,7 +69,7 @@ Use the eyes.analyze tool with this screenshot:
 
 ### Analyze Error Recordings
 ```
-Use the eyes.analyze tool with this screen recording:
+Use the eyes_analyze tool with this screen recording:
 - Type: video
 - Analysis type: error_detection
 - Focus on: the error sequence
@@ -77,7 +77,7 @@ Use the eyes.analyze tool with this screen recording:
 
 ### Check Accessibility
 ```
-Use the eyes.analyze tool:
+Use the eyes_analyze tool:
 - Analysis type: accessibility
 - Check accessibility: true
 ```

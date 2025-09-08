@@ -38,7 +38,7 @@ src/
 ### Key Components
 
 **Vision Analysis (tools/eyes/)**
-- `index.ts` - Registers eyes.analyze and eyes.compare tools
+- `index.ts` - Registers eyes_analyze and eyes_compare tools
 - `processors/` - Handles image, video, and GIF processing
 - `utils/gemini-client.ts` - Google Gemini API integration
 - `schemas.ts` - Zod validation schemas for tool inputs
@@ -50,14 +50,16 @@ src/
 
 ## MCP Tools
 
-### eyes.analyze
+**Important**: Tool names must comply with MCP validation pattern `^[a-zA-Z0-9_-]{1,64}$`. Only alphanumeric characters, underscores, and hyphens are allowed. No dots, spaces, or other special characters.
+
+### eyes_analyze
 Primary tool for visual analysis of images, videos, and GIFs:
 - Supports file paths, URLs, and base64 data URIs
 - Configurable detail levels (quick/detailed)
 - Frame extraction for videos and GIFs
 - Custom analysis prompts
 
-### eyes.compare  
+### eyes_compare  
 Compares two images to identify visual differences:
 - Three comparison types: pixel, structural, semantic
 - Detailed difference reporting

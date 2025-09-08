@@ -144,7 +144,7 @@ Claude Desktop is a desktop application that provides a user-friendly interface 
 
 **Verification:**
 - Look for the connection indicator in Claude Desktop
-- Try using the `eyes.analyze` tool with a test image
+- Try using the `eyes_analyze` tool with a test image
 
 #### Claude Code (CLI)
 
@@ -413,7 +413,7 @@ cd /path/to/human-mcp && bun run inspector
 
 **Test with MCP Clients:**
 1. Check client logs for connection status
-2. Try using `eyes.analyze` tool with a test image
+2. Try using `eyes_analyze` tool with a test image
 3. Verify API responses are returned correctly
 4. Look for the Human MCP server in the client's MCP server list
 
@@ -471,7 +471,7 @@ human-mcp --version  # if globally installed
 
 ## Tools
 
-### eyes.analyze
+### eyes_analyze
 
 Comprehensive visual analysis for images, videos, and GIFs.
 
@@ -485,7 +485,7 @@ Comprehensive visual analysis for images, videos, and GIFs.
 }
 ```
 
-### eyes.compare
+### eyes_compare
 
 Compare two images to identify visual differences.
 
