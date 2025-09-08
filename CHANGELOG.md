@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/mrgoonie/human-mcp/compare/v1.0.0...v1.0.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* **config:** update NPM publishing configuration for scoped package ([caa26cd](https://github.com/mrgoonie/human-mcp/commit/caa26cd36d6967a935921b62e7478f4074cac671))
+
 # 1.0.0 (2025-09-08)
 
 
