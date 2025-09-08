@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/mrgoonie/human-mcp/compare/v1.2.0...v1.2.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* update tool names to comply with MCP validation pattern ([3c23e10](https://github.com/mrgoonie/human-mcp/commit/3c23e101e843095fb33703dd9431a89936c18308))
+
 # [1.2.0](https://github.com/mrgoonie/human-mcp/compare/v1.1.0...v1.2.0) (2025-09-08)
 
 
