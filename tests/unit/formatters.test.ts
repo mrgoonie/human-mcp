@@ -20,14 +20,14 @@ describe("Formatters", () => {
     it("should create accessibility prompt", () => {
       const options: AnalysisOptions = {
         analysis_type: "accessibility", 
-        detail_level: "basic"
+        detail_level: "quick"
       };
       
       const prompt = createPrompt(options);
       
       expect(prompt).toContain("accessibility expert");
       expect(prompt).toContain("WCAG guidelines");
-      expect(prompt).toContain("concise analysis");
+      expect(prompt).toContain("Provide a concise analysis");
     });
     
     it("should include specific focus when provided", () => {

@@ -3,7 +3,7 @@ import { z } from "zod";
 const ConfigSchema = z.object({
   gemini: z.object({
     apiKey: z.string().min(1, "Google Gemini API key is required"),
-    model: z.string().default("gemini-2.0-flash-latest"),
+    model: z.string().default("gemini-2.5-flash"),
   }),
   server: z.object({
     port: z.number().default(3000),

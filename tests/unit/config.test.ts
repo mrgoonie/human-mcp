@@ -11,7 +11,7 @@ describe("Config", () => {
     const config = loadConfig();
     
     expect(config.gemini.apiKey).toBe("test-key");
-    expect(config.gemini.model).toBe("gemini-2.0-flash-latest");
+    expect(config.gemini.model).toBe("gemini-2.5-flash");
     expect(config.server.port).toBe(3000);
     expect(config.logging.level).toBe("info");
   });
@@ -19,13 +19,13 @@ describe("Config", () => {
   it("should override defaults with environment variables", () => {
     process.env.PORT = "8080";
     process.env.LOG_LEVEL = "debug";
-    process.env.GOOGLE_GEMINI_MODEL = "gemini-2.0-flash-exp";
+    process.env.GOOGLE_GEMINI_MODEL = "gemini-2.5-flash";
     
     const config = loadConfig();
     
     expect(config.server.port).toBe(8080);
     expect(config.logging.level).toBe("debug");
-    expect(config.gemini.model).toBe("gemini-2.0-flash-exp");
+    expect(config.gemini.model).toBe("gemini-2.5-flash");
   });
   
   it("should throw error for missing API key", () => {
