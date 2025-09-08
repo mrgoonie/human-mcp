@@ -5,6 +5,25 @@ const ConfigSchema = z.object({
     apiKey: z.string().min(1, "Google Gemini API key is required"),
     model: z.string().default("gemini-2.5-flash"),
   }),
+  transport: z.object({
+    type: z.enum(["stdio", "http", "both"]).default("stdio"),
+    http: z.object({
+      enabled: z.boolean().default(false),
+      port: z.number().default(3000),
+      host: z.string().default("0.0.0.0"),
+      sessionMode: z.enum(["stateful", "stateless"]).default("stateful"),
+      enableSse: z.boolean().default(true),
+      enableJsonResponse: z.boolean().default(true),
+      security: z.object({
+        enableCors: z.boolean().default(true),
+        corsOrigins: z.array(z.string()).optional(),
+        enableDnsRebindingProtection: z.boolean().default(true),
+        allowedHosts: z.array(z.string()).default(["127.0.0.1", "localhost"]),
+        enableRateLimiting: z.boolean().default(false),
+        secret: z.string().optional(),
+      }).optional(),
+    }).optional(),
+  }),
   server: z.object({
     port: z.number().default(3000),
     maxRequestSize: z.string().default("50MB"),
@@ -26,10 +45,37 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export function loadConfig(): Config {
+  const corsOrigins = process.env.HTTP_CORS_ORIGINS ? 
+    process.env.HTTP_CORS_ORIGINS.split(',').map(origin => origin.trim()) : 
+    undefined;
+  
+  const allowedHosts = process.env.HTTP_ALLOWED_HOSTS ? 
+    process.env.HTTP_ALLOWED_HOSTS.split(',').map(host => host.trim()) : 
+    ["127.0.0.1", "localhost"];
+
   return ConfigSchema.parse({
     gemini: {
       apiKey: process.env.GOOGLE_GEMINI_API_KEY || "",
       model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.5-flash",
+    },
+    transport: {
+      type: (process.env.TRANSPORT_TYPE as any) || "stdio",
+      http: {
+        enabled: process.env.TRANSPORT_TYPE === "http" || process.env.TRANSPORT_TYPE === "both",
+        port: parseInt(process.env.HTTP_PORT || "3000"),
+        host: process.env.HTTP_HOST || "0.0.0.0",
+        sessionMode: (process.env.HTTP_SESSION_MODE as any) || "stateful",
+        enableSse: process.env.HTTP_ENABLE_SSE !== "false",
+        enableJsonResponse: process.env.HTTP_ENABLE_JSON_RESPONSE !== "false",
+        security: {
+          enableCors: process.env.HTTP_CORS_ENABLED !== "false",
+          corsOrigins,
+          enableDnsRebindingProtection: process.env.HTTP_DNS_REBINDING_ENABLED !== "false",
+          allowedHosts,
+          enableRateLimiting: process.env.HTTP_ENABLE_RATE_LIMITING === "true",
+          secret: process.env.HTTP_SECRET,
+        },
+      },
     },
     server: {
       port: parseInt(process.env.PORT || "3000"),

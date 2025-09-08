@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  human-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: human-mcp:latest
+    container_name: human-mcp-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Core Configuration
+      - NODE_ENV=production
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
+      - GOOGLE_GEMINI_MODEL=${GOOGLE_GEMINI_MODEL:-gemini-2.5-flash}
+      
+      # Transport Configuration
+      - TRANSPORT_TYPE=http
+      - HTTP_PORT=3000
+      - HTTP_HOST=0.0.0.0
+      - HTTP_SESSION_MODE=${HTTP_SESSION_MODE:-stateful}
+      - HTTP_ENABLE_SSE=${HTTP_ENABLE_SSE:-true}
+      - HTTP_ENABLE_JSON_RESPONSE=${HTTP_ENABLE_JSON_RESPONSE:-true}
+      
+      # Security Configuration
+      - HTTP_CORS_ENABLED=${HTTP_CORS_ENABLED:-true}
+      - HTTP_CORS_ORIGINS=${HTTP_CORS_ORIGINS:-*}
+      - HTTP_DNS_REBINDING_ENABLED=${HTTP_DNS_REBINDING_ENABLED:-true}
+      - HTTP_ALLOWED_HOSTS=${HTTP_ALLOWED_HOSTS:-127.0.0.1,localhost}
+      - HTTP_ENABLE_RATE_LIMITING=${HTTP_ENABLE_RATE_LIMITING:-false}
+      - HTTP_SECRET=${HTTP_SECRET:-}
+      
+      # Server Configuration
+      - MAX_REQUEST_SIZE=${MAX_REQUEST_SIZE:-100MB}
+      - ENABLE_CACHING=${ENABLE_CACHING:-true}
+      - CACHE_TTL=${CACHE_TTL:-3600}
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-300000}
+      - FETCH_TIMEOUT=${FETCH_TIMEOUT:-60000}
+      
+      # Rate Limiting
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-100}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60000}
+      
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    
+    volumes:
+      # Optional: Mount a volume for persistent data if needed
+      - ./data:/app/data
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.human-mcp.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.human-mcp.entrypoints=websecure"
+      - "traefik.http.routers.human-mcp.tls.certresolver=letsencrypt"
+      - "traefik.http.services.human-mcp.loadbalancer.server.port=3000"
+    
+    networks:
+      - human-mcp-network
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # Optional: Traefik reverse proxy for production deployment
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    restart: unless-stopped
+    profiles:
+      - proxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard (disable in production)
+    environment:
+      - TRAEFIK_API_DASHBOARD=true
+      - TRAEFIK_API_INSECURE=true
+      - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS=:80
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS=:443
+      - TRAEFIK_PROVIDERS_DOCKER=true
+      - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${ACME_EMAIL:-admin@example.com}
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_STORAGE=/letsencrypt/acme.json
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_HTTPCHALLENGE_ENTRYPOINT=web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - human-mcp-network
+
+  # Optional: Redis for session storage (if needed for scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: human-mcp-redis
+    restart: unless-stopped
+    profiles:
+      - redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - human-mcp-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+volumes:
+  redis-data:
+
+networks:
+  human-mcp-network:
+    driver: bridge
