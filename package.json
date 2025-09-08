@@ -1,5 +1,5 @@
 {
-  "name": "human-mcp",
+  "name": "@goonnguyen/human-mcp",
   "version": "1.0.0",
   "description": "Human MCP: Bringing Human Capabilities to Coding Agents",
   "type": "module",

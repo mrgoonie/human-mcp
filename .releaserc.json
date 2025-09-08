@@ -7,16 +7,9 @@
     [
       "@semantic-release/npm",
       {
-        "npmPublish": true
-      }
-    ],
-    [
-      "@semantic-release/npm",
-      {
         "npmPublish": true,
         "publishConfig": {
-          "registry": "https://npm.pkg.github.com",
-          "@duynguyen:registry": "https://npm.pkg.github.com"
+          "access": "public"
         }
       }
     ],
