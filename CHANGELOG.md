@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/mrgoonie/human-mcp/compare/v1.0.1...v1.0.2) (2025-09-08)
+
+
+### Bug Fixes
+
+* **ci:** configure NPM package for public publishing ([3222450](https://github.com/mrgoonie/human-mcp/commit/3222450edae2f40e86cba29dea5c3dfd35bf4fd1))
+
 ## [1.0.1](https://github.com/mrgoonie/human-mcp/compare/v1.0.0...v1.0.1) (2025-09-08)
 
 
