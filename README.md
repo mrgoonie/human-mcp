@@ -2,6 +2,8 @@
 
 > Bringing Human Capabilities to Coding Agents
 
+![Human MCP](human-mcp.png)
+
 Human MCP is a Model Context Protocol server that provides AI coding agents with human-like visual capabilities for debugging and understanding visual content like screenshots, recordings, and UI elements.
 
 ## Features
