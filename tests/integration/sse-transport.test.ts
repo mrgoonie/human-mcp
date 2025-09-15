@@ -1,30 +1,14 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { startHttpTransport } from "../../src/transports/http/server.js";
-import type { HttpTransportConfig } from "../../src/transports/types.js";
+import { testServerManager } from "../utils/test-server-manager.js";
+import type { HttpServerHandle } from "../../src/transports/types.js";
 
 describe("SSE Transport Integration", () => {
-  let mcpServer: McpServer;
-  let config: HttpTransportConfig;
-  const testPort = 3001;
+  let serverHandle: HttpServerHandle;
+  let testPort: number;
+  let baseUrl: string;
 
   beforeAll(async () => {
-    // Create a basic MCP server for testing
-    mcpServer = new McpServer(
-      {
-        name: "test-server",
-        version: "1.0.0"
-      },
-      {
-        capabilities: {
-          tools: {}
-        }
-      }
-    );
-
-    config = {
-      port: testPort,
-      host: "127.0.0.1",
+    const testServer = await testServerManager.startTestServer({
       sessionMode: "stateful",
       enableSse: true,
       enableJsonResponse: true,
@@ -38,23 +22,20 @@ describe("SSE Transport Integration", () => {
         enableDnsRebindingProtection: true,
         allowedHosts: ["127.0.0.1", "localhost"]
       }
-    };
+    });
 
-    // Start the HTTP transport (this includes SSE routes)
-    await startHttpTransport(mcpServer, config);
-    
-    // Give the server a moment to start
-    await new Promise(resolve => setTimeout(resolve, 100));
+    serverHandle = testServer.server;
+    testPort = testServer.port;
+    baseUrl = testServer.baseUrl;
   });
 
   afterAll(async () => {
-    // Cleanup would be handled by the server's signal handlers
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await testServerManager.stopAllServers();
   });
 
   describe("health endpoint", () => {
     it("should include SSE fallback status in health check", async () => {
-      const response = await fetch(`http://127.0.0.1:${testPort}/health`);
+      const response = await fetch(`${baseUrl}/health`);
       const health = await response.json();
       
       expect(health.status).toBe("healthy");
@@ -69,7 +50,7 @@ describe("SSE Transport Integration", () => {
 
   describe("SSE endpoint availability", () => {
     it("should reject GET /sse in stateless mode", async () => {
-      const response = await fetch(`http://127.0.0.1:${testPort}/sse`, {
+      const response = await fetch(`${baseUrl}/sse`, {
         method: "GET"
       });
       
@@ -80,7 +61,7 @@ describe("SSE Transport Integration", () => {
     });
 
     it("should reject POST /messages without sessionId", async () => {
-      const response = await fetch(`http://127.0.0.1:${testPort}/messages`, {
+      const response = await fetch(`${baseUrl}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -98,7 +79,7 @@ describe("SSE Transport Integration", () => {
     });
 
     it("should reject POST /messages with invalid sessionId", async () => {
-      const response = await fetch(`http://127.0.0.1:${testPort}/messages?sessionId=invalid`, {
+      const response = await fetch(`${baseUrl}/messages?sessionId=invalid`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -119,7 +100,7 @@ describe("SSE Transport Integration", () => {
   describe("transport mixing prevention", () => {
     it("should prevent using streamable HTTP session ID on SSE endpoints", async () => {
       // First create a streamable HTTP session
-      const initResponse = await fetch(`http://127.0.0.1:${testPort}/mcp`, {
+      const initResponse = await fetch(`${baseUrl}/mcp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -140,7 +121,7 @@ describe("SSE Transport Integration", () => {
       
       if (sessionId) {
         // Try to use this session ID on SSE message endpoint
-        const response = await fetch(`http://127.0.0.1:${testPort}/messages?sessionId=${sessionId}`, {
+        const response = await fetch(`${baseUrl}/messages?sessionId=${sessionId}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

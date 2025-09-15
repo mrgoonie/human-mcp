@@ -63,8 +63,11 @@ export class SessionManager {
   async terminateSession(sessionId: string): Promise<void> {
     const transport = this.transports.get(sessionId);
     if (transport) {
-      transport.close();
+      // Remove from map first to prevent circular cleanup
       this.transports.delete(sessionId);
+      // Clear the onclose handler to prevent recursion
+      transport.onclose = undefined;
+      transport.close();
     }
     
     if (this.store) {
@@ -73,10 +76,15 @@ export class SessionManager {
   }
 
   async cleanup(): Promise<void> {
-    for (const [sessionId, transport] of this.transports) {
+    // Create a copy of the map entries to avoid modification during iteration
+    const transportEntries = Array.from(this.transports.entries());
+    this.transports.clear();
+    
+    for (const [sessionId, transport] of transportEntries) {
+      // Clear the onclose handler to prevent recursion during cleanup
+      transport.onclose = undefined;
       transport.close();
     }
-    this.transports.clear();
     
     if (this.store) {
       await this.store.cleanup();

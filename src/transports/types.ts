@@ -40,3 +40,11 @@ export interface SessionStore {
   delete(sessionId: string): Promise<void>;
   cleanup(): Promise<void>;
 }
+
+export interface HttpServerHandle {
+  app: any;
+  server: any;
+  sessionManager: any;
+  sseManager?: any;
+  close(): Promise<void>;
+}

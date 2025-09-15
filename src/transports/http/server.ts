@@ -7,12 +7,12 @@ import { createRoutes } from "./routes.js";
 import { createSSERoutes } from "./sse-routes.js";
 import { SessionManager } from "./session.js";
 import { createSecurityMiddleware } from "./middleware.js";
-import type { HttpTransportConfig } from "../types.js";
+import type { HttpTransportConfig, HttpServerHandle } from "../types.js";
 
 export async function startHttpTransport(
   mcpServer: McpServer,
   config: HttpTransportConfig
-): Promise<void> {
+): Promise<HttpServerHandle> {
   const app = express();
   const sessionManager = new SessionManager(config.sessionMode, config);
 
@@ -70,14 +70,14 @@ export async function startHttpTransport(
   const port = config.port || 3000;
   const host = config.host || '0.0.0.0';
   
-  app.listen(port, host, () => {
+  const server = app.listen(port, host, () => {
     console.log(`MCP HTTP Server listening on http://${host}:${port}`);
     console.log(`Health check: http://${host}:${port}/health`);
     console.log(`MCP endpoint: http://${host}:${port}/mcp`);
   });
 
-  // Graceful shutdown handling
-  process.on('SIGTERM', async () => {
+  // Create cleanup function
+  const cleanup = async () => {
     console.log('Shutting down HTTP server...');
     await sessionManager.cleanup();
     
@@ -85,15 +85,28 @@ export async function startHttpTransport(
     if (config.enableSseFallback && (app as any).sseManager) {
       await (app as any).sseManager.cleanup();
     }
-  });
+  };
 
-  process.on('SIGINT', async () => {
-    console.log('Shutting down HTTP server...');
-    await sessionManager.cleanup();
-    
-    // Cleanup SSE sessions if enabled
-    if (config.enableSseFallback && (app as any).sseManager) {
-      await (app as any).sseManager.cleanup();
+  // Graceful shutdown handling
+  process.on('SIGTERM', cleanup);
+  process.on('SIGINT', cleanup);
+
+  // Return server handle
+  const handle: HttpServerHandle = {
+    app,
+    server,
+    sessionManager,
+    sseManager,
+    async close() {
+      await cleanup();
+      return new Promise<void>((resolve, reject) => {
+        server.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
     }
-  });
+  };
+
+  return handle;
 }
