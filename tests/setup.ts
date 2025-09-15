@@ -13,8 +13,8 @@ mock.module("@/utils/logger", () => ({
   logger: globalMocks.logger
 }));
 
-// Mock fs module for Bun compatibility
-mock.module("fs", () => globalMocks.fs);
+// Mock fs module for Bun compatibility (disabled for integration tests)
+// mock.module("fs", () => globalMocks.fs);
 
 // Mock Google Gemini client
 mock.module("@google/generative-ai", () => ({

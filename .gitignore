@@ -11,6 +11,9 @@ dist/
 .env.local
 .env.*.local
 .env.*
+.env.backup
+.env.prod
+.claude/.env
 !.env.example
 
 # IDE

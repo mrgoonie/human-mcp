@@ -9,7 +9,8 @@
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --target=node --outdir=dist",
     "start": "bun run dist/index.js",
-    "test": "bun test",
+    "test": "bun test tests/unit/ && bun test tests/integration/sse-transport.test.ts && bun test tests/integration/server.test.ts && bun test tests/integration/http-transport-files.test.ts",
+    "test:parallel": "bun test",
     "typecheck": "tsc --noEmit",
     "inspector": "mcp-inspector stdio -- bun run src/index.ts"
   },

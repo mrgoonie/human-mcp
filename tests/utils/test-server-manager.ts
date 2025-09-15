@@ -10,9 +10,9 @@ export class TestServerManager {
    * Get a random available port for testing using OS-level port checking
    */
   async getAvailablePort(): Promise<number> {
-    // Try sequential ports starting from a random high port
-    const basePort = 4000 + Math.floor(Math.random() * 1000);
-    const maxAttempts = 50;
+    // Use a wider range to avoid conflicts and add process PID for uniqueness
+    const basePort = 5000 + (process.pid % 1000);
+    const maxAttempts = 100;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const port = basePort + attempt;
@@ -111,16 +111,37 @@ export class TestServerManager {
     while (Date.now() - startTime < timeout) {
       try {
         const response = await fetch(`http://127.0.0.1:${port}/health`, {
-          signal: AbortSignal.timeout(2000)
+          signal: AbortSignal.timeout(2000),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
         });
         
         if (response.ok) {
-          const health = await response.json() as { status: string };
-          if (health.status === 'healthy') {
-            // Give the server a bit more time to fully initialize
-            await new Promise(resolve => setTimeout(resolve, 200));
-            return;
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const text = await response.text();
+            try {
+              const health = JSON.parse(text) as { status: string };
+              if (health.status === 'healthy') {
+                // Give the server a bit more time to fully initialize
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return;
+              }
+            } catch (jsonError) {
+              lastError = new Error(`Failed to parse JSON response: ${text.substring(0, 100)}`);
+              // JSON parsing failed, server not ready yet
+            }
+          } else {
+            // Try to read content to understand what's being returned
+            const text = await response.text();
+            const preview = text.length > 100 ? text.substring(0, 100) + '...' : text;
+            lastError = new Error(`Expected JSON response, got: ${contentType}. Content preview: ${preview}`);
           }
+        } else {
+          lastError = new Error(`Health check failed with status: ${response.status}`);
         }
       } catch (error) {
         lastError = error as Error;
@@ -139,9 +160,17 @@ export class TestServerManager {
   async stopServer(port: number): Promise<void> {
     const server = this.servers.get(port);
     if (server) {
-      await server.close();
-      this.servers.delete(port);
-      this.usedPorts.delete(port);
+      try {
+        await server.close();
+      } catch (error) {
+        console.warn(`Error closing server on port ${port}:`, error);
+      } finally {
+        this.servers.delete(port);
+        // Add delay before releasing port to ensure cleanup
+        setTimeout(() => {
+          this.usedPorts.delete(port);
+        }, 1000);
+      }
     }
   }
 

@@ -1,39 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { fileInterceptorMiddleware } from '@/transports/http/file-interceptor';
 import type { Request, Response, NextFunction } from 'express';
-
-// Mock the Cloudflare R2 client
-mock.module('@/utils/cloudflare-r2', () => ({
-  CloudflareR2Client: mock(function() {
-    return {
-      uploadFile: mock(async (_buffer: Buffer, filename: string) => {
-        return `https://cdn.test.com/human-mcp/${filename}`;
-      }),
-      uploadBase64: mock(async (_data: string, _mimeType: string, filename?: string) => {
-        return `https://cdn.test.com/human-mcp/${filename || 'upload.jpg'}`;
-      }),
-      isConfigured: mock(() => true)
-    };
-  }),
-  getCloudflareR2: mock(() => ({
-    uploadFile: mock(async (_buffer: Buffer, filename: string) => {
-      return `https://cdn.test.com/human-mcp/${filename}`;
-    }),
-    uploadBase64: mock(async (_data: string, _mimeType: string, filename?: string) => {
-      return `https://cdn.test.com/human-mcp/${filename || 'upload.jpg'}`;
-    }),
-    isConfigured: mock(() => true)
-  }))
-}));
-
-// Logger is mocked globally in setup.ts
-
-// Mock fs/promises module for Bun compatibility
-mock.module('fs/promises', () => ({
-  access: mock(async () => { throw new Error('File not found'); }),
-  readFile: mock(async () => Buffer.from('fake image data')),
-  stat: mock(async () => ({ isFile: () => true }))
-}));
 
 describe('HTTP Transport File Handling', () => {
   beforeAll(() => {
@@ -69,18 +36,27 @@ describe('HTTP Transport File Handling', () => {
       }
     } as Request;
 
+    let statusCode = 0;
+    let responseData: any = null;
+    
     const res = {
-      status: mock(() => res),
-      json: mock(() => {}),
+      status: (code: number) => {
+        statusCode = code;
+        return res;
+      },
+      json: (data: any) => {
+        responseData = data;
+        return res;
+      },
     } as unknown as Response;
 
-    const next = mock(() => {}) as NextFunction;
+    const next = () => {};
 
-    await fileInterceptorMiddleware(req, res, next);
+    await fileInterceptorMiddleware(req, res, next as NextFunction);
 
-    // Should provide helpful error when file not found
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
+    // Without proper file access and R2 configuration, should provide helpful error
+    expect(statusCode).toBe(400);
+    expect(responseData).toEqual({
       jsonrpc: '2.0',
       error: {
         code: -32602,
@@ -97,8 +73,7 @@ describe('HTTP Transport File Handling', () => {
   });
 
   it('should auto-upload local files in HTTP mode', async () => {
-    // For now, let's test that the middleware doesn't break when Cloudflare is not configured
-    // This is actually the expected behavior in a test environment
+    // Test that middleware doesn't break when processing local paths
     const req = {
       body: {
         method: 'tools/call',
@@ -111,14 +86,14 @@ describe('HTTP Transport File Handling', () => {
     } as Request;
 
     const res = {} as Response;
-    const next = mock(() => {}) as NextFunction;
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
 
-    await fileInterceptorMiddleware(req, res, next);
+    await fileInterceptorMiddleware(req, res, next as NextFunction);
 
     // Without proper Cloudflare configuration, the path should remain unchanged
-    // This is the correct behavior for the current implementation
     expect(req.body.params.arguments.source).toBe('/local/path/image.jpg');
-    expect(next).toHaveBeenCalled();
+    expect(nextCalled).toBe(true);
   });
 
   it('should skip non-file fields', async () => {
@@ -136,13 +111,14 @@ describe('HTTP Transport File Handling', () => {
     } as Request;
 
     const res = {} as Response;
-    const next = mock(() => {}) as NextFunction;
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
 
-    await fileInterceptorMiddleware(req, res, next);
+    await fileInterceptorMiddleware(req, res, next as NextFunction);
 
     // Should not modify URL sources
     expect(req.body.params.arguments.source).toBe(originalSource);
-    expect(next).toHaveBeenCalled();
+    expect(nextCalled).toBe(true);
   });
 
   it('should skip non-tool-call requests', async () => {
@@ -154,11 +130,12 @@ describe('HTTP Transport File Handling', () => {
     } as Request;
 
     const res = {} as Response;
-    const next = mock(() => {}) as NextFunction;
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
 
-    await fileInterceptorMiddleware(req, res, next);
+    await fileInterceptorMiddleware(req, res, next as NextFunction);
 
-    expect(next).toHaveBeenCalled();
+    expect(nextCalled).toBe(true);
   });
 
   it('should handle multiple file fields', async () => {
@@ -177,14 +154,15 @@ describe('HTTP Transport File Handling', () => {
     } as Request;
 
     const res = {} as Response;
-    const next = mock(() => {}) as NextFunction;
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
 
-    await fileInterceptorMiddleware(req, res, next);
+    await fileInterceptorMiddleware(req, res, next as NextFunction);
 
     // Without proper Cloudflare configuration, paths should remain unchanged
     expect(req.body.params.arguments.source1).toBe('/path/image1.jpg');
     expect(req.body.params.arguments.source2).toBe('/path/image2.png');
     expect(req.body.params.arguments.normalField).toBe('value');
-    expect(next).toHaveBeenCalled();
+    expect(nextCalled).toBe(true);
   });
 });

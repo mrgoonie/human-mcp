@@ -10,6 +10,8 @@ disableManifest = false
 
 [test]
 preload = ["./tests/setup.ts"]
+# Disable parallel execution to prevent global state interference
+concurrency = 1
 
 [run]
 bun = true

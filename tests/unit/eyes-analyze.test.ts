@@ -7,6 +7,9 @@ import { MockHelpers, TestDataGenerators } from '../utils/index.js';
 // Import global mocks from setup
 import { globalMocks } from '../setup.js';
 
+// Store original fetch for restoration
+const originalFetch = global.fetch;
+
 // Mock fetch for URL operations
 const mockFetch = mock(async (url: string) => {
   if (url.includes('error')) {
@@ -17,7 +20,6 @@ const mockFetch = mock(async (url: string) => {
     headers: { 'content-type': 'image/jpeg' }
   });
 });
-global.fetch = mockFetch as unknown as typeof fetch;
 
 // Mock Gemini client
 const mockGeminiModel = {
@@ -56,6 +58,15 @@ mock.module('@/tools/eyes/processors/gif', () => ({
 }));
 
 describe('Eyes Analyze Tool', () => {
+  beforeAll(() => {
+    // Apply fetch mock only for this test suite
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  afterAll(() => {
+    // Restore original fetch after this test suite
+    global.fetch = originalFetch;
+  });
   let server: McpServer;
 
   beforeAll(async () => {

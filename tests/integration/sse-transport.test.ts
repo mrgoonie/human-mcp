@@ -1,10 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "bun:test";
 import { testServerManager } from "../utils/test-server-manager.js";
 
 describe("SSE Transport Integration", () => {
   let baseUrl: string;
 
   beforeAll(async () => {
+    // Clear any global fetch mocks that might interfere
+    if (globalThis.fetch && (globalThis.fetch as any).mockRestore) {
+      (globalThis.fetch as any).mockRestore();
+    }
+    
+    // Add delay to ensure cleanup from previous tests
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
     const testServer = await testServerManager.startTestServer({
       sessionMode: "stateful",
       enableSse: true,
@@ -22,6 +30,42 @@ describe("SSE Transport Integration", () => {
     });
 
     baseUrl = testServer.baseUrl;
+    
+    // Additional check to ensure server is completely ready with multiple attempts
+    let retries = 0;
+    while (retries < 10) {
+      try {
+        // Use a fresh fetch request with no-cache headers
+        const response = await fetch(`${baseUrl}/health`, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.includes('application/json')) {
+          const health = await response.json() as { status: string };
+          if (health.status === 'healthy') {
+            console.log(`✅ Server ready on attempt ${retries + 1}`);
+            break;
+          }
+        } else {
+          console.log(`❌ Attempt ${retries + 1}: Wrong content-type: ${contentType}`);
+        }
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.log(`❌ Attempt ${retries + 1}: ${error}`);
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    if (retries >= 10) {
+      throw new Error("Server failed to become ready after 10 attempts");
+    }
   });
 
   afterAll(async () => {
