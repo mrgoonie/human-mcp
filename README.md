@@ -400,6 +400,70 @@ Or via JSON configuration:
 }
 ```
 
+#### OpenCode
+
+OpenCode is a powerful AI coding agent that supports MCP servers for enhanced capabilities. Use Human MCP to add visual analysis tools to your OpenCode workflow.
+
+**Configuration Location:**
+- **Global**: `~/.config/opencode/opencode.json`
+- **Project**: `./opencode.json` in your project root
+
+**Configuration Example (STDIO - Recommended):**
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "human": {
+      "type": "local",
+      "command": ["npx", "@goonnguyen/human-mcp"],
+      "enabled": true,
+      "environment": {
+        "GOOGLE_GEMINI_API_KEY": "your_gemini_api_key_here",
+        "TRANSPORT_TYPE": "stdio",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
+```
+
+**Alternative Configuration (if globally installed):**
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "human": {
+      "type": "local",
+      "command": ["human-mcp"],
+      "enabled": true,
+      "environment": {
+        "GOOGLE_GEMINI_API_KEY": "your_gemini_api_key_here",
+        "TRANSPORT_TYPE": "stdio"
+      }
+    }
+  }
+}
+```
+
+**Setup Steps:**
+1. Install Human MCP: `npm install -g @goonnguyen/human-mcp`
+2. Create or edit your OpenCode configuration file
+3. Add the Human MCP server configuration (use `npx` version for reliability)
+4. Set your Google Gemini API key in environment variables or the config
+5. Restart OpenCode
+
+**Important Notes:**
+- **STDIO Mode**: Human MCP uses stdio transport by default, which provides the best compatibility with OpenCode
+- **No R2 Uploads**: In stdio mode, all images and videos are processed locally and sent to Gemini using inline base64 - no Cloudflare R2 uploads occur
+- **Security**: Never commit API keys to version control. Use environment variables or secure credential storage
+
+**Verification:**
+- Check OpenCode logs for successful MCP connection
+- Try using `eyes_analyze` tool: "Analyze this screenshot for UI issues"
+- Verify no external network calls to Cloudflare R2 in stdio mode
+
 #### Gemini CLI
 
 While Gemini CLI doesn't directly support MCP, you can use Human MCP as a bridge to access visual analysis capabilities.

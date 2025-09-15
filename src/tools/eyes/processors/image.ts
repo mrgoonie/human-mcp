@@ -113,9 +113,9 @@ async function loadImage(source: string, fetchTimeout?: number): Promise<{ image
       throw new ProcessingError("Invalid base64 image format");
     }
     
-    // Optional: For large base64 images, upload to Cloudflare R2 if configured
+    // Optional: For large base64 images, upload to Cloudflare R2 if configured (HTTP transport only)
     const cloudflare = getCloudflareR2();
-    if (cloudflare && data.length > 1024 * 1024) { // > 1MB base64
+    if (process.env.TRANSPORT_TYPE === 'http' && cloudflare && data.length > 1024 * 1024) { // > 1MB base64
       logger.info('Large base64 image detected, uploading to Cloudflare R2');
       try {
         const publicUrl = await cloudflare.uploadBase64(data, mimeMatch[1]);
