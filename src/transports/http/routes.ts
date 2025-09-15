@@ -6,10 +6,16 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { SessionManager } from "./session.js";
 import type { HttpTransportConfig } from "../types.js";
 
+// Interface for SSE session checking (to avoid circular dependency)
+interface SSESessionChecker {
+  hasSession(sessionId: string): boolean;
+}
+
 export function createRoutes(
   mcpServer: McpServer,
   sessionManager: SessionManager,
-  config: HttpTransportConfig
+  config: HttpTransportConfig,
+  sseSessionChecker?: SSESessionChecker
 ): Router {
   const router = Router();
 
@@ -21,7 +27,7 @@ export function createRoutes(
       if (config.sessionMode === 'stateless') {
         await handleStatelessRequest(mcpServer, req, res);
       } else {
-        await handleStatefulRequest(mcpServer, sessionManager, sessionId, req, res);
+        await handleStatefulRequest(mcpServer, sessionManager, sessionId, req, res, sseSessionChecker);
       }
     } catch (error) {
       handleError(res, error);
@@ -97,8 +103,22 @@ async function handleStatefulRequest(
   sessionManager: SessionManager,
   sessionId: string | undefined,
   req: any,
-  res: any
+  res: any,
+  sseSessionChecker?: SSESessionChecker
 ): Promise<void> {
+  // Check if sessionId is being used by SSE transport
+  if (sessionId && sseSessionChecker?.hasSession(sessionId)) {
+    res.status(400).json({
+      jsonrpc: '2.0',
+      error: {
+        code: -32600,
+        message: 'Session ID is already in use by SSE transport',
+      },
+      id: null,
+    });
+    return;
+  }
+
   let transport = sessionId ? 
     await sessionManager.getTransport(sessionId) : null;
 

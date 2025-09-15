@@ -747,19 +747,64 @@ Access built-in documentation:
 
 ## Configuration
 
-Environment variables:
+### Transport Configuration
+
+Human MCP supports multiple transport modes for maximum compatibility with different MCP clients:
+
+#### Standard Mode (Default)
+Uses modern Streamable HTTP transport with SSE notifications.
+
+```bash
+# Transport configuration
+TRANSPORT_TYPE=stdio              # Options: stdio, http, both
+HTTP_PORT=3000                   # HTTP server port
+HTTP_HOST=0.0.0.0               # HTTP server host
+HTTP_SESSION_MODE=stateful       # Options: stateful, stateless
+HTTP_ENABLE_SSE=true            # Enable SSE notifications
+HTTP_ENABLE_JSON_RESPONSE=true  # Enable JSON responses
+```
+
+#### Legacy Client Support
+For older MCP clients that only support the deprecated HTTP+SSE transport:
+
+```bash
+# SSE Fallback configuration (for legacy clients)
+HTTP_ENABLE_SSE_FALLBACK=true    # Enable legacy SSE transport
+HTTP_SSE_STREAM_PATH=/sse        # SSE stream endpoint path
+HTTP_SSE_MESSAGE_PATH=/messages  # SSE message endpoint path
+```
+
+When enabled, Human MCP provides isolated SSE fallback endpoints:
+- **GET /sse** - Establishes SSE connection for legacy clients
+- **POST /messages** - Handles incoming messages from legacy clients
+
+**Important Notes:**
+- SSE fallback is disabled by default following YAGNI principles
+- Sessions are segregated between transport types to prevent mixing
+- Modern clients should use the standard `/mcp` endpoints
+- Legacy clients use separate `/sse` and `/messages` endpoints
+
+### Environment Variables
 
 ```bash
 # Required
 GOOGLE_GEMINI_API_KEY=your_api_key
 
-# Optional  
+# Optional Core Configuration
 GOOGLE_GEMINI_MODEL=gemini-2.5-flash
 LOG_LEVEL=info
 PORT=3000
 MAX_REQUEST_SIZE=50MB
 ENABLE_CACHING=true
 CACHE_TTL=3600
+
+# Security Configuration
+HTTP_SECRET=your_http_secret_here
+HTTP_CORS_ENABLED=true
+HTTP_CORS_ORIGINS=*
+HTTP_DNS_REBINDING_ENABLED=true
+HTTP_ALLOWED_HOSTS=127.0.0.1,localhost
+HTTP_ENABLE_RATE_LIMITING=false
 ```
 
 ## Architecture

@@ -11,6 +11,11 @@ export interface HttpTransportConfig {
   sessionMode: 'stateful' | 'stateless';
   enableSse?: boolean;
   enableJsonResponse?: boolean;
+  enableSseFallback?: boolean;
+  ssePaths?: {
+    stream: string;
+    message: string;
+  };
   security?: SecurityConfig;
 }
 

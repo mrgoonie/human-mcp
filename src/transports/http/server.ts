@@ -4,6 +4,7 @@ import compression from "compression";
 import helmet from "helmet";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createRoutes } from "./routes.js";
+import { createSSERoutes } from "./sse-routes.js";
 import { SessionManager } from "./session.js";
 import { createSecurityMiddleware } from "./middleware.js";
 import type { HttpTransportConfig } from "../types.js";
@@ -27,20 +28,42 @@ export async function startHttpTransport(
     app.use(cors({
       origin: config.security?.corsOrigins || '*',
       exposedHeaders: ['Mcp-Session-Id'],
-      allowedHeaders: ['Content-Type', 'mcp-session-id'],
+      allowedHeaders: ['Content-Type', 'mcp-session-id', 'Authorization'],
       credentials: true
     }));
   }
 
   app.use(createSecurityMiddleware(config.security));
 
-  // Create routes
-  const routes = createRoutes(mcpServer, sessionManager, config);
+  // Create SSE routes first if enabled to get SSE manager reference
+  let sseManager: any = undefined;
+  if (config.enableSseFallback) {
+    console.log('Enabling SSE fallback transport');
+    const sseRoutes = createSSERoutes(mcpServer, config, sessionManager);
+    app.use(sseRoutes);
+    
+    // Store SSE manager reference for cleanup and cross-validation
+    sseManager = (sseRoutes as any).sseManager;
+    (app as any).sseManager = sseManager;
+  }
+
+  // Create routes with SSE session checker
+  const routes = createRoutes(mcpServer, sessionManager, config, sseManager);
   app.use('/mcp', routes);
 
   // Health check endpoint
   app.get('/health', (req, res) => {
-    res.json({ status: 'healthy', transport: 'streamable-http' });
+    const healthStatus: any = { 
+      status: 'healthy', 
+      transport: 'streamable-http' 
+    };
+    
+    if (config.enableSseFallback) {
+      healthStatus.sseFallback = 'enabled';
+      healthStatus.ssePaths = config.ssePaths;
+    }
+    
+    res.json(healthStatus);
   });
 
   // Start server
@@ -57,10 +80,20 @@ export async function startHttpTransport(
   process.on('SIGTERM', async () => {
     console.log('Shutting down HTTP server...');
     await sessionManager.cleanup();
+    
+    // Cleanup SSE sessions if enabled
+    if (config.enableSseFallback && (app as any).sseManager) {
+      await (app as any).sseManager.cleanup();
+    }
   });
 
   process.on('SIGINT', async () => {
     console.log('Shutting down HTTP server...');
     await sessionManager.cleanup();
+    
+    // Cleanup SSE sessions if enabled
+    if (config.enableSseFallback && (app as any).sseManager) {
+      await (app as any).sseManager.cleanup();
+    }
   });
 }

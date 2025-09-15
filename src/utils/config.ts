@@ -14,6 +14,11 @@ const ConfigSchema = z.object({
       sessionMode: z.enum(["stateful", "stateless"]).default("stateful"),
       enableSse: z.boolean().default(true),
       enableJsonResponse: z.boolean().default(true),
+      enableSseFallback: z.boolean().default(false),
+      ssePaths: z.object({
+        stream: z.string().default("/sse"),
+        message: z.string().default("/messages")
+      }).default({ stream: "/sse", message: "/messages" }),
       security: z.object({
         enableCors: z.boolean().default(true),
         corsOrigins: z.array(z.string()).optional(),
@@ -67,6 +72,11 @@ export function loadConfig(): Config {
         sessionMode: (process.env.HTTP_SESSION_MODE as any) || "stateful",
         enableSse: process.env.HTTP_ENABLE_SSE !== "false",
         enableJsonResponse: process.env.HTTP_ENABLE_JSON_RESPONSE !== "false",
+        enableSseFallback: process.env.HTTP_ENABLE_SSE_FALLBACK === "true",
+        ssePaths: {
+          stream: process.env.HTTP_SSE_STREAM_PATH || "/sse",
+          message: process.env.HTTP_SSE_MESSAGE_PATH || "/messages"
+        },
         security: {
           enableCors: process.env.HTTP_CORS_ENABLED !== "false",
           corsOrigins,

@@ -18,6 +18,8 @@ async function main() {
         sessionMode: config.transport.http.sessionMode,
         enableSse: config.transport.http.enableSse,
         enableJsonResponse: config.transport.http.enableJsonResponse,
+        enableSseFallback: config.transport.http.enableSseFallback,
+        ssePaths: config.transport.http.ssePaths,
         security: config.transport.http.security
       } : undefined
     };
