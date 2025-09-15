@@ -1,3 +1,17 @@
+# [1.3.0](https://github.com/mrgoonie/human-mcp/compare/v1.2.1...v1.3.0) (2025-09-15)
+
+
+### Bug Fixes
+
+* **test:** resolve SSE transport timeouts and server lifecycle issues ([53baad5](https://github.com/mrgoonie/human-mcp/commit/53baad54c3482e3dfc4c22865f2c04c390718a04))
+
+
+### Features
+
+* add OpenCode agent definitions for code review, debugging, docs, git and planning ([69ef21f](https://github.com/mrgoonie/human-mcp/commit/69ef21fc018a20320cb0cf2113ea01785500b313))
+* **transport:** add Cloudflare R2 HTTP transport file access ([8459b83](https://github.com/mrgoonie/human-mcp/commit/8459b8322172019a9b2cee944c02471113444c19))
+* **transport:** implement SSE fallback for legacy MCP client compatibility ([a2a8041](https://github.com/mrgoonie/human-mcp/commit/a2a8041220577597061efd37e6e1ae167ae40ec5))
+
 ## [1.2.1](https://github.com/mrgoonie/human-mcp/compare/v1.2.0...v1.2.1) (2025-09-08)
 
 
