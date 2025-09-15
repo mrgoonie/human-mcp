@@ -7,6 +7,7 @@ import { createRoutes } from "./routes.js";
 import { createSSERoutes } from "./sse-routes.js";
 import { SessionManager } from "./session.js";
 import { createSecurityMiddleware } from "./middleware.js";
+import { fileInterceptorMiddleware } from "./file-interceptor.js";
 import type { HttpTransportConfig, HttpServerHandle } from "../types.js";
 
 export async function startHttpTransport(
@@ -34,6 +35,9 @@ export async function startHttpTransport(
   }
 
   app.use(createSecurityMiddleware(config.security));
+  
+  // Add file interceptor middleware before routes
+  app.use(fileInterceptorMiddleware);
 
   // Create SSE routes first if enabled to get SSE manager reference
   let sseManager: any = undefined;

@@ -14,6 +14,8 @@
     "inspector": "mcp-inspector stdio -- bun run src/index.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.888.0",
+    "@aws-sdk/s3-request-presigner": "^3.888.0",
     "@google/generative-ai": "^0.21.0",
     "@modelcontextprotocol/sdk": "^1.4.0",
     "compression": "^1.8.1",
@@ -21,7 +23,10 @@
     "express": "^5.1.0",
     "fluent-ffmpeg": "^2.1.3",
     "helmet": "^8.1.0",
+    "mime-types": "^3.0.1",
+    "multer": "^2.0.2",
     "sharp": "^0.33.0",
+    "uuid": "^13.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -35,6 +40,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/fluent-ffmpeg": "^2.1.26",
+    "@types/mime-types": "^3.0.1",
+    "@types/multer": "^2.0.0",
+    "@types/uuid": "^10.0.0",
     "semantic-release": "^24.2.7",
     "typescript": "^5.6.0"
   },

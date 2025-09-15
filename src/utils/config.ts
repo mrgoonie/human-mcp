@@ -45,6 +45,14 @@ const ConfigSchema = z.object({
   logging: z.object({
     level: z.enum(["debug", "info", "warn", "error"]).default("info"),
   }),
+  cloudflare: z.object({
+    projectName: z.string().optional().default("human-mcp"),
+    bucketName: z.string().optional(),
+    accessKey: z.string().optional(),
+    secretKey: z.string().optional(),
+    endpointUrl: z.string().optional(),
+    baseUrl: z.string().optional(),
+  }).optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -102,6 +110,14 @@ export function loadConfig(): Config {
     },
     logging: {
       level: (process.env.LOG_LEVEL as any) || "info",
+    },
+    cloudflare: {
+      projectName: process.env.CLOUDFLARE_CDN_PROJECT_NAME || "human-mcp",
+      bucketName: process.env.CLOUDFLARE_CDN_BUCKET_NAME,
+      accessKey: process.env.CLOUDFLARE_CDN_ACCESS_KEY,
+      secretKey: process.env.CLOUDFLARE_CDN_SECRET_KEY,
+      endpointUrl: process.env.CLOUDFLARE_CDN_ENDPOINT_URL,
+      baseUrl: process.env.CLOUDFLARE_CDN_BASE_URL,
     },
   });
 }

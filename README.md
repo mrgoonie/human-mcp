@@ -667,6 +667,170 @@ human-mcp --version  # if globally installed
 - Review client-specific MCP documentation  
 - Test package installation: `npx @goonnguyen/human-mcp --help`
 
+## HTTP Transport & Local Files
+
+### Overview
+
+Human MCP supports HTTP transport mode for clients like Claude Desktop that require HTTP-based communication instead of stdio. When using HTTP transport with local files, the server automatically handles file uploading to ensure compatibility.
+
+### Using Local Files with HTTP Transport
+
+When Claude Desktop or other HTTP transport clients access local files, they often use virtual paths like `/mnt/user-data/uploads/file.png`. The Human MCP server automatically detects these paths and uploads files to Cloudflare R2 for processing.
+
+#### Automatic Upload (Default Behavior)
+
+When you provide a local file path, the server automatically:
+1. Detects the local file path or Claude Desktop virtual path
+2. Uploads it to Cloudflare R2 (if configured)
+3. Returns the CDN URL for processing
+4. Uses the fast Cloudflare CDN for delivery
+
+#### Manual Upload Options
+
+##### Option 1: Upload File Directly
+
+```bash
+# Upload file to Cloudflare R2 and get CDN URL
+curl -X POST http://localhost:3000/mcp/upload \
+  -F "file=@/path/to/image.png" \
+  -H "Authorization: Bearer your_secret"
+
+# Response:
+{
+  "result": {
+    "success": true,
+    "url": "https://cdn.example.com/human-mcp/abc123.png",
+    "originalName": "image.png",
+    "size": 102400,
+    "mimeType": "image/png"
+  }
+}
+```
+
+##### Option 2: Upload Base64 Data
+
+```bash
+# Upload base64 data to Cloudflare R2
+curl -X POST http://localhost:3000/mcp/upload-base64 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_secret" \
+  -d '{
+    "data": "iVBORw0KGgoAAAANSUhEUgA...",
+    "mimeType": "image/png",
+    "filename": "screenshot.png"
+  }'
+```
+
+##### Option 3: Use Existing CDN URLs
+
+If your files are already hosted, use the public URL directly:
+- Cloudflare R2: `https://cdn.example.com/path/to/file.jpg`
+- Other CDNs: Any publicly accessible URL
+
+### Cloudflare R2 Configuration
+
+#### Required Environment Variables
+
+Add these to your `.env` file:
+
+```env
+# Cloudflare R2 Storage Configuration
+CLOUDFLARE_CDN_PROJECT_NAME=human-mcp
+CLOUDFLARE_CDN_BUCKET_NAME=your-bucket-name
+CLOUDFLARE_CDN_ACCESS_KEY=your_access_key
+CLOUDFLARE_CDN_SECRET_KEY=your_secret_key
+CLOUDFLARE_CDN_ENDPOINT_URL=https://your-account-id.r2.cloudflarestorage.com
+CLOUDFLARE_CDN_BASE_URL=https://cdn.example.com
+```
+
+#### Setting up Cloudflare R2
+
+1. **Create Cloudflare Account**: Sign up at [cloudflare.com](https://cloudflare.com)
+
+2. **Enable R2 Storage**: Go to R2 Object Storage in your Cloudflare dashboard
+
+3. **Create a Bucket**: 
+   - Name: `your-bucket-name`
+   - Location: Choose based on your needs
+
+4. **Generate API Credentials**:
+   - Go to "Manage R2 API Tokens" 
+   - Create token with R2:Object:Write permissions
+   - Copy the access key and secret key
+
+5. **Set up Custom Domain** (Optional):
+   - Add custom domain to your R2 bucket
+   - Update `CLOUDFLARE_CDN_BASE_URL` with your domain
+
+#### Claude Desktop HTTP Configuration
+
+For Claude Desktop with HTTP transport and automatic file uploads:
+
+```json
+{
+  "mcpServers": {
+    "human-mcp-http": {
+      "command": "node",
+      "args": ["path/to/http-wrapper.js"],
+      "env": {
+        "GOOGLE_GEMINI_API_KEY": "your_key",
+        "TRANSPORT_TYPE": "http",
+        "HTTP_PORT": "3000",
+        "CLOUDFLARE_CDN_BUCKET_NAME": "your-bucket",
+        "CLOUDFLARE_CDN_ACCESS_KEY": "your-access-key",
+        "CLOUDFLARE_CDN_SECRET_KEY": "your-secret-key",
+        "CLOUDFLARE_CDN_ENDPOINT_URL": "https://account.r2.cloudflarestorage.com",
+        "CLOUDFLARE_CDN_BASE_URL": "https://cdn.example.com"
+      }
+    }
+  }
+}
+```
+
+### Benefits of Cloudflare R2 Integration
+
+- **Fast Global Delivery**: Files served from Cloudflare's 300+ edge locations
+- **Automatic Handling**: No manual conversion needed for local files
+- **Large File Support**: Handle files up to 100MB
+- **Persistent URLs**: Files remain accessible for future reference
+- **Cost Effective**: Cloudflare R2 offers competitive pricing with no egress fees
+- **Enhanced Security**: Files isolated from server filesystem
+
+### Alternative Solutions
+
+#### Using stdio Transport
+
+For users who need direct local file access without cloud uploads:
+
+```json
+{
+  "mcpServers": {
+    "human-mcp": {
+      "command": "npx",
+      "args": ["@goonnguyen/human-mcp"],
+      "env": {
+        "GOOGLE_GEMINI_API_KEY": "key",
+        "TRANSPORT_TYPE": "stdio"
+      }
+    }
+  }
+}
+```
+
+#### Pre-uploading Files
+
+Batch upload files using the upload endpoints:
+
+```bash
+#!/bin/bash
+# Upload script
+for file in *.png; do
+  curl -X POST http://localhost:3000/mcp/upload \
+    -F "file=@$file" \
+    -H "Authorization: Bearer $MCP_SECRET"
+done
+```
+
 ## Tools
 
 ### eyes_analyze

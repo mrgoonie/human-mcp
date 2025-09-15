@@ -1,10 +1,12 @@
 import { Router } from "express";
-import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { SessionManager } from "./session.js";
 import type { HttpTransportConfig } from "../types.js";
+import multer from 'multer';
+import { getCloudflareR2 } from '@/utils/cloudflare-r2.js';
+import { logger } from '@/utils/logger.js';
 
 // Interface for SSE session checking (to avoid circular dependency)
 interface SSESessionChecker {
@@ -76,6 +78,145 @@ export function createRoutes(
     const sessionId = req.headers['mcp-session-id'] as string;
     await sessionManager.terminateSession(sessionId);
     res.status(204).send();
+  });
+
+  // Configure multer for memory storage
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      // Accept images, videos, and GIFs
+      if (file.mimetype.startsWith('image/') || 
+          file.mimetype.startsWith('video/') ||
+          file.mimetype === 'image/gif') {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only images and videos are allowed.'));
+      }
+    }
+  });
+
+  // POST /upload - Handle file uploads to Cloudflare R2
+  router.post('/upload', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        res.status(400).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32600,
+            message: 'No file uploaded'
+          },
+          id: null
+        });
+        return;
+      }
+
+      const cloudflare = getCloudflareR2();
+      if (!cloudflare) {
+        res.status(500).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32603,
+            message: 'Cloudflare R2 not configured. Please set up environment variables.'
+          },
+          id: null
+        });
+        return;
+      }
+      
+      // Upload to Cloudflare R2
+      const publicUrl = await cloudflare.uploadFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      
+      res.json({
+        jsonrpc: '2.0',
+        result: {
+          success: true,
+          url: publicUrl,
+          originalName: req.file.originalname,
+          size: req.file.size,
+          mimeType: req.file.mimetype,
+          message: 'File uploaded successfully to Cloudflare R2'
+        },
+        id: (req.body as any)?.id || null
+      });
+    } catch (error) {
+      logger.error('Upload error:', error);
+      res.status(500).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32603,
+          message: `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        },
+        id: (req.body as any)?.id || null
+      });
+    }
+  });
+
+  // POST /upload-base64 - Handle base64 uploads
+  router.post('/upload-base64', async (req, res) => {
+    try {
+      const { data, mimeType, filename } = req.body;
+      
+      if (!data || !mimeType) {
+        res.status(400).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32600,
+            message: 'Missing required fields: data and mimeType'
+          },
+          id: null
+        });
+        return;
+      }
+
+      const cloudflare = getCloudflareR2();
+      if (!cloudflare) {
+        res.status(500).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32603,
+            message: 'Cloudflare R2 not configured. Please set up environment variables.'
+          },
+          id: null
+        });
+        return;
+      }
+      
+      // Remove data URI prefix if present
+      const base64Data = data.replace(/^data:.*?;base64,/, '');
+      
+      // Upload to Cloudflare R2
+      const publicUrl = await cloudflare.uploadBase64(
+        base64Data,
+        mimeType,
+        filename
+      );
+      
+      res.json({
+        jsonrpc: '2.0',
+        result: {
+          success: true,
+          url: publicUrl,
+          message: 'Base64 data uploaded successfully to Cloudflare R2'
+        },
+        id: req.body?.id || null
+      });
+    } catch (error) {
+      logger.error('Base64 upload error:', error);
+      res.status(500).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32603,
+          message: `Failed to upload base64 data: ${error instanceof Error ? error.message : 'Unknown error'}`
+        },
+        id: req.body?.id || null
+      });
+    }
   });
 
   return router;

@@ -380,34 +380,91 @@ router.post('/upload-base64', express.json({ limit: '100mb' }), async (req, res)
 });
 ```
 
+5. **Add Configuration Validation** (`src/utils/config.ts`)
+```typescript
+// Add Cloudflare R2 configuration
+cloudflare: z.object({
+  projectName: z.string().optional().default('human-mcp'),
+  bucketName: z.string(),
+  accessKey: z.string(),
+  secretKey: z.string(),
+  endpointUrl: z.string().url(),
+  baseUrl: z.string().url(),
+}).optional(),
+```
+
 #### Phase 2: Client Configuration Documentation
 
-1. **Update README.md** with HTTP transport file handling:
+1. **Update README.md** with Cloudflare R2 integration:
 ```markdown
 ### Using Local Files with HTTP Transport
 
-When using HTTP transport (common with Claude Desktop), local files need special handling:
+When using HTTP transport (common with Claude Desktop), local files are automatically uploaded to Cloudflare R2:
 
-#### Option 1: Convert to Base64 (Recommended)
-```bash
-# Convert image to base64 data URI
-base64_image=$(base64 -i image.png)
-data_uri="data:image/png;base64,${base64_image}"
-```
+#### Automatic Upload (Default Behavior)
+When you provide a local file path, the server automatically:
+1. Detects the local file path
+2. Uploads it to Cloudflare R2
+3. Returns the CDN URL for processing
+4. Uses the fast Cloudflare CDN for delivery
 
-#### Option 2: Use File Upload Endpoint
+#### Manual Upload Options
+
+##### Option 1: Upload File Directly
 ```bash
-# Upload file and get data URI
+# Upload file to Cloudflare R2 and get CDN URL
 curl -X POST http://localhost:3000/mcp/upload \
   -F "file=@/path/to/image.png" \
   -H "Authorization: Bearer your_secret"
+
+# Response:
+{
+  "result": {
+    "success": true,
+    "url": "https://cdn.gotest.app/human-mcp/abc123.png",
+    "originalName": "image.png",
+    "size": 102400,
+    "mimeType": "image/png"
+  }
+}
 ```
 
-#### Option 3: Use Public URL
-Upload your file to a cloud service and use the public URL.
+##### Option 2: Upload Base64 Data
+```bash
+# Upload base64 data to Cloudflare R2
+curl -X POST http://localhost:3000/mcp/upload-base64 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_secret" \
+  -d '{
+    "data": "iVBORw0KGgoAAAANSUhEUgA...",
+    "mimeType": "image/png",
+    "filename": "screenshot.png"
+  }'
+```
 
-#### Option 4: Use stdio Transport
-For direct local file access, configure stdio transport instead of HTTP.
+##### Option 3: Use Existing CDN URLs
+If your files are already hosted, use the public URL directly:
+- Cloudflare R2: `https://cdn.gotest.app/path/to/file.jpg`
+- Other CDNs: Any publicly accessible URL
+
+#### Configuration
+Add these to your `.env` file:
+```env
+# Cloudflare R2 Configuration
+CLOUDFLARE_CDN_PROJECT_NAME=human-mcp
+CLOUDFLARE_CDN_BUCKET_NAME=digitop
+CLOUDFLARE_CDN_ACCESS_KEY=your_access_key
+CLOUDFLARE_CDN_SECRET_KEY=your_secret_key
+CLOUDFLARE_CDN_ENDPOINT_URL=https://your-account.r2.cloudflarestorage.com
+CLOUDFLARE_CDN_BASE_URL=https://cdn.gotest.app
+```
+
+#### Benefits of Cloudflare R2 Integration
+- **Fast Global Delivery**: Files served from Cloudflare's global CDN
+- **Automatic Handling**: No manual conversion needed
+- **Large File Support**: Handle files up to 100MB
+- **Persistent URLs**: Files remain accessible for future reference
+- **Cost Effective**: Cloudflare R2 offers competitive pricing
 ```
 
 2. **Add Claude Desktop Specific Configuration**:
@@ -428,107 +485,188 @@ For direct local file access, configure stdio transport instead of HTTP.
 }
 ```
 
-#### Phase 3: Create HTTP Wrapper Script
+#### Phase 3: Middleware for Automatic File Handling
 
-Create `src/transports/http/claude-wrapper.js`:
-```javascript
-#!/usr/bin/env node
+Create `src/transports/http/file-interceptor.ts`:
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import { cloudflareR2 } from '@/utils/cloudflare-r2.js';
+import { logger } from '@/utils/logger.js';
+import fs from 'fs/promises';
+import path from 'path';
 
-import { spawn } from 'child_process';
-import { readFileSync, existsSync } from 'fs';
-import { createServer } from 'http';
-import express from 'express';
-import proxy from 'http-proxy-middleware';
-
-const app = express();
-const PORT = process.env.HTTP_PORT || 3000;
-
-// Middleware to intercept and transform requests
-app.use(express.json({ limit: '50mb' }));
-
-app.use('/mcp', async (req, res, next) => {
-  // Check if request contains file paths
-  if (req.body && req.body.params) {
-    const params = req.body.params;
+export async function fileInterceptorMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  // Only intercept tool calls with file paths
+  if (req.body?.method === 'tools/call' && req.body?.params?.arguments) {
+    const args = req.body.params.arguments;
     
-    // Check for source field (eyes_analyze tool)
-    if (params.source && params.source.startsWith('/mnt/')) {
-      // Extract actual filename
-      const filename = params.source.split('/').pop();
-      const localPath = `./uploads/${filename}`;
-      
-      if (existsSync(localPath)) {
-        // Convert to base64
-        const buffer = readFileSync(localPath);
-        const base64 = buffer.toString('base64');
-        params.source = `data:image/jpeg;base64,${base64}`;
-      } else {
-        // Return helpful error
-        return res.status(400).json({
-          error: `Local file not accessible via HTTP transport. Please use base64 or URL.`,
-          suggestion: 'Convert your file to base64 or upload to a cloud service'
-        });
+    // Check for source fields that might contain file paths
+    const fileFields = ['source', 'source1', 'source2', 'path', 'filePath'];
+    
+    for (const field of fileFields) {
+      if (args[field] && typeof args[field] === 'string') {
+        const filePath = args[field];
+        
+        // Detect Claude Desktop virtual paths
+        if (filePath.startsWith('/mnt/user-data/') || filePath.startsWith('/mnt/')) {
+          logger.info(`Intercepting Claude Desktop virtual path: ${filePath}`);
+          
+          try {
+            // Extract filename
+            const filename = path.basename(filePath);
+            
+            // Check if we have a temporary file saved by Claude Desktop
+            const tempPath = path.join('/tmp/claude-uploads', filename);
+            
+            if (await fs.access(tempPath).then(() => true).catch(() => false)) {
+              // File exists in temp, upload to Cloudflare
+              const buffer = await fs.readFile(tempPath);
+              const publicUrl = await cloudflareR2.uploadFile(buffer, filename);
+              
+              // Replace the virtual path with CDN URL
+              args[field] = publicUrl;
+              
+              // Clean up temp file
+              await fs.unlink(tempPath).catch(() => {});
+              
+              logger.info(`Replaced virtual path with CDN URL: ${publicUrl}`);
+            } else {
+              // No temp file, try to extract from request if it's base64
+              // This handles cases where Claude Desktop might send base64 inline
+              if (req.body.params.fileData && req.body.params.fileData[field]) {
+                const base64Data = req.body.params.fileData[field];
+                const mimeType = req.body.params.fileMimeTypes?.[field] || 'image/jpeg';
+                
+                const publicUrl = await cloudflareR2.uploadBase64(
+                  base64Data,
+                  mimeType,
+                  filename
+                );
+                
+                args[field] = publicUrl;
+                logger.info(`Uploaded inline base64 to CDN: ${publicUrl}`);
+              } else {
+                // Provide helpful error response
+                logger.warn(`Cannot access virtual path: ${filePath}`);
+                return res.status(400).json({
+                  jsonrpc: '2.0',
+                  error: {
+                    code: -32602,
+                    message: 'File not accessible via HTTP transport',
+                    data: {
+                      path: filePath,
+                      suggestions: [
+                        'Upload the file using the /mcp/upload endpoint first',
+                        'Use a public URL instead of a local file path',
+                        'Convert the image to a base64 data URI',
+                        'Switch to stdio transport for local file access'
+                      ]
+                    }
+                  },
+                  id: req.body.id
+                });
+              }
+            }
+          } catch (error) {
+            logger.error(`Error processing virtual path: ${error}`);
+            return res.status(500).json({
+              jsonrpc: '2.0',
+              error: {
+                code: -32603,
+                message: `Failed to process file: ${error.message}`
+              },
+              id: req.body.id
+            });
+          }
+        }
+        
+        // Handle regular local paths when in HTTP mode
+        else if (!filePath.startsWith('http') && !filePath.startsWith('data:')) {
+          if (process.env.TRANSPORT_TYPE === 'http') {
+            try {
+              // Check if file exists locally
+              await fs.access(filePath);
+              
+              // Upload to Cloudflare R2
+              const buffer = await fs.readFile(filePath);
+              const filename = path.basename(filePath);
+              const publicUrl = await cloudflareR2.uploadFile(buffer, filename);
+              
+              // Replace local path with CDN URL
+              args[field] = publicUrl;
+              
+              logger.info(`Auto-uploaded local file to CDN: ${publicUrl}`);
+            } catch (error) {
+              if (error.code === 'ENOENT') {
+                logger.warn(`Local file not found: ${filePath}`);
+              }
+              // Continue without modification if file doesn't exist
+            }
+          }
+        }
       }
     }
   }
   
   next();
-});
+}
+```
 
-// Proxy to actual MCP server
-app.use(proxy({
-  target: `http://localhost:${PORT + 1}`,
-  changeOrigin: true
-}));
+4. **Update HTTP Server to Use Middleware** (`src/transports/http/server.ts`)
+```typescript
+import { fileInterceptorMiddleware } from './file-interceptor.js';
 
-// Start wrapper server
-app.listen(PORT, () => {
-  console.log(`Claude Desktop HTTP wrapper listening on port ${PORT}`);
-  
-  // Start actual MCP server on next port
-  const server = spawn('node', ['dist/index.js'], {
-    env: {
-      ...process.env,
-      HTTP_PORT: String(PORT + 1),
-      TRANSPORT_TYPE: 'http'
-    }
-  });
-  
-  server.stdout.pipe(process.stdout);
-  server.stderr.pipe(process.stderr);
-});
+// Add before route handlers
+app.use(fileInterceptorMiddleware);
+
+// Existing routes...
+app.use('/mcp', routes);
 ```
 
 #### Phase 4: Testing Strategy
 
-1. **Unit Tests** (`tests/unit/file-handling.test.ts`):
+1. **Unit Tests** (`tests/unit/cloudflare-r2.test.ts`):
 ```typescript
-describe('File Handling in HTTP Transport', () => {
-  it('should reject /mnt/ paths with helpful error', async () => {
-    const result = await processImage(model, '/mnt/user-data/test.png', options);
-    expect(result).toContain('Local file access not supported');
+import { CloudflareR2Client } from '@/utils/cloudflare-r2';
+
+describe('Cloudflare R2 Integration', () => {
+  let client: CloudflareR2Client;
+  
+  beforeAll(() => {
+    client = new CloudflareR2Client();
   });
   
-  it('should accept base64 data URIs', async () => {
-    const dataUri = 'data:image/png;base64,iVBORw0KG...';
-    const result = await processImage(model, dataUri, options);
-    expect(result).toBeDefined();
+  it('should upload buffer to Cloudflare R2', async () => {
+    const buffer = Buffer.from('test image data');
+    const url = await client.uploadFile(buffer, 'test.jpg');
+    
+    expect(url).toMatch(/^https:\/\/cdn\.gotest\.app\/human-mcp\//);
   });
   
-  it('should handle file upload endpoint', async () => {
-    const response = await request(app)
-      .post('/mcp/upload')
-      .attach('file', 'test/fixtures/test.png');
-    expect(response.body.dataUri).toMatch(/^data:image/);
+  it('should upload base64 to Cloudflare R2', async () => {
+    const base64 = Buffer.from('test').toString('base64');
+    const url = await client.uploadBase64(base64, 'image/png', 'test.png');
+    
+    expect(url).toMatch(/^https:\/\/cdn\.gotest\.app\/human-mcp\//);
+  });
+  
+  it('should handle upload errors gracefully', async () => {
+    const invalidBuffer = null as any;
+    
+    await expect(client.uploadFile(invalidBuffer, 'test.jpg'))
+      .rejects.toThrow('Failed to upload file');
   });
 });
 ```
 
-2. **Integration Tests** (`tests/integration/claude-desktop.test.ts`):
+2. **Integration Tests** (`tests/integration/http-transport-files.test.ts`):
 ```typescript
-describe('Claude Desktop Integration', () => {
-  it('should handle Claude Desktop file paths gracefully', async () => {
-    // Test with mock Claude Desktop request
+describe('HTTP Transport File Handling', () => {
+  it('should auto-upload Claude Desktop virtual paths to Cloudflare', async () => {
     const request = {
       jsonrpc: '2.0',
       method: 'tools/call',
@@ -542,8 +680,51 @@ describe('Claude Desktop Integration', () => {
     };
     
     const response = await sendRequest(request);
-    expect(response.error).toBeDefined();
-    expect(response.error.message).toContain('base64 or URL');
+    
+    // Should either upload successfully or provide helpful error
+    if (response.result) {
+      expect(response.result).toBeDefined();
+    } else {
+      expect(response.error.data.suggestions).toContain(
+        'Upload the file using the /mcp/upload endpoint first'
+      );
+    }
+  });
+  
+  it('should handle file upload endpoint', async () => {
+    const response = await request(app)
+      .post('/mcp/upload')
+      .attach('file', 'test/fixtures/test.png');
+    
+    expect(response.body.result.url).toMatch(/^https:\/\/cdn\.gotest\.app\//);
+    expect(response.body.result.success).toBe(true);
+  });
+  
+  it('should handle base64 upload endpoint', async () => {
+    const base64Data = Buffer.from('test image').toString('base64');
+    
+    const response = await request(app)
+      .post('/mcp/upload-base64')
+      .send({
+        data: base64Data,
+        mimeType: 'image/png',
+        filename: 'test.png'
+      });
+    
+    expect(response.body.result.url).toMatch(/^https:\/\/cdn\.gotest\.app\//);
+  });
+  
+  it('should auto-upload local files in HTTP mode', async () => {
+    process.env.TRANSPORT_TYPE = 'http';
+    
+    const result = await processImage(
+      model,
+      './test/fixtures/local-image.png',
+      options
+    );
+    
+    // Should have uploaded to Cloudflare and processed from CDN
+    expect(result.metadata).toBeDefined();
   });
 });
 ```
@@ -551,47 +732,74 @@ describe('Claude Desktop Integration', () => {
 ## Implementation Checklist
 
 ### Immediate Actions (Phase 1)
-- [ ] Update `loadImage()` function with better error handling for `/mnt/` paths
-- [ ] Add clear error messages with actionable suggestions
-- [ ] Update documentation with HTTP transport limitations
+- [ ] Install AWS SDK S3 client and dependencies
+- [ ] Create Cloudflare R2 client utility class
+- [ ] Add Cloudflare configuration to environment variables
+- [ ] Update config validation schema
 
 ### Short-term (Phase 2)
-- [ ] Implement file upload endpoint
-- [ ] Add multer middleware for multipart handling
-- [ ] Create base64 conversion utilities
-- [ ] Update README with usage examples
+- [ ] Update `loadImage()` function to auto-upload to Cloudflare
+- [ ] Implement file upload endpoint `/mcp/upload`
+- [ ] Implement base64 upload endpoint `/mcp/upload-base64`
+- [ ] Add file interceptor middleware for automatic handling
+- [ ] Update error messages with Cloudflare upload instructions
 
 ### Medium-term (Phase 3)
-- [ ] Create Claude Desktop wrapper script
-- [ ] Add automatic file conversion option
-- [ ] Implement caching for converted files
-- [ ] Add file size optimization
+- [ ] Add file caching to avoid re-uploading same files
+- [ ] Implement file cleanup/retention policies
+- [ ] Add progress tracking for large uploads
+- [ ] Create upload status endpoint
 
 ### Long-term (Phase 4)
-- [ ] Investigate Claude Desktop API for native file handling
-- [ ] Propose MCP specification enhancement for file transfers
-- [ ] Create browser extension for automatic conversion
-- [ ] Add streaming support for large files
+- [ ] Add support for video and GIF uploads
+- [ ] Implement chunked upload for very large files
+- [ ] Add file compression before upload
+- [ ] Create dashboard for managing uploaded files
 
 ## Security Considerations
 
-1. **Path Traversal Prevention**: Never allow direct filesystem access via HTTP
-2. **File Size Limits**: Enforce reasonable limits (50MB default)
-3. **MIME Type Validation**: Only accept image/video files
-4. **Memory Management**: Stream large files instead of loading into memory
-5. **Authentication**: Require auth token for file upload endpoint
+1. **Cloudflare R2 Security**: 
+   - Use secure access keys and never expose them
+   - Implement proper CORS policies on the bucket
+   - Set appropriate ACLs for uploaded files
+   
+2. **Upload Validation**:
+   - Enforce file size limits (100MB default)
+   - Validate MIME types strictly
+   - Scan for malicious content if needed
+   
+3. **Access Control**:
+   - Require authentication for upload endpoints
+   - Implement rate limiting for uploads
+   - Log all upload activities
+   
+4. **Data Privacy**:
+   - Consider file encryption for sensitive content
+   - Implement retention policies
+   - Provide deletion capabilities
 
 ## Performance Optimizations
 
-1. **Compression**: Use sharp to compress images before base64 encoding
-2. **Caching**: Cache converted files for repeated requests
-3. **Lazy Loading**: Only convert files when actually needed
-4. **Chunking**: Support chunked uploads for large files
+1. **Cloudflare CDN Benefits**:
+   - Global edge caching for fast delivery
+   - Automatic image optimization
+   - WebP conversion for supported browsers
+   - Bandwidth savings through compression
+   
+2. **Upload Optimizations**:
+   - Parallel uploads for multiple files
+   - Resume capability for interrupted uploads
+   - Deduplication based on file hash
+   
+3. **Processing Optimizations**:
+   - Process images directly from CDN URLs
+   - Skip re-upload for already uploaded files
+   - Use Cloudflare Workers for on-the-fly transformations
 
 ## Alternative Solutions
 
 ### Using stdio Transport
-For users who need local file access, recommend stdio transport:
+For users who need direct local file access without cloud uploads:
 ```json
 {
   "mcpServers": {
@@ -607,27 +815,66 @@ For users who need local file access, recommend stdio transport:
 }
 ```
 
-### Using Cloud Storage
-Recommend uploading files to cloud storage and using URLs:
-- Cloudinary for images
-- AWS S3 for general files
-- GitHub for public files
+### Pre-uploading to Cloudflare R2
+Users can pre-upload files using the provided endpoints:
+```bash
+# Upload script
+#!/bin/bash
+for file in *.png; do
+  curl -X POST http://localhost:3000/mcp/upload \
+    -F "file=@$file" \
+    -H "Authorization: Bearer $MCP_SECRET"
+done
+```
+
+### Using Existing CDN URLs
+If files are already hosted on Cloudflare or other CDNs, use the URLs directly without re-uploading.
 
 ## Success Metrics
 
-1. **Error Rate**: Reduce "file not found" errors by 95%
-2. **User Experience**: Clear, actionable error messages
-3. **Performance**: File processing under 2 seconds
-4. **Compatibility**: Works with all MCP clients
-5. **Security**: No path traversal vulnerabilities
+1. **Error Resolution**: Eliminate "file not found" errors for Claude Desktop users
+2. **Upload Performance**: Files uploaded to Cloudflare R2 in under 3 seconds
+3. **CDN Performance**: Image delivery under 100ms from edge locations
+4. **User Experience**: Seamless file handling without manual intervention
+5. **Reliability**: 99.9% upload success rate
+6. **Cost Efficiency**: Under $0.015 per GB stored on Cloudflare R2
 
 ## Rollout Plan
 
-1. **Week 1**: Implement error handling improvements
-2. **Week 2**: Add file upload endpoint and documentation
-3. **Week 3**: Create wrapper script and test with Claude Desktop
-4. **Week 4**: Gather feedback and iterate
+1. **Day 1-2**: 
+   - Set up Cloudflare R2 client
+   - Implement upload endpoints
+   - Add configuration validation
+
+2. **Day 3-4**: 
+   - Update image processors with auto-upload
+   - Add file interceptor middleware
+   - Test with Claude Desktop
+
+3. **Day 5-6**: 
+   - Add comprehensive error handling
+   - Update documentation
+   - Create usage examples
+
+4. **Day 7**: 
+   - Deploy to production
+   - Monitor upload metrics
+   - Gather user feedback
 
 ## Conclusion
 
-The recommended solution provides a pragmatic approach to handling local files in HTTP transport while maintaining security and compatibility. The phased implementation allows for immediate improvements while working toward a comprehensive solution.
+The Cloudflare R2 integration provides a robust, scalable solution for handling local files in HTTP transport. By automatically uploading files to Cloudflare's global CDN, we eliminate file access issues while providing superior performance and reliability. This approach transforms a limitation into an advantage, giving users faster file processing through Cloudflare's edge network.
+
+### Key Benefits:
+- **Zero Configuration for Users**: Automatic file handling without manual steps
+- **Global Performance**: Files served from Cloudflare's 300+ edge locations
+- **Cost Effective**: R2's competitive pricing with no egress fees
+- **Future Proof**: Scalable solution that grows with usage
+- **Enhanced Security**: Files isolated from server filesystem
+
+### Next Steps:
+1. Implement the Cloudflare R2 client
+2. Update file processors with auto-upload logic
+3. Add comprehensive testing
+4. Deploy and monitor performance
+5. Gather user feedback for improvements
