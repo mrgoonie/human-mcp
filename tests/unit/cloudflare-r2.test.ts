@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, mock } from 'bun:test';
 import { CloudflareR2Client, getCloudflareR2 } from '@/utils/cloudflare-r2';
+import type { MockS3Command, MockCloudflareR2Client } from '../types/test-types.js';
 
 // Mock the S3Client and PutObjectCommand
 mock.module('@aws-sdk/client-s3', () => ({
   S3Client: mock(() => ({})),
-  PutObjectCommand: mock((params: any) => ({ ...params }))
+  PutObjectCommand: mock((params: MockS3Command) => ({ ...params }))
 }));
 
 describe('Cloudflare R2 Integration', () => {
@@ -59,20 +60,21 @@ describe('Cloudflare R2 Integration', () => {
     const testBuffer = Buffer.from('test file content');
     
     // Mock the S3 send method to capture the command
-    let capturedCommand: any;
-    const mockSend = mock(async (command: any) => {
+    let capturedCommand: MockS3Command | undefined;
+    const mockSend = mock(async (command: MockS3Command) => {
       capturedCommand = command;
       return {};
     });
     
-    (client as any).s3Client.send = mockSend;
+    (client as unknown as MockCloudflareR2Client).s3Client.send = mockSend;
 
     try {
       await client.uploadFile(testBuffer, 'test.jpg');
       
-      expect(capturedCommand.input.Key).toMatch(/^human-mcp\/[a-f0-9-]{36}\.jpg$/);
-      expect(capturedCommand.input.ContentType).toBe('image/jpeg');
-      expect(capturedCommand.input.Metadata?.originalName).toBe('test.jpg');
+      expect(capturedCommand).toBeDefined();
+      expect(capturedCommand!.input.Key).toMatch(/^human-mcp\/[a-f0-9-]{36}\.jpg$/);
+      expect(capturedCommand!.input.ContentType).toBe('image/jpeg');
+      expect(capturedCommand!.input.Metadata?.originalName).toBe('test.jpg');
     } catch (error) {
       // Expected to fail in test environment, but we captured the command
     }
@@ -82,19 +84,20 @@ describe('Cloudflare R2 Integration', () => {
     const client = new CloudflareR2Client();
     const testBase64 = Buffer.from('test image data').toString('base64');
     
-    let capturedCommand: any;
-    const mockSend = mock(async (command: any) => {
+    let capturedCommand: MockS3Command | undefined;
+    const mockSend = mock(async (command: MockS3Command) => {
       capturedCommand = command;
       return {};
     });
     
-    (client as any).s3Client.send = mockSend;
+    (client as unknown as MockCloudflareR2Client).s3Client.send = mockSend;
 
     try {
       await client.uploadBase64(testBase64, 'image/png', 'test.png');
       
-      expect(capturedCommand.input.Key).toMatch(/^human-mcp\/[a-f0-9-]{36}\.png$/);
-      expect(capturedCommand.input.ContentType).toBe('image/png');
+      expect(capturedCommand).toBeDefined();
+      expect(capturedCommand!.input.Key).toMatch(/^human-mcp\/[a-f0-9-]{36}\.png$/);
+      expect(capturedCommand!.input.ContentType).toBe('image/png');
     } catch (error) {
       // Expected to fail in test environment
     }
@@ -107,7 +110,7 @@ describe('Cloudflare R2 Integration', () => {
       throw new Error('Network error');
     });
     
-    (client as any).s3Client.send = mockSend;
+    (client as unknown as MockCloudflareR2Client).s3Client.send = mockSend;
 
     await expect(client.uploadFile(Buffer.from('test'), 'test.jpg'))
       .rejects.toThrow('Failed to upload file: Network error');

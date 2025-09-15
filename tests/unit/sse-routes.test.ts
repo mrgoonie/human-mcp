@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { SSEManager } from "../../src/transports/http/sse-routes.js";
 import type { HttpTransportConfig } from "../../src/transports/types.js";
+import type { Response } from "express";
 
 describe("SSEManager", () => {
   let sseManager: SSEManager;
@@ -41,7 +42,7 @@ describe("SSEManager", () => {
         end: () => {},
         on: () => {},
         removeAllListeners: () => {}
-      } as any;
+      } as unknown as Response;
 
       const transport = sseManager.createSession("/messages", mockRes);
       
@@ -61,7 +62,7 @@ describe("SSEManager", () => {
         end: () => {},
         on: () => {},
         removeAllListeners: () => {}
-      } as any;
+      } as unknown as Response;
 
       sseManager.createSession("/messages", mockRes);
       expect(sseManager.getSessionCount()).toBe(1);
@@ -79,7 +80,7 @@ describe("SSEManager", () => {
         end: () => {},
         on: () => {},
         removeAllListeners: () => {}
-      } as any;
+      } as unknown as Response;
 
       const transport = sseManager.createSession("/messages", mockRes);
       

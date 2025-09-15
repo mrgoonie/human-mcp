@@ -7,40 +7,43 @@ export class TestServerManager {
   private usedPorts: Set<number> = new Set();
 
   /**
-   * Get a random available port for testing
+   * Get a random available port for testing using OS-level port checking
    */
   async getAvailablePort(): Promise<number> {
-    // Start from a high port to avoid conflicts with common services
-    let port = 3000 + Math.floor(Math.random() * 1000);
-    let attempts = 0;
-    const maxAttempts = 100;
+    // Try sequential ports starting from a random high port
+    const basePort = 4000 + Math.floor(Math.random() * 1000);
+    const maxAttempts = 50;
 
-    while (attempts < maxAttempts) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const port = basePort + attempt;
+      
       if (!this.usedPorts.has(port) && await this.isPortAvailable(port)) {
         this.usedPorts.add(port);
         return port;
       }
-      port = 3000 + Math.floor(Math.random() * 1000);
-      attempts++;
     }
 
-    throw new Error('Unable to find available port after maximum attempts');
+    throw new Error(`Unable to find available port after ${maxAttempts} attempts (tried ${basePort} to ${basePort + maxAttempts - 1})`);
   }
 
   /**
-   * Check if a port is available
+   * Check if a port is available using Node.js net module
    */
   private async isPortAvailable(port: number): Promise<boolean> {
-    try {
-      await fetch(`http://127.0.0.1:${port}/health`, {
-        signal: AbortSignal.timeout(1000)
+    return new Promise((resolve) => {
+      const net = require('net');
+      const server = net.createServer();
+      
+      server.listen(port, '127.0.0.1', () => {
+        server.close(() => {
+          resolve(true);
+        });
       });
-      // If we get a response, port is in use
-      return false;
-    } catch {
-      // If we get an error (connection refused), port is available
-      return true;
-    }
+      
+      server.on('error', () => {
+        resolve(false);
+      });
+    });
   }
 
   /**
@@ -101,29 +104,33 @@ export class TestServerManager {
   /**
    * Wait for server to be ready by checking health endpoint
    */
-  private async waitForServerReady(port: number, timeout = 10000): Promise<void> {
+  private async waitForServerReady(port: number, timeout = 15000): Promise<void> {
     const startTime = Date.now();
+    let lastError: Error | undefined;
     
     while (Date.now() - startTime < timeout) {
       try {
         const response = await fetch(`http://127.0.0.1:${port}/health`, {
-          signal: AbortSignal.timeout(1000)
+          signal: AbortSignal.timeout(2000)
         });
         
         if (response.ok) {
-          const health = await response.json();
+          const health = await response.json() as { status: string };
           if (health.status === 'healthy') {
+            // Give the server a bit more time to fully initialize
+            await new Promise(resolve => setTimeout(resolve, 200));
             return;
           }
         }
-      } catch {
+      } catch (error) {
+        lastError = error as Error;
         // Server not ready yet, continue waiting
       }
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 250));
     }
     
-    throw new Error(`Server on port ${port} did not become ready within ${timeout}ms`);
+    throw new Error(`Server on port ${port} did not become ready within ${timeout}ms. Last error: ${lastError?.message || 'Unknown'}`);
   }
 
   /**

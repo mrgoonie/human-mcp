@@ -32,6 +32,7 @@ Thumbs.db
 # Logs
 logs
 *.log
+logs.txt
 npm-debug.log*
 pnpm-debug.log*
 lerna-debug.log*

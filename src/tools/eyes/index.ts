@@ -173,7 +173,7 @@ Be precise with locations and measurements where possible.`;
       }
     ]);
     
-    const result = await response.response;
+    const result = response.response;
     const comparisonText = result.text();
     
     return {

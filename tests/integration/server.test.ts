@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test";
+
+// Logger is mocked globally in setup.ts
+
 import { createServer } from "../../src/server.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 

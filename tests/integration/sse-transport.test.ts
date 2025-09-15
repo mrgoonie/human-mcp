@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { testServerManager } from "../utils/test-server-manager.js";
-import type { HttpServerHandle } from "../../src/transports/types.js";
 
 describe("SSE Transport Integration", () => {
-  let serverHandle: HttpServerHandle;
-  let testPort: number;
   let baseUrl: string;
 
   beforeAll(async () => {
@@ -24,8 +21,6 @@ describe("SSE Transport Integration", () => {
       }
     });
 
-    serverHandle = testServer.server;
-    testPort = testServer.port;
     baseUrl = testServer.baseUrl;
   });
 
@@ -36,7 +31,12 @@ describe("SSE Transport Integration", () => {
   describe("health endpoint", () => {
     it("should include SSE fallback status in health check", async () => {
       const response = await fetch(`${baseUrl}/health`);
-      const health = await response.json();
+      const health = await response.json() as {
+        status: string;
+        transport: string;
+        sseFallback: string;
+        ssePaths: { stream: string; message: string; };
+      };
       
       expect(health.status).toBe("healthy");
       expect(health.transport).toBe("streamable-http");
@@ -74,7 +74,7 @@ describe("SSE Transport Integration", () => {
       });
       
       expect(response.status).toBe(400);
-      const error = await response.json();
+      const error = await response.json() as { error: { message: string } };
       expect(error.error.message).toContain("Missing sessionId");
     });
 
@@ -92,7 +92,7 @@ describe("SSE Transport Integration", () => {
       });
       
       expect(response.status).toBe(400);
-      const error = await response.json();
+      const error = await response.json() as { error: { message: string } };
       expect(error.error.message).toContain("No active SSE session");
     });
   });
@@ -134,7 +134,7 @@ describe("SSE Transport Integration", () => {
         });
         
         expect(response.status).toBe(400);
-        const error = await response.json();
+        const error = await response.json() as { error: { message: string } };
         expect(error.error.message).toContain("streamable HTTP transport");
       }
     });

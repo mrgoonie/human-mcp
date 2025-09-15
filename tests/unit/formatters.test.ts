@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import { createPrompt, parseAnalysisResponse } from "../../src/tools/eyes/utils/formatters.js";
-import { AnalysisOptions } from "../../src/types/index.js";
+import type { AnalysisOptions } from "../../src/types/index.js";
 
 describe("Formatters", () => {
   describe("createPrompt", () => {
