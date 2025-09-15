@@ -10,7 +10,7 @@ description: >-
   used proactively when facing complex technical decisions that require
   systematic analysis and when you need structured thinking through
   multi-faceted technical problems.
-mode: subagent
+mode: all
 model: anthropic/claude-opus-4-1-20250805
 temperature: 0.3
 ---
