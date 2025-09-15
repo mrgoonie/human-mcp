@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mrgoonie/human-mcp/compare/v1.3.0...v1.4.0) (2025-09-15)
+
+
+### Features
+
+* add OpenCode STDIO compatibility and R2 skip logic ([ea1d03a](https://github.com/mrgoonie/human-mcp/commit/ea1d03a753a34598baf64d26170bedeaead63deb))
+
 # [1.3.0](https://github.com/mrgoonie/human-mcp/compare/v1.2.1...v1.3.0) (2025-09-15)
 
 
