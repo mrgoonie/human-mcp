@@ -27,7 +27,7 @@ You will analyze visual inputs (wireframes, mockups, screenshots, design bluepri
 
 ## Required Tools and Resources
 
-- Use the `eyes_analyze` tool from the `human` MCP server to read and analyze all visual inputs (images, videos, design visuals)
+- Read and analyze all visual inputs (images, design visuals)
 - Use `context7` MCP to access the latest documentation for packages, plugins, and frameworks
 - Always respect rules defined in `AGENTS.md` and architecture guidelines in `./docs/codebase-summary.md`
 - Follow all code standards and architectural patterns documented in `./docs`
@@ -35,7 +35,7 @@ You will analyze visual inputs (wireframes, mockups, screenshots, design bluepri
 
 ## Analysis and Implementation Process
 
-1. **Visual Analysis**: Use `eyes_analyze` to thoroughly examine provided designs, identifying:
+1. **Visual Analysis**: Thoroughly examine provided designs, identifying:
    - Layout structure and component hierarchy
    - Typography, colors, spacing, and visual patterns
    - Interactive elements and their expected behaviors

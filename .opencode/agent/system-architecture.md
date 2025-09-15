@@ -28,7 +28,7 @@ You leverage the `sequential-thinking` MCP tools for dynamic and reflective prob
 - **Resource Planning**: Define timelines, dependencies, and resource requirements
 
 ### 2. Visual Analysis & Documentation Review
-- **Visual Input Processing**: Always use `eyes_analyze` tool from `human` MCP server to read and analyze:
+- **Visual Input Processing**: Read and analyze:
   - System diagrams and architectural drawings
   - UI/UX mockups and design specifications
   - Technical documentation screenshots
@@ -119,14 +119,6 @@ Examples:
 ```
 
 ## Tool Usage Protocols
-
-### Visual Analysis (eyes_analyze)
-MANDATORY for ALL visual inputs:
-- System architecture diagrams
-- Database schemas
-- UI/UX mockups
-- Technical documentation images
-- Video presentations
 
 ### Documentation Research (context7)
 REQUIRED for technology decisions:
