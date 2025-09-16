@@ -53,6 +53,27 @@ const ConfigSchema = z.object({
     endpointUrl: z.string().optional(),
     baseUrl: z.string().optional(),
   }).optional(),
+  documentProcessing: z.object({
+    enabled: z.boolean().default(true),
+    maxFileSize: z.number().default(50 * 1024 * 1024), // 50MB
+    supportedFormats: z.array(z.string()).default([
+      "pdf", "docx", "xlsx", "pptx", "txt", "md", "rtf", "odt", "csv", "json", "xml", "html"
+    ]),
+    timeout: z.number().default(300000), // 5 minutes
+    retryAttempts: z.number().default(3),
+    cacheEnabled: z.boolean().default(true),
+    ocrEnabled: z.boolean().default(false),
+    geminiModel: z.string().default("gemini-2.5-flash"),
+  }).default({
+    enabled: true,
+    maxFileSize: 50 * 1024 * 1024,
+    supportedFormats: ["pdf", "docx", "xlsx", "pptx", "txt", "md", "rtf", "odt", "csv", "json", "xml", "html"],
+    timeout: 300000,
+    retryAttempts: 3,
+    cacheEnabled: true,
+    ocrEnabled: false,
+    geminiModel: "gemini-2.5-flash"
+  }),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -118,6 +139,18 @@ export function loadConfig(): Config {
       secretKey: process.env.CLOUDFLARE_CDN_SECRET_KEY,
       endpointUrl: process.env.CLOUDFLARE_CDN_ENDPOINT_URL,
       baseUrl: process.env.CLOUDFLARE_CDN_BASE_URL,
+    },
+    documentProcessing: {
+      enabled: process.env.DOCUMENT_PROCESSING_ENABLED !== "false",
+      maxFileSize: parseInt(process.env.DOCUMENT_MAX_FILE_SIZE || "52428800"), // 50MB
+      supportedFormats: process.env.DOCUMENT_SUPPORTED_FORMATS ?
+        process.env.DOCUMENT_SUPPORTED_FORMATS.split(',').map(format => format.trim()) :
+        ["pdf", "docx", "xlsx", "pptx", "txt", "md", "rtf", "odt", "csv", "json", "xml", "html"],
+      timeout: parseInt(process.env.DOCUMENT_TIMEOUT || "300000"),
+      retryAttempts: parseInt(process.env.DOCUMENT_RETRY_ATTEMPTS || "3"),
+      cacheEnabled: process.env.DOCUMENT_CACHE_ENABLED !== "false",
+      ocrEnabled: process.env.DOCUMENT_OCR_ENABLED === "true",
+      geminiModel: process.env.DOCUMENT_GEMINI_MODEL || "gemini-2.0-flash-exp",
     },
   });
 }

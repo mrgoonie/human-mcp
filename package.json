@@ -27,10 +27,16 @@
     "express": "^5.1.0",
     "fluent-ffmpeg": "^2.1.3",
     "helmet": "^8.1.0",
+    "mammoth": "^1.10.0",
+    "marked": "^16.3.0",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
+
+    "pptx-automizer": "^0.7.4",
     "sharp": "^0.33.0",
+
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.0"
   },
   "devDependencies": {
