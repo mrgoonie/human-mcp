@@ -1,3 +1,15 @@
+# [2.2.0](https://github.com/mrgoonie/human-mcp/compare/v2.1.0...v2.2.0) (2025-09-21)
+
+
+### Bug Fixes
+
+* **typescript:** resolve compilation errors in brain tools and hands tools ([c96ab09](https://github.com/mrgoonie/human-mcp/commit/c96ab09b6b05c5f0c6032ed5c777392ec6ce1a23))
+
+
+### Features
+
+* **brain:** implement advanced reasoning capabilities ([b181b1e](https://github.com/mrgoonie/human-mcp/commit/b181b1eeaef201d6a333e9319e1dd4865f799adc))
+
 # [2.1.0](https://github.com/mrgoonie/human-mcp/compare/v2.0.0...v2.1.0) (2025-09-21)
 
 
