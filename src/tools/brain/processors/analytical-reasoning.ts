@@ -100,31 +100,35 @@ export class AnalyticalReasoningProcessor {
     thoughtManager: ThoughtManager,
     input: BrainAnalyzeInput
   ): Promise<void> {
-    const analysisSteps = this.getAnalysisSteps(input.analysisDepth, input.focusAreas);
+    const analysisSteps = this.getAnalysisSteps(input.analysisDepth ?? 'detailed', input.focusAreas);
 
     for (let i = 0; i < analysisSteps.length; i++) {
       const step = analysisSteps[i];
+
+      if (!step) continue;
 
       try {
         const thoughtResult = await this.generateAnalyticalThought(
           input.subject,
           step,
           thoughtManager.getThoughts(),
-          input.thinkingStyle,
+          input.thinkingStyle ?? 'analytical',
           input.context
         );
 
-        thoughtManager.addThought(
-          thoughtResult.content,
-          thoughtResult.confidence,
-          {
-            tags: ['analytical', step.category]
-          }
-        );
+        if (step) {
+          thoughtManager.addThought(
+            thoughtResult.content,
+            thoughtResult.confidence,
+            {
+              tags: ['analytical', step.category]
+            }
+          );
+        }
 
         await this.pause(150);
       } catch (error) {
-        logger.warn(`Failed to complete analysis step "${step.name}":`, error);
+        logger.warn(`Failed to complete analysis step "${step?.name}":`, error);
       }
     }
   }
@@ -432,7 +436,7 @@ ${thoughtsText}
       input.subject,
       thoughtManager.getThoughts(),
       thoughtManager.getProcess().hypotheses,
-      input.thinkingStyle,
+      input.thinkingStyle ?? 'analytical',
       input.context
     );
   }
@@ -462,7 +466,9 @@ ${thoughtsText}
         const categoryThoughts = thoughts.filter(t => t.tags?.includes(category));
         if (categoryThoughts.length > 0) {
           const bestThought = categoryThoughts.sort((a, b) => b.confidence - a.confidence)[0];
-          findings.push(`${category}: ${bestThought.content.substring(0, 200)}...`);
+          if (bestThought) {
+            findings.push(`${category}: ${bestThought.content.substring(0, 200)}...`);
+          }
         }
       }
 

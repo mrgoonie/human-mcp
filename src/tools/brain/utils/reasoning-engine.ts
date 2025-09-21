@@ -382,7 +382,7 @@ Your synthesis:`;
    */
   private extractConfidence(content: string): number | null {
     const confidenceMatch = content.match(/\[Confidence:\s*(\d*\.?\d+)\]/i);
-    if (confidenceMatch) {
+    if (confidenceMatch && confidenceMatch[1]) {
       const confidence = parseFloat(confidenceMatch[1]);
       return Math.min(Math.max(confidence, 0), 1); // Clamp between 0 and 1
     }
@@ -443,7 +443,7 @@ Your synthesis:`;
         statement = line.replace('HYPOTHESIS:', '').trim();
       } else if (line.startsWith('CONFIDENCE:')) {
         const confMatch = line.match(/(\d*\.?\d+)/);
-        if (confMatch) {
+        if (confMatch && confMatch[1]) {
           confidence = Math.min(Math.max(parseFloat(confMatch[1]), 0), 1);
         }
       } else if (line.startsWith('EVIDENCE:')) {
@@ -517,7 +517,7 @@ Your synthesis:`;
         analysis = line.replace('ANALYSIS:', '').trim();
       } else if (line.startsWith('CONFIDENCE:')) {
         const confMatch = line.match(/(\d*\.?\d+)/);
-        if (confMatch) {
+        if (confMatch && confMatch[1]) {
           confidence = Math.min(Math.max(parseFloat(confMatch[1]), 0), 1);
         }
       } else if (line.startsWith('RECOMMENDATIONS:')) {

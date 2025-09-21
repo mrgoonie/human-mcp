@@ -26,7 +26,7 @@ export class ProblemSolverProcessor {
 
       const thoughtManager = new ThoughtManager(
         input.problemStatement,
-        this.mapSolutionApproachToThinkingStyle(input.solutionApproach),
+        this.mapSolutionApproachToThinkingStyle(input.solutionApproach ?? 'systematic'),
         input.context,
         {
           ...input.options,
@@ -101,7 +101,7 @@ export class ProblemSolverProcessor {
   }
 
   private async generateSolutions(thoughtManager: ThoughtManager, input: BrainSolveInput): Promise<void> {
-    const maxIterations = Math.min(input.maxIterations, 10);
+    const maxIterations = Math.min(input.maxIterations ?? 5, 10);
 
     for (let i = 1; i <= maxIterations; i++) {
       try {
@@ -296,14 +296,14 @@ Provide a clear, comprehensive problem definition that includes:
       .map(t => `- ${t.content}`)
       .join('\n');
 
-    const approach = this.getSolutionApproachInstructions(input.solutionApproach);
+    const approach = this.getSolutionApproachInstructions(input.solutionApproach ?? 'systematic');
 
     return `Generate solution candidate #${iteration} for the problem.
 
 **Problem:**
 ${input.problemStatement}
 
-**Approach:** ${input.solutionApproach}
+**Approach:** ${input.solutionApproach ?? 'systematic'}
 ${approach}
 
 **Constraints:** ${input.constraints?.join(', ') || 'None specified'}
@@ -447,7 +447,7 @@ TEST_PLAN: [How to validate the solution works, one per line]
         statement = line.replace('SELECTED_SOLUTION:', '').trim();
       } else if (line.startsWith('CONFIDENCE:')) {
         const confMatch = line.match(/(\d*\.?\d+)/);
-        if (confMatch) {
+        if (confMatch && confMatch[1]) {
           confidence = Math.min(Math.max(parseFloat(confMatch[1]), 0), 1);
         }
       } else if (line.startsWith('RECOMMENDATIONS:')) {

@@ -212,18 +212,18 @@ export class SequentialThinkingProcessor {
       if (content) {
         thoughtManager.addThought(
           content,
-          Math.min(toRevise.confidence + 0.2, 1.0), // Boost confidence for revision
+          Math.min((toRevise?.confidence ?? 0.5) + 0.2, 1.0), // Boost confidence for revision
           {
             isRevision: true,
-            revisesThought: toRevise.number,
+            revisesThought: toRevise?.number,
             tags: ['revision']
           }
         );
 
-        logger.debug(`Revised thought ${toRevise.number}`);
+        logger.debug(`Revised thought ${toRevise?.number}`);
       }
     } catch (error) {
-      logger.warn(`Failed to revise thought ${toRevise.number}:`, error);
+      logger.warn(`Failed to revise thought ${toRevise?.number}:`, error);
     }
   }
 
@@ -240,12 +240,12 @@ export class SequentialThinkingProcessor {
 **Original Problem:**
 ${input.problem}
 
-**Original Thought #${originalThought.number} (Confidence: ${originalThought.confidence.toFixed(2)}):**
-${originalThought.content}
+**Original Thought #${originalThought?.number} (Confidence: ${originalThought?.confidence.toFixed(2)}):**
+${originalThought?.content}
 
 **Context from other thoughts:**
 ${allThoughts
-  .filter(t => t.number !== originalThought.number)
+  .filter(t => t.number !== originalThought?.number)
   .map(t => `${t.number}. ${t.content}`)
   .join('\n')}
 
