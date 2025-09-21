@@ -21,8 +21,15 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 - **Performance**: Loading states, visual performance indicators
 - **Layout**: Responsive design, positioning, visual hierarchy
 
+🎨 **Content Generation**
+- Generate high-quality images from text descriptions
+- Multiple artistic styles: photorealistic, artistic, cartoon, sketch, digital art
+- Flexible aspect ratios and output formats
+- Advanced prompt engineering and negative prompts
+
 🤖 **AI-Powered**
 - Uses Google Gemini 2.5 Flash for fast, accurate analysis
+- Advanced Imagen API for high-quality image generation
 - Detailed technical insights for developers
 - Actionable recommendations for fixing issues
 - Structured output with detected elements and coordinates
@@ -919,7 +926,20 @@ Compare two images to identify visual differences.
 {
   "source1": "/path/to/before.png",
   "source2": "/path/to/after.png",
-  "comparison_type": "structural" 
+  "comparison_type": "structural"
+}
+```
+
+### gemini_gen_image
+
+Generate high-quality images from text descriptions using Gemini Imagen API.
+
+```json
+{
+  "prompt": "A modern minimalist login form with clean typography",
+  "style": "digital_art",
+  "aspect_ratio": "16:9",
+  "negative_prompt": "cluttered, low quality, blurry"
 }
 ```
 
@@ -950,9 +970,30 @@ Compare two images to identify visual differences.
 # Check accessibility compliance
 {
   "source": "page-screenshot.png",
-  "type": "image", 
+  "type": "image",
   "analysis_type": "accessibility",
   "check_accessibility": true
+}
+```
+
+### Image Generation for Design
+```bash
+# Generate UI mockups and design elements
+{
+  "prompt": "Professional dashboard interface with data visualization charts",
+  "style": "digital_art",
+  "aspect_ratio": "16:9"
+}
+```
+
+### Prototype Creation
+```bash
+# Create visual prototypes for development
+{
+  "prompt": "Mobile app login screen with modern design, dark theme",
+  "style": "photorealistic",
+  "aspect_ratio": "9:16",
+  "negative_prompt": "old-fashioned, bright colors"
 }
 ```
 
@@ -1041,9 +1082,14 @@ HTTP_ENABLE_RATE_LIMITING=false
 Human MCP Server
 ├── Eyes Tool (Vision Understanding)
 │   ├── Image Analysis
-│   ├── Video Processing  
+│   ├── Video Processing
 │   ├── GIF Frame Extraction
 │   └── Visual Comparison
+├── Hands Tool (Content Generation)
+│   ├── Image Generation
+│   ├── Style Customization
+│   ├── Aspect Ratio Control
+│   └── Prompt Engineering
 ├── Debugging Prompts
 └── Documentation Resources
 ```
@@ -1056,7 +1102,7 @@ For detailed architecture information and future development plans, see:
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: Phase 1 Complete ✅
+### Current Status: Phase 1 Complete ✅ | Phase 5 Complete ✅
 
 **Eyes (Visual Analysis)** - Production Ready (v1.2.1)
 - Advanced image, video, and GIF analysis capabilities
@@ -1064,6 +1110,13 @@ For detailed architecture information and future development plans, see:
 - Image comparison with pixel, structural, and semantic analysis
 - Processing 20+ visual formats with 98.5% success rate
 - Sub-30 second response times for detailed analysis
+
+**Hands (Content Generation)** - Production Ready (v1.2.2)
+- High-quality image generation using Gemini Imagen API
+- Multiple artistic styles and aspect ratios
+- Advanced prompt engineering with negative prompts
+- Comprehensive validation and error handling
+- Fast generation times with reliable output
 
 ### Upcoming Development Phases
 
@@ -1091,13 +1144,16 @@ For detailed architecture information and future development plans, see:
 - Long-form content narration with natural pacing
 - Professional-quality audio export in multiple formats
 
-#### Phase 5: Content Generation - Hands (Q4 2025)
-**Creative Content Creation**
-- Image generation from text descriptions using Imagen API
-- Advanced image editing (inpainting, style transfer, enhancement)
-- Video generation up to 30 seconds using Veo3 API
-- Animation creation with motion graphics
-- Batch content generation for workflow automation
+#### Phase 5: Content Generation - Hands ✅ COMPLETE
+**Creative Content Creation** - Production Ready (v1.2.2)
+- ✅ Image generation from text descriptions using Imagen API
+- Multiple artistic styles: photorealistic, artistic, cartoon, sketch, digital_art
+- Flexible aspect ratios: 1:1, 16:9, 9:16, 4:3, 3:4
+- Advanced prompt engineering with negative prompts
+- Comprehensive error handling and validation
+- Future: Advanced image editing (inpainting, style transfer, enhancement)
+- Future: Video generation up to 30 seconds using Veo3 API
+- Future: Animation creation with motion graphics
 
 ### Target Architecture (End 2025)
 

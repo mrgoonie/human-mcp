@@ -212,6 +212,74 @@ export class TestDataGenerators {
       data: {}
     };
   }
+
+  // Hands tool test data generators
+  static createMockImageGenerationRequest(overrides: Partial<any> = {}): any {
+    const prompts = [
+      'A beautiful sunset over mountains',
+      'A cat sitting on a windowsill',
+      'Modern architecture building with glass facade',
+      'Abstract digital art with vibrant colors',
+      'Photorealistic portrait of a young woman'
+    ];
+
+    const styles = ['photorealistic', 'artistic', 'cartoon', 'sketch', 'digital_art'];
+    const aspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4'];
+
+    const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+    const selectedStyle = styles[Math.floor(Math.random() * styles.length)];
+    const selectedRatio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)];
+
+    return {
+      prompt: selectedPrompt,
+      model: 'gemini-2.5-flash-image-preview',
+      output_format: 'base64',
+      style: selectedStyle,
+      aspect_ratio: selectedRatio,
+      negative_prompt: 'blurry, low quality, distorted',
+      seed: Math.floor(Math.random() * 1000000),
+      ...overrides
+    };
+  }
+
+  static createMockImageGenerationResponse(overrides: Partial<any> = {}): any {
+    const base64Image = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=';
+
+    return {
+      success: true,
+      image: base64Image,
+      format: 'base64_data_uri',
+      model: 'gemini-2.5-flash-image-preview',
+      prompt: 'A beautiful landscape scene',
+      metadata: {
+        timestamp: new Date().toISOString(),
+        generation_time: Math.floor(Math.random() * 10000) + 2000,
+        size: '1024x1024'
+      },
+      ...overrides
+    };
+  }
+
+  static createMockGeminiImageGenerationResponse(): any {
+    return {
+      response: {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: 'image/jpeg',
+                    data: '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k='
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+  }
 }
 
 export default TestDataGenerators;

@@ -116,15 +116,29 @@ export class GeminiClient {
   }
   
   getModel(detailLevel: "quick" | "detailed"): GenerativeModel {
-    const modelName = detailLevel === "detailed" 
+    const modelName = detailLevel === "detailed"
       ? this.config.gemini.model
       : "gemini-2.5-flash";
-    
-    return this.genAI.getGenerativeModel({ 
+
+    return this.genAI.getGenerativeModel({
       model: modelName,
       generationConfig: {
         temperature: 0.1,
         topK: 1,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    });
+  }
+
+  getImageGenerationModel(modelName?: string): GenerativeModel {
+    const imageModelName = modelName || "gemini-2.5-flash-image-preview";
+
+    return this.genAI.getGenerativeModel({
+      model: imageModelName,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 32,
         topP: 0.95,
         maxOutputTokens: 8192,
       }
