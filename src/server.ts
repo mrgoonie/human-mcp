@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerEyesTool } from "./tools/eyes/index.js";
 import { registerHandsTool } from "./tools/hands/index.js";
+import { registerMouthTool } from "./tools/mouth/index.js";
 import { registerPrompts } from "./prompts/index.js";
 import { registerResources } from "./resources/index.js";
 import { logger } from "./utils/logger.js";
@@ -17,6 +18,7 @@ export async function createServer() {
 
   await registerEyesTool(server, config);
   await registerHandsTool(server, config);
+  await registerMouthTool(server, config);
   await registerPrompts(server);
   await registerResources(server);
 

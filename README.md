@@ -27,12 +27,32 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 - Flexible aspect ratios and output formats
 - Advanced prompt engineering and negative prompts
 
+🗣️ **Speech Generation**
+- Convert text to natural-sounding speech with 30+ voice options
+- Long-form content narration with chapter breaks
+- Technical code explanation with spoken analysis
+- Voice customization and style control
+- Multi-language support (24 languages)
+- Professional audio export in WAV format
+
 🤖 **AI-Powered**
 - Uses Google Gemini 2.5 Flash for fast, accurate analysis
 - Advanced Imagen API for high-quality image generation
+- Gemini Speech Generation API for natural voice synthesis
 - Detailed technical insights for developers
 - Actionable recommendations for fixing issues
 - Structured output with detected elements and coordinates
+
+### Google Gemini Documentation
+- [Gemini API](https://ai.google.dev/gemini-api/docs?hl=en)
+- [Gemini Models](https://ai.google.dev/gemini-api/docs/models)
+- [Video Understanding](https://ai.google.dev/gemini-api/docs/video-understanding?hl=en)
+- [Image Understanding](https://ai.google.dev/gemini-api/docs/image-understanding)
+- [Document Understanding](https://ai.google.dev/gemini-api/docs/document-processing)
+- [Audio Understanding](https://ai.google.dev/gemini-api/docs/audio)
+- [Speech Generation](https://ai.google.dev/gemini-api/docs/speech-generation)
+- [Image Generation](https://ai.google.dev/gemini-api/docs/image-generation)
+- [Video Generation](https://ai.google.dev/gemini-api/docs/video)
 
 ## Quick Start
 
@@ -943,6 +963,60 @@ Generate high-quality images from text descriptions using Gemini Imagen API.
 }
 ```
 
+### mouth_speak
+
+Convert text to natural-sounding speech with voice customization.
+
+```json
+{
+  "text": "Welcome to our application. Let me guide you through the interface.",
+  "voice": "Zephyr",
+  "language": "en-US",
+  "style_prompt": "Speak in a friendly, welcoming tone"
+}
+```
+
+### mouth_narrate
+
+Generate narration for long-form content with chapter breaks and style control.
+
+```json
+{
+  "content": "Chapter 1: Introduction to React...",
+  "voice": "Sage",
+  "narration_style": "educational",
+  "chapter_breaks": true,
+  "max_chunk_size": 8000
+}
+```
+
+### mouth_explain
+
+Generate spoken explanations of code with technical analysis.
+
+```json
+{
+  "code": "function factorial(n) { return n <= 1 ? 1 : n * factorial(n-1); }",
+  "programming_language": "javascript",
+  "voice": "Apollo",
+  "explanation_level": "intermediate",
+  "include_examples": true
+}
+```
+
+### mouth_customize
+
+Test different voices and styles to find the best fit for your content.
+
+```json
+{
+  "text": "Hello, this is a voice test sample.",
+  "voice": "Charon",
+  "style_variations": ["professional", "casual", "energetic"],
+  "compare_voices": ["Puck", "Sage", "Apollo"]
+}
+```
+
 ## Example Use Cases
 
 ### Debugging UI Issues
@@ -994,6 +1068,40 @@ Generate high-quality images from text descriptions using Gemini Imagen API.
   "style": "photorealistic",
   "aspect_ratio": "9:16",
   "negative_prompt": "old-fashioned, bright colors"
+}
+```
+
+### Code Explanation Audio
+```bash
+# Generate spoken explanations for code reviews
+{
+  "code": "const useAuth = () => { const [user, setUser] = useState(null); return { user, login: setUser }; }",
+  "programming_language": "javascript",
+  "voice": "Apollo",
+  "explanation_level": "advanced",
+  "include_examples": true
+}
+```
+
+### Documentation Narration
+```bash
+# Convert technical documentation to audio
+{
+  "content": "This API endpoint handles user authentication and returns a JWT token...",
+  "voice": "Sage",
+  "narration_style": "professional",
+  "chapter_breaks": true
+}
+```
+
+### User Interface Voice Feedback
+```bash
+# Generate voice responses for applications
+{
+  "text": "File uploaded successfully. Processing will complete in approximately 30 seconds.",
+  "voice": "Kore",
+  "language": "en-US",
+  "style_prompt": "Speak in a helpful, reassuring tone"
 }
 ```
 
@@ -1090,6 +1198,11 @@ Human MCP Server
 │   ├── Style Customization
 │   ├── Aspect Ratio Control
 │   └── Prompt Engineering
+├── Mouth Tool (Speech Generation)
+│   ├── Text-to-Speech Synthesis
+│   ├── Long-form Narration
+│   ├── Code Explanation
+│   └── Voice Customization
 ├── Debugging Prompts
 └── Documentation Resources
 ```
@@ -1102,7 +1215,7 @@ For detailed architecture information and future development plans, see:
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: Phase 1 Complete ✅ | Phase 5 Complete ✅
+### Current Status: Phase 1 Complete ✅ | Phase 4 Complete ✅ | Phase 5 Complete ✅
 
 **Eyes (Visual Analysis)** - Production Ready (v1.2.1)
 - Advanced image, video, and GIF analysis capabilities
@@ -1117,6 +1230,14 @@ For detailed architecture information and future development plans, see:
 - Advanced prompt engineering with negative prompts
 - Comprehensive validation and error handling
 - Fast generation times with reliable output
+
+**Mouth (Speech Generation)** - Production Ready (v1.3.0)
+- Natural text-to-speech with 30+ voice options
+- Long-form content narration with chapter breaks
+- Technical code explanation with spoken analysis
+- Voice customization and style control
+- Multi-language support (24 languages)
+- Professional audio export in WAV format
 
 ### Upcoming Development Phases
 
@@ -1136,13 +1257,14 @@ For detailed architecture information and future development plans, see:
 - Support for 20+ audio formats (WAV, MP3, AAC, OGG, FLAC)
 - Real-time audio processing capabilities
 
-#### Phase 4: Speech Generation - Mouth (Q4 2025)
-**AI Voice Capabilities**
-- High-quality text-to-speech with customizable voice parameters
-- Code explanation and technical content narration
-- Multi-language speech generation (10+ languages)
-- Long-form content narration with natural pacing
-- Professional-quality audio export in multiple formats
+#### Phase 4: Speech Generation - Mouth ✅ COMPLETE
+**AI Voice Capabilities** - Production Ready (v1.3.0)
+- ✅ High-quality text-to-speech with 30+ voice options using Gemini Speech API
+- ✅ Code explanation and technical content narration
+- ✅ Multi-language speech generation (24 languages supported)
+- ✅ Long-form content narration with chapter breaks and natural pacing
+- ✅ Professional-quality audio export in WAV format
+- ✅ Voice customization with style prompts and voice comparison
 
 #### Phase 5: Content Generation - Hands ✅ COMPLETE
 **Creative Content Creation** - Production Ready (v1.2.2)

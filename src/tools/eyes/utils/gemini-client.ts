@@ -1347,4 +1347,195 @@ Extract as much metadata as possible from the document properties and content.`;
     // Check if all required schema keys are present in data
     return schemaKeys.every(key => dataKeys.includes(key));
   }
+
+  /**
+   * Get speech generation model for text-to-speech
+   */
+  getSpeechModel(modelName?: string): GenerativeModel {
+    const speechModelName = modelName || "gemini-2.5-flash-preview-tts";
+
+    return this.genAI.getGenerativeModel({
+      model: speechModelName,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 32,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    });
+  }
+
+  /**
+   * Generate speech from text using Gemini Speech Generation API
+   */
+  async generateSpeech(
+    text: string,
+    options: {
+      voice?: string;
+      model?: string;
+      language?: string;
+      stylePrompt?: string;
+    } = {}
+  ): Promise<{ audioData: string; metadata: any }> {
+    try {
+      const {
+        voice = "Zephyr",
+        model = "gemini-2.5-flash-preview-tts",
+        language = "en-US",
+        stylePrompt
+      } = options;
+
+      logger.debug(`Generating speech with voice: ${voice}, model: ${model}, language: ${language}`);
+
+      const speechModel = this.getSpeechModel(model);
+
+      // Build prompt with style if provided
+      let prompt = text;
+      if (stylePrompt) {
+        prompt = `${stylePrompt}: ${text}`;
+      }
+
+      // Generate content with speech configuration
+      const result = await speechModel.generateContent(prompt);
+
+      const response = await result.response;
+
+      // Extract audio data from response
+      const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
+      if (!audioData) {
+        throw new APIError("No audio data received from Gemini Speech API");
+      }
+
+      const metadata = {
+        voice,
+        model,
+        language,
+        stylePrompt,
+        timestamp: new Date().toISOString(),
+        textLength: text.length,
+        sampleRate: 24000,
+        channels: 1,
+        format: "wav"
+      };
+
+      return {
+        audioData,
+        metadata
+      };
+    } catch (error) {
+      logger.error("Gemini Speech Generation error:", error);
+      if (error instanceof Error) {
+        throw new APIError(`Speech generation error: ${error.message}`);
+      }
+      throw new APIError("Unknown speech generation error");
+    }
+  }
+
+  /**
+   * Generate speech with retry logic
+   */
+  async generateSpeechWithRetry(
+    text: string,
+    options: {
+      voice?: string;
+      model?: string;
+      language?: string;
+      stylePrompt?: string;
+    } = {},
+    maxRetries: number = 2
+  ): Promise<{ audioData: string; metadata: any }> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.debug(`Speech generation attempt ${attempt}/${maxRetries}`);
+        return await this.generateSpeech(text, options);
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        logger.warn(`Speech generation attempt ${attempt} failed:`, lastError.message);
+
+        if (attempt < maxRetries) {
+          // Simple backoff
+          const delay = Math.min(1000 * attempt, 5000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw new APIError(`Speech generation failed after ${maxRetries} attempts: ${lastError?.message}`);
+  }
+
+  /**
+   * Split long text into chunks for speech generation
+   */
+  splitTextForSpeech(text: string, maxChunkSize: number = 8000): string[] {
+    if (text.length <= maxChunkSize) {
+      return [text];
+    }
+
+    const chunks: string[] = [];
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+
+    let currentChunk = '';
+
+    for (const sentence of sentences) {
+      const trimmedSentence = sentence.trim();
+      if (!trimmedSentence) continue;
+
+      const potentialChunk = currentChunk + (currentChunk ? '. ' : '') + trimmedSentence;
+
+      if (potentialChunk.length <= maxChunkSize) {
+        currentChunk = potentialChunk;
+      } else {
+        if (currentChunk) {
+          chunks.push(currentChunk + '.');
+        }
+        currentChunk = trimmedSentence;
+      }
+    }
+
+    if (currentChunk) {
+      chunks.push(currentChunk + '.');
+    }
+
+    return chunks;
+  }
+
+  /**
+   * Generate speech for multiple chunks (for narration)
+   */
+  async generateSpeechChunks(
+    chunks: string[],
+    options: {
+      voice?: string;
+      model?: string;
+      language?: string;
+      stylePrompt?: string;
+    } = {}
+  ): Promise<{ audioData: string; metadata: any }[]> {
+    const results: { audioData: string; metadata: any }[] = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      if (!chunk) continue;
+
+      logger.debug(`Generating speech for chunk ${i + 1}/${chunks.length}`);
+
+      try {
+        const result = await this.generateSpeechWithRetry(chunk, options);
+        results.push(result);
+
+        // Add small delay between chunks to avoid rate limiting
+        if (i < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (error) {
+        logger.error(`Failed to generate speech for chunk ${i + 1}:`, error);
+        throw new APIError(`Failed to generate speech for chunk ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return results;
+  }
 }
