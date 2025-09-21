@@ -6,18 +6,23 @@ import { TestDataGenerators } from '../utils/index.js';
 import type { ImageGenerationOptions } from '@/tools/hands/schemas';
 
 // Mock GeminiClient for integration tests
+let mockGenerateContent = mock(async () => {
+  // Simulate some processing time
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return TestDataGenerators.createMockGeminiImageGenerationResponse();
+});
+
 const mockGeminiModel = {
-  generateContent: mock(async () => {
-    // Simulate some processing time
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return TestDataGenerators.createMockGeminiImageGenerationResponse();
-  })
+  generateContent: mockGenerateContent
 };
 
 let mockGeminiClient: any;
 
 // Initialize mock client
 function initializeMockClient() {
+  // Reset the mock
+  mockGenerateContent.mockClear();
+
   mockGeminiClient = {
     getImageGenerationModel: mock(() => mockGeminiModel)
   } as unknown as GeminiClient;
@@ -73,7 +78,7 @@ describe('Image Generation Integration Tests', () => {
 
       await generateImage(mockGeminiClient, options);
 
-      expect(mockGeminiModel.generateContent).toHaveBeenCalledWith([
+      expect(mockGenerateContent).toHaveBeenCalledWith([
         { text: expect.stringContaining('photorealistic, high quality, detailed') }
       ]);
     });
@@ -89,7 +94,7 @@ describe('Image Generation Integration Tests', () => {
 
       await generateImage(mockGeminiClient, options);
 
-      expect(mockGeminiModel.generateContent).toHaveBeenCalledWith([
+      expect(mockGenerateContent).toHaveBeenCalledWith([
         { text: expect.stringContaining('aspect ratio 16:9') }
       ]);
     });
@@ -106,7 +111,7 @@ describe('Image Generation Integration Tests', () => {
 
       await generateImage(mockGeminiClient, options);
 
-      expect(mockGeminiModel.generateContent).toHaveBeenCalledWith([
+      expect(mockGenerateContent).toHaveBeenCalledWith([
         { text: expect.stringContaining('Avoid: blurry, distorted') }
       ]);
     });
@@ -125,7 +130,7 @@ describe('Image Generation Integration Tests', () => {
       await generateImage(mockGeminiClient, options);
 
       const expectedPrompt = 'A serene lake, artistic style, creative, expressive, aspect ratio 4:3. Avoid: noisy, cluttered';
-      expect(mockGeminiModel.generateContent).toHaveBeenCalledWith([
+      expect(mockGenerateContent).toHaveBeenCalledWith([
         { text: expectedPrompt }
       ]);
     });
@@ -145,7 +150,7 @@ describe('Image Generation Integration Tests', () => {
 
         await generateImage(mockGeminiClient, options);
 
-        expect(mockGeminiModel.generateContent).toHaveBeenCalledWith(
+        expect(mockGenerateContent).toHaveBeenCalledWith(
           expect.arrayContaining([
             { text: expect.stringContaining(style === 'digital_art' ? 'digital art' : style) }
           ])
@@ -201,10 +206,9 @@ describe('Image Generation Integration Tests', () => {
 
   describe('error handling', () => {
     it('should handle API key errors', async () => {
-      const errorMock = mock(async () => {
+      mockGenerateContent.mockImplementationOnce(async () => {
         throw new Error('API key invalid');
       });
-      mockGeminiModel.generateContent.mockImplementationOnce(errorMock);
 
       const options: ImageGenerationOptions = {
         prompt: 'Test error',
@@ -220,10 +224,9 @@ describe('Image Generation Integration Tests', () => {
     });
 
     it('should handle quota exceeded errors', async () => {
-      const errorMock = mock(async () => {
+      mockGenerateContent.mockImplementationOnce(async () => {
         throw new Error('quota exceeded');
       });
-      mockGeminiModel.generateContent.mockImplementationOnce(errorMock);
 
       const options: ImageGenerationOptions = {
         prompt: 'Test quota error',
@@ -239,10 +242,9 @@ describe('Image Generation Integration Tests', () => {
     });
 
     it('should handle safety policy errors', async () => {
-      const errorMock = mock(async () => {
+      mockGenerateContent.mockImplementationOnce(async () => {
         throw new Error('safety policy violation');
       });
-      mockGeminiModel.generateContent.mockImplementationOnce(errorMock);
 
       const options: ImageGenerationOptions = {
         prompt: 'Test safety error',
@@ -263,7 +265,7 @@ describe('Image Generation Integration Tests', () => {
           candidates: []
         }
       };
-      mockGeminiModel.generateContent.mockResolvedValueOnce(errorResponse);
+      mockGenerateContent.mockResolvedValueOnce(errorResponse);
 
       const options: ImageGenerationOptions = {
         prompt: 'Test no candidates',
@@ -290,7 +292,7 @@ describe('Image Generation Integration Tests', () => {
           ]
         }
       };
-      mockGeminiModel.generateContent.mockResolvedValueOnce(errorResponse);
+      mockGenerateContent.mockResolvedValueOnce(errorResponse);
 
       const options: ImageGenerationOptions = {
         prompt: 'Test invalid response',
@@ -306,10 +308,9 @@ describe('Image Generation Integration Tests', () => {
     });
 
     it('should handle generic errors', async () => {
-      const errorMock = mock(async () => {
+      mockGenerateContent.mockImplementationOnce(async () => {
         throw new Error('Unknown error');
       });
-      mockGeminiModel.generateContent.mockImplementationOnce(errorMock);
 
       const options: ImageGenerationOptions = {
         prompt: 'Test generic error',

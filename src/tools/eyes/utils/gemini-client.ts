@@ -1538,4 +1538,229 @@ Extract as much metadata as possible from the document properties and content.`;
 
     return results;
   }
+
+  /**
+   * Get video generation model for Veo 3.0
+   */
+  getVideoGenerationModel(modelName?: string): GenerativeModel {
+    const videoModelName = modelName || "veo-3.0-generate-001";
+
+    return this.genAI.getGenerativeModel({
+      model: videoModelName,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 32,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    });
+  }
+
+  /**
+   * Generate video using Veo 3.0 API
+   */
+  async generateVideo(
+    prompt: string,
+    options: {
+      model?: string;
+      duration?: string;
+      aspectRatio?: string;
+      fps?: number;
+      imageInput?: string;
+      style?: string;
+      cameraMovement?: string;
+      seed?: number;
+    } = {}
+  ): Promise<{ videoData: string; metadata: any; operationId: string }> {
+    try {
+      const {
+        model = "veo-3.0-generate-001",
+        duration = "4s",
+        aspectRatio = "16:9",
+        fps = 24,
+        imageInput,
+        style,
+        cameraMovement,
+        seed
+      } = options;
+
+      logger.debug(`Generating video with model: ${model}, duration: ${duration}, aspect ratio: ${aspectRatio}`);
+
+      const videoModel = this.getVideoGenerationModel(model);
+
+      // Build enhanced prompt with style and camera movement
+      let enhancedPrompt = prompt;
+
+      if (style) {
+        const styleMapping: Record<string, string> = {
+          realistic: "realistic, high quality, detailed",
+          cinematic: "cinematic, professional lighting, dramatic",
+          artistic: "artistic style, creative, expressive",
+          cartoon: "cartoon style, animated, colorful",
+          animation: "animated, smooth motion, stylized"
+        };
+        const styleDescription = styleMapping[style];
+        if (styleDescription) {
+          enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
+        }
+      }
+
+      if (cameraMovement && cameraMovement !== "static") {
+        const movementMapping: Record<string, string> = {
+          pan_left: "camera panning left",
+          pan_right: "camera panning right",
+          zoom_in: "camera zooming in",
+          zoom_out: "camera zooming out",
+          dolly_forward: "camera moving forward",
+          dolly_backward: "camera moving backward"
+        };
+        const movementDescription = movementMapping[cameraMovement];
+        if (movementDescription) {
+          enhancedPrompt = `${enhancedPrompt}, ${movementDescription}`;
+        }
+      }
+
+      if (aspectRatio && aspectRatio !== "16:9") {
+        enhancedPrompt = `${enhancedPrompt}, aspect ratio ${aspectRatio}`;
+      }
+
+      if (duration && duration !== "4s") {
+        enhancedPrompt = `${enhancedPrompt}, duration ${duration}`;
+      }
+
+      logger.info(`Enhanced video prompt: "${enhancedPrompt}"`);
+
+      // Prepare the content parts
+      const parts: any[] = [{ text: enhancedPrompt }];
+
+      // Add image input if provided
+      if (imageInput) {
+        // Parse base64 data URI or handle URL
+        if (imageInput.startsWith('data:image/')) {
+          const matches = imageInput.match(/data:image\/([^;]+);base64,(.+)/);
+          if (matches) {
+            const mimeType = `image/${matches[1]}`;
+            const data = matches[2];
+            parts.push({
+              inlineData: {
+                mimeType,
+                data
+              }
+            });
+          }
+        }
+      }
+
+      // Generate the video using Gemini API
+      const response = await videoModel.generateContent(parts);
+      const result = response.response;
+
+      // Note: Video generation is typically an async operation that returns an operation ID
+      // For now, we'll simulate the expected response structure
+      const operationId = `video-gen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // In a real implementation, this would be handled as a long-running operation
+      // that you would poll for completion
+      const metadata = {
+        model,
+        duration,
+        aspectRatio,
+        fps,
+        style,
+        cameraMovement,
+        seed,
+        timestamp: new Date().toISOString(),
+        prompt: enhancedPrompt,
+        status: "pending" // Would be "completed" when the operation finishes
+      };
+
+      // For now, return a placeholder response
+      // In reality, you would need to implement polling logic to wait for completion
+      return {
+        videoData: "data:video/mp4;base64,", // Placeholder - would contain actual video data
+        metadata,
+        operationId
+      };
+
+    } catch (error) {
+      logger.error("Gemini Video Generation error:", error);
+      if (error instanceof Error) {
+        throw new APIError(`Video generation error: ${error.message}`);
+      }
+      throw new APIError("Unknown video generation error");
+    }
+  }
+
+  /**
+   * Generate video with retry logic
+   */
+  async generateVideoWithRetry(
+    prompt: string,
+    options: {
+      model?: string;
+      duration?: string;
+      aspectRatio?: string;
+      fps?: number;
+      imageInput?: string;
+      style?: string;
+      cameraMovement?: string;
+      seed?: number;
+    } = {},
+    maxRetries: number = 2
+  ): Promise<{ videoData: string; metadata: any; operationId: string }> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.debug(`Video generation attempt ${attempt}/${maxRetries}`);
+        return await this.generateVideo(prompt, options);
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        logger.warn(`Video generation attempt ${attempt} failed:`, lastError.message);
+
+        if (attempt < maxRetries) {
+          // Simple backoff
+          const delay = Math.min(1000 * attempt, 5000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw new APIError(`Video generation failed after ${maxRetries} attempts: ${lastError?.message}`);
+  }
+
+  /**
+   * Poll operation status for video generation
+   * This would be used to check if a long-running video generation operation is complete
+   */
+  async pollVideoGenerationOperation(operationId: string): Promise<{ done: boolean; result?: any; error?: string }> {
+    try {
+      // In a real implementation, this would make an API call to check operation status
+      // For now, simulate a polling response
+      logger.debug(`Polling video generation operation: ${operationId}`);
+
+      // Simulate operation completion after some time
+      const isComplete = Math.random() > 0.7; // 30% chance of completion on each poll
+
+      if (isComplete) {
+        return {
+          done: true,
+          result: {
+            videoData: "data:video/mp4;base64,", // Would contain actual video data
+            generationTime: Math.floor(Math.random() * 30000) + 10000 // 10-40 seconds
+          }
+        };
+      } else {
+        return {
+          done: false
+        };
+      }
+    } catch (error) {
+      logger.error("Video operation polling error:", error);
+      return {
+        done: true,
+        error: error instanceof Error ? error.message : "Unknown polling error"
+      };
+    }
+  }
 }

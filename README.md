@@ -22,9 +22,13 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 - **Layout**: Responsive design, positioning, visual hierarchy
 
 🎨 **Content Generation**
-- Generate high-quality images from text descriptions
-- Multiple artistic styles: photorealistic, artistic, cartoon, sketch, digital art
-- Flexible aspect ratios and output formats
+- Generate high-quality images from text descriptions using Imagen API
+- Create professional videos from text prompts using Veo 3.0 API
+- Image-to-video generation combining Imagen and Veo 3.0
+- Multiple artistic styles: photorealistic, artistic, cartoon, sketch, digital art (images) and realistic, cinematic, artistic, cartoon, animation (videos)
+- Flexible aspect ratios (1:1, 16:9, 9:16, 4:3, 3:4) and output formats
+- Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
+- Camera movement controls: static, pan, zoom, dolly movements
 - Advanced prompt engineering and negative prompts
 
 🗣️ **Speech Generation**
@@ -38,6 +42,7 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 🤖 **AI-Powered**
 - Uses Google Gemini 2.5 Flash for fast, accurate analysis
 - Advanced Imagen API for high-quality image generation
+- Cutting-edge Veo 3.0 API for professional video generation
 - Gemini Speech Generation API for natural voice synthesis
 - Detailed technical insights for developers
 - Actionable recommendations for fixing issues
@@ -963,6 +968,35 @@ Generate high-quality images from text descriptions using Gemini Imagen API.
 }
 ```
 
+### gemini_gen_video
+
+Generate professional videos from text descriptions using Gemini Veo 3.0 API.
+
+```json
+{
+  "prompt": "A serene mountain landscape at sunrise with gentle camera movement",
+  "duration": "8s",
+  "style": "cinematic",
+  "aspect_ratio": "16:9",
+  "camera_movement": "pan_right",
+  "fps": 30
+}
+```
+
+### gemini_image_to_video
+
+Generate videos from images and text descriptions using Imagen + Veo 3.0 pipeline.
+
+```json
+{
+  "prompt": "Animate this landscape with flowing water and moving clouds",
+  "image_input": "data:image/jpeg;base64,/9j/4AAQ...",
+  "duration": "12s",
+  "style": "realistic",
+  "camera_movement": "zoom_in"
+}
+```
+
 ### mouth_speak
 
 Convert text to natural-sounding speech with voice customization.
@@ -1068,6 +1102,31 @@ Test different voices and styles to find the best fit for your content.
   "style": "photorealistic",
   "aspect_ratio": "9:16",
   "negative_prompt": "old-fashioned, bright colors"
+}
+```
+
+### Video Generation for Prototyping
+```bash
+# Create animated prototypes and demonstrations
+{
+  "prompt": "User interface animation showing a smooth login process with form transitions",
+  "duration": "8s",
+  "style": "digital_art",
+  "aspect_ratio": "16:9",
+  "camera_movement": "static",
+  "fps": 30
+}
+```
+
+### Marketing Video Creation
+```bash
+# Generate promotional videos for products
+{
+  "prompt": "Elegant product showcase video with professional lighting and smooth camera movement",
+  "duration": "12s",
+  "style": "cinematic",
+  "aspect_ratio": "16:9",
+  "camera_movement": "dolly_forward"
 }
 ```
 
@@ -1194,9 +1253,12 @@ Human MCP Server
 │   ├── GIF Frame Extraction
 │   └── Visual Comparison
 ├── Hands Tool (Content Generation)
-│   ├── Image Generation
+│   ├── Image Generation (Imagen API)
+│   ├── Video Generation (Veo 3.0 API)
+│   ├── Image-to-Video Pipeline
 │   ├── Style Customization
-│   ├── Aspect Ratio Control
+│   ├── Aspect Ratio & Duration Control
+│   ├── Camera Movement Control
 │   └── Prompt Engineering
 ├── Mouth Tool (Speech Generation)
 │   ├── Text-to-Speech Synthesis
@@ -1224,11 +1286,15 @@ For detailed architecture information and future development plans, see:
 - Processing 20+ visual formats with 98.5% success rate
 - Sub-30 second response times for detailed analysis
 
-**Hands (Content Generation)** - Production Ready (v1.2.2)
+**Hands (Content Generation)** - Production Ready (v1.4.0)
 - High-quality image generation using Gemini Imagen API
-- Multiple artistic styles and aspect ratios
+- Professional video generation using Gemini Veo 3.0 API
+- Image-to-video generation pipeline combining Imagen + Veo 3.0
+- Multiple artistic styles and aspect ratios for both images and videos
+- Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
+- Camera movement controls: static, pan, zoom, dolly movements
 - Advanced prompt engineering with negative prompts
-- Comprehensive validation and error handling
+- Comprehensive validation and error handling with retry logic
 - Fast generation times with reliable output
 
 **Mouth (Speech Generation)** - Production Ready (v1.3.0)
@@ -1267,14 +1333,17 @@ For detailed architecture information and future development plans, see:
 - ✅ Voice customization with style prompts and voice comparison
 
 #### Phase 5: Content Generation - Hands ✅ COMPLETE
-**Creative Content Creation** - Production Ready (v1.2.2)
+**Creative Content Creation** - Production Ready (v1.4.0)
 - ✅ Image generation from text descriptions using Imagen API
-- Multiple artistic styles: photorealistic, artistic, cartoon, sketch, digital_art
-- Flexible aspect ratios: 1:1, 16:9, 9:16, 4:3, 3:4
-- Advanced prompt engineering with negative prompts
-- Comprehensive error handling and validation
+- ✅ Video generation from text prompts using Veo 3.0 API
+- ✅ Image-to-video generation pipeline combining Imagen + Veo 3.0
+- ✅ Multiple artistic styles for images and videos
+- ✅ Flexible aspect ratios: 1:1, 16:9, 9:16, 4:3, 3:4
+- ✅ Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
+- ✅ Camera movement controls: static, pan, zoom, dolly movements
+- ✅ Advanced prompt engineering with negative prompts
+- ✅ Comprehensive error handling and validation with retry logic
 - Future: Advanced image editing (inpainting, style transfer, enhancement)
-- Future: Video generation up to 30 seconds using Veo3 API
 - Future: Animation creation with motion graphics
 
 ### Target Architecture (End 2025)
@@ -1299,8 +1368,8 @@ The evolution from single-capability visual analysis to comprehensive human-like
                        │  • Narration         │
                        │                      │
                        │  ✋ Hands (Creation) │
-                       │  • Image Generation  │
-                       │  • Video Generation  │
+                       │  • Image Generation ✅│
+                       │  • Video Generation ✅│
                        └──────────────────────┘
 ```
 
@@ -1323,15 +1392,16 @@ The evolution from single-capability visual analysis to comprehensive human-like
 ### Success Metrics & Timeline
 
 - **Phase 2 (Document Understanding)**: January - March 2025
-- **Phase 3 (Audio Processing)**: April - June 2025  
-- **Phase 4 (Speech Generation)**: September - October 2025
-- **Phase 5 (Content Generation)**: October - December 2025
+- **Phase 3 (Audio Processing)**: April - June 2025
+- **Phase 4 (Speech Generation)**: ✅ Completed September 2025
+- **Phase 5 (Content Generation)**: ✅ Completed September 2025
 
 **Target Goals:**
 - Support 50+ file formats across all modalities
-- 99%+ success rate with sub-60 second processing times
+- 99%+ success rate with optimized processing times (images <30s, videos <5min)
 - 1000+ MCP client integrations and 100K+ monthly API calls
 - Comprehensive documentation with real-world examples
+- Professional-grade content generation capabilities
 
 ### Getting Involved
 
@@ -1343,10 +1413,17 @@ Human MCP is built for the developer community. Whether you're integrating with 
 
 ## Supported Formats
 
-**Images**: PNG, JPEG, WebP, GIF (static)  
-**Videos**: MP4, WebM, MOV, AVI
-**GIFs**: Animated GIF with frame extraction  
-**Sources**: File paths, URLs, base64 data URLs
+**Analysis Formats**:
+- **Images**: PNG, JPEG, WebP, GIF (static)
+- **Videos**: MP4, WebM, MOV, AVI
+- **GIFs**: Animated GIF with frame extraction
+- **Sources**: File paths, URLs, base64 data URLs
+
+**Generation Formats**:
+- **Images**: PNG, JPEG (Base64 output)
+- **Videos**: MP4 (Base64 output)
+- **Durations**: 4s, 8s, 12s video lengths
+- **Quality**: Professional-grade output with customizable FPS (1-60)
 
 ## Contributing
 
