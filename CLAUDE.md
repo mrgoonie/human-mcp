@@ -35,13 +35,13 @@ src/
 └── utils/           # Configuration, logging, error handling
 ```
 
-### Key Components
+### Docs
+- [Project Overview / PDR](project-overview-pdr.md)
+- [Project Roadmap](project-roadmap.md)
+- [Codebase Summary](codebase-summary.md)
+- [Codebase Structure & Code Standards](codebase-structure-architecture-code-standards.md)
 
-**Vision Analysis (tools/eyes/)**
-- `index.ts` - Registers eyes_analyze and eyes_compare tools
-- `processors/` - Handles image, video, and GIF processing
-- `utils/gemini-client.ts` - Google Gemini API integration
-- `schemas.ts` - Zod validation schemas for tool inputs
+### Key Components
 
 **Configuration (utils/config.ts)**
 - Environment-based configuration using Zod validation
@@ -51,19 +51,6 @@ src/
 ## MCP Tools
 
 **Important**: Tool names must comply with MCP validation pattern `^[a-zA-Z0-9_-]{1,64}$`. Only alphanumeric characters, underscores, and hyphens are allowed. No dots, spaces, or other special characters.
-
-### eyes_analyze
-Primary tool for visual analysis of images, videos, and GIFs:
-- Supports file paths, URLs, and base64 data URIs
-- Configurable detail levels (quick/detailed)
-- Frame extraction for videos and GIFs
-- Custom analysis prompts
-
-### eyes_compare  
-Compares two images to identify visual differences:
-- Three comparison types: pixel, structural, semantic
-- Detailed difference reporting
-- Impact assessment and recommendations
 
 ## Important Development Notes
 

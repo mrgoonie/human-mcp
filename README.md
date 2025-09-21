@@ -4,15 +4,23 @@
 
 ![Human MCP](human-mcp.png)
 
-Human MCP is a Model Context Protocol server that provides AI coding agents with human-like visual capabilities for debugging and understanding visual content like screenshots, recordings, and UI elements.
+Human MCP v2.0.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, and content creation for debugging, understanding, and enhancing multimodal content.
 
 ## Features
 
-🎯 **Visual Analysis**
+🎯 **Visual Analysis (Eyes) - ✅ Complete**
 - Analyze screenshots for UI bugs and layout issues
-- Process screen recordings to understand error sequences  
+- Process screen recordings to understand error sequences
 - Extract insights from GIFs and animations
 - Compare visual changes between versions
+
+📄 **Document Processing (Eyes Extended) - ✅ Complete v2.0.0**
+- Comprehensive document analysis for PDF, DOCX, XLSX, PPTX, TXT, MD, RTF, ODT, CSV, JSON, XML, HTML
+- Structured data extraction using custom JSON schemas
+- Document summarization with multiple types (brief, detailed, executive, technical)
+- Text extraction with formatting preservation
+- Table and image extraction from documents
+- Auto-format detection and processing
 
 🔍 **Specialized Analysis Types**
 - **UI Debug**: Layout issues, rendering problems, visual bugs
@@ -20,8 +28,9 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 - **Accessibility**: Color contrast, WCAG compliance, readability
 - **Performance**: Loading states, visual performance indicators
 - **Layout**: Responsive design, positioning, visual hierarchy
+- **Document Analysis**: Content extraction, data mining, document intelligence
 
-🎨 **Content Generation**
+🎨 **Content Generation (Hands) - ✅ Complete v2.0.0**
 - Generate high-quality images from text descriptions using Imagen API
 - Create professional videos from text prompts using Veo 3.0 API
 - Image-to-video generation combining Imagen and Veo 3.0
@@ -31,13 +40,22 @@ Human MCP is a Model Context Protocol server that provides AI coding agents with
 - Camera movement controls: static, pan, zoom, dolly movements
 - Advanced prompt engineering and negative prompts
 
-🗣️ **Speech Generation**
+🗣️ **Speech Generation (Mouth) - ✅ Complete v1.3.0**
 - Convert text to natural-sounding speech with 30+ voice options
 - Long-form content narration with chapter breaks
 - Technical code explanation with spoken analysis
 - Voice customization and style control
 - Multi-language support (24 languages)
 - Professional audio export in WAV format
+
+🧠 **Advanced Reasoning (Brain) - 🔄 Future Phase Q2 2025**
+Ref: https://github.com/modelcontextprotocol/servers/blob/main/src/sequentialthinking/index.ts
+- Sequential thinking with dynamic problem-solving
+- Multi-step analysis with hypothesis generation and testing
+- Thought revision and reflection capabilities
+- Branching logic for non-linear problem exploration
+- Meta-cognitive analysis and process optimization
+- Advanced reasoning patterns for complex technical problems
 
 🤖 **AI-Powered**
 - Uses Google Gemini 2.5 Flash for fast, accurate analysis
@@ -955,6 +973,106 @@ Compare two images to identify visual differences.
 }
 ```
 
+### eyes_read_document
+
+Comprehensive document analysis and content extraction.
+
+```json
+{
+  "source": "/path/to/document.pdf",
+  "format": "auto",
+  "options": {
+    "extract_text": true,
+    "extract_tables": true,
+    "detail_level": "detailed"
+  }
+}
+```
+
+### eyes_extract_data
+
+Extract structured data from documents using custom schemas.
+
+```json
+{
+  "source": "/path/to/invoice.pdf",
+  "format": "auto",
+  "schema": {
+    "invoice_number": "string",
+    "amount": "number",
+    "date": "string"
+  }
+}
+```
+
+### eyes_summarize
+
+Generate summaries and key insights from documents.
+
+```json
+{
+  "source": "/path/to/report.docx",
+  "format": "auto",
+  "options": {
+    "summary_type": "executive",
+    "include_key_points": true,
+    "max_length": 500
+  }
+}
+```
+
+### mouth_speak
+
+Convert text to natural-sounding speech.
+
+```json
+{
+  "text": "Welcome to our application. Let me guide you through the interface.",
+  "voice": "Zephyr",
+  "language": "en-US",
+  "style_prompt": "Speak in a friendly, welcoming tone"
+}
+```
+
+### mouth_narrate
+
+Generate narration for long-form content with chapter breaks.
+
+```json
+{
+  "content": "Chapter 1: Introduction to React...",
+  "voice": "Sage",
+  "narration_style": "educational",
+  "chapter_breaks": true
+}
+```
+
+### mouth_explain
+
+Generate spoken explanations of code with technical analysis.
+
+```json
+{
+  "code": "function factorial(n) { return n <= 1 ? 1 : n * factorial(n-1); }",
+  "programming_language": "javascript",
+  "voice": "Apollo",
+  "explanation_level": "intermediate"
+}
+```
+
+### mouth_customize
+
+Test different voices and styles for optimal content delivery.
+
+```json
+{
+  "text": "Hello, this is a voice test sample.",
+  "voice": "Charon",
+  "style_variations": ["professional", "casual", "energetic"],
+  "compare_voices": ["Puck", "Sage", "Apollo"]
+}
+```
+
 ### gemini_gen_image
 
 Generate high-quality images from text descriptions using Gemini Imagen API.
@@ -1048,6 +1166,58 @@ Test different voices and styles to find the best fit for your content.
   "voice": "Charon",
   "style_variations": ["professional", "casual", "energetic"],
   "compare_voices": ["Puck", "Sage", "Apollo"]
+}
+```
+
+### brain_think
+
+Advanced sequential thinking with dynamic problem-solving.
+
+```json
+{
+  "problem": "Complex technical issue requiring multi-step analysis",
+  "initial_thoughts": 5,
+  "allow_revision": true,
+  "enable_branching": true,
+  "thinking_style": "analytical"
+}
+```
+
+### brain_analyze
+
+Deep analytical reasoning with branching support.
+
+```json
+{
+  "subject": "System architecture design decisions",
+  "analysis_depth": "detailed",
+  "consider_alternatives": true,
+  "track_assumptions": true
+}
+```
+
+### brain_solve
+
+Multi-step problem solving with hypothesis testing.
+
+```json
+{
+  "problem_statement": "Performance bottleneck in distributed system",
+  "solution_approach": "systematic",
+  "verify_hypotheses": true,
+  "max_iterations": 10
+}
+```
+
+### brain_reflect
+
+Thought revision and process optimization.
+
+```json
+{
+  "previous_analysis": "reference_to_prior_thinking",
+  "reflection_focus": ["assumptions", "logic_gaps", "alternative_approaches"],
+  "optimize_process": true
 }
 ```
 
@@ -1164,6 +1334,50 @@ Test different voices and styles to find the best fit for your content.
 }
 ```
 
+### Advanced Problem Solving
+```bash
+# Analyze complex technical issues with multi-step reasoning
+{
+  "problem": "Database performance degradation in production environment",
+  "initial_thoughts": 8,
+  "allow_revision": true,
+  "enable_branching": true,
+  "thinking_style": "systematic"
+}
+```
+
+### Architecture Decision Analysis
+```bash
+# Deep analysis of system design decisions
+{
+  "subject": "Microservices vs monolithic architecture for e-commerce platform",
+  "analysis_depth": "detailed",
+  "consider_alternatives": true,
+  "track_assumptions": true
+}
+```
+
+### Hypothesis-Driven Debugging
+```bash
+# Systematic problem solving with hypothesis testing
+{
+  "problem_statement": "API response time increased by 300% after deployment",
+  "solution_approach": "scientific",
+  "verify_hypotheses": true,
+  "max_iterations": 15
+}
+```
+
+### Code Review Reasoning
+```bash
+# Reflect on code analysis and optimization approaches
+{
+  "previous_analysis": "Initial code review findings",
+  "reflection_focus": ["performance_assumptions", "security_gaps", "maintainability"],
+  "optimize_process": true
+}
+```
+
 ## Prompts
 
 Human MCP includes pre-built prompts for common debugging scenarios:
@@ -1265,6 +1479,13 @@ Human MCP Server
 │   ├── Long-form Narration
 │   ├── Code Explanation
 │   └── Voice Customization
+├── Brain Tool (Advanced Reasoning) [Future]
+│   ├── Sequential Thinking
+│   ├── Hypothesis Testing
+│   ├── Thought Revision
+│   ├── Branching Logic
+│   ├── Meta-cognitive Analysis
+│   └── Problem-solving Workflows
 ├── Debugging Prompts
 └── Documentation Resources
 ```
@@ -1277,51 +1498,55 @@ For detailed architecture information and future development plans, see:
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: Phase 1 Complete ✅ | Phase 4 Complete ✅ | Phase 5 Complete ✅
+### Current Status: Phase 1-2 Complete ✅ | Phase 4-5 Complete ✅ | v2.0.0
 
-**Eyes (Visual Analysis)** - Production Ready (v1.2.1)
-- Advanced image, video, and GIF analysis capabilities
-- UI debugging, error detection, accessibility auditing
-- Image comparison with pixel, structural, and semantic analysis
-- Processing 20+ visual formats with 98.5% success rate
-- Sub-30 second response times for detailed analysis
-
-**Hands (Content Generation)** - Production Ready (v1.4.0)
-- High-quality image generation using Gemini Imagen API
-- Professional video generation using Gemini Veo 3.0 API
-- Image-to-video generation pipeline combining Imagen + Veo 3.0
-- Multiple artistic styles and aspect ratios for both images and videos
-- Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
-- Camera movement controls: static, pan, zoom, dolly movements
-- Advanced prompt engineering with negative prompts
-- Comprehensive validation and error handling with retry logic
-- Fast generation times with reliable output
+**Eyes (Visual Analysis + Document Processing)** - Production Ready (v2.0.0)
+- ✅ Advanced image, video, and GIF analysis capabilities
+- ✅ UI debugging, error detection, accessibility auditing
+- ✅ Image comparison with pixel, structural, and semantic analysis
+- ✅ Document processing for PDF, DOCX, XLSX, PPTX, TXT, MD, RTF, ODT, CSV, JSON, XML, HTML
+- ✅ Structured data extraction using custom JSON schemas
+- ✅ Document summarization with multiple types (brief, detailed, executive, technical)
+- ✅ Processing 20+ visual formats + 12+ document formats with 95%+ success rate
+- ✅ Sub-30 second response times for images, sub-60 second for documents
 
 **Mouth (Speech Generation)** - Production Ready (v1.3.0)
-- Natural text-to-speech with 30+ voice options
-- Long-form content narration with chapter breaks
-- Technical code explanation with spoken analysis
-- Voice customization and style control
-- Multi-language support (24 languages)
-- Professional audio export in WAV format
+- ✅ Natural text-to-speech with 30+ voice options
+- ✅ Long-form content narration with chapter breaks
+- ✅ Technical code explanation with spoken analysis
+- ✅ Voice customization and style control
+- ✅ Multi-language support (24 languages)
+- ✅ Professional audio export in WAV format
 
-### Upcoming Development Phases
+**Hands (Content Generation)** - Production Ready (v2.0.0)
+- ✅ High-quality image generation using Gemini Imagen API
+- ✅ Professional video generation using Gemini Veo 3.0 API
+- ✅ Image-to-video generation pipeline combining Imagen + Veo 3.0
+- ✅ Multiple artistic styles and aspect ratios for both images and videos
+- ✅ Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
+- ✅ Camera movement controls: static, pan, zoom, dolly movements
+- ✅ Advanced prompt engineering with negative prompts
+- ✅ Comprehensive validation and error handling with retry logic
+- ✅ Fast generation times with reliable output
 
-#### Phase 2: Document Understanding (Q4 2025)
-**Expanding Eyes Capabilities**
-- PDF, Word, Excel, PowerPoint document analysis
-- Text extraction with 95%+ accuracy and formatting preservation
-- Structured data extraction and cross-document comparison
-- Integration with Gemini's Document Understanding API
-- Processing time under 60 seconds for typical documents
+### Remaining Development Phases
 
-#### Phase 3: Audio Processing - Ears (Q4 2025)
+#### Phase 3: Audio Processing - Ears (Q1 2025)
 **Advanced Audio Intelligence**
 - Speech-to-text transcription with speaker identification
 - Audio content analysis (music, speech, noise classification)
 - Audio quality assessment and debugging capabilities
 - Support for 20+ audio formats (WAV, MP3, AAC, OGG, FLAC)
 - Real-time audio processing capabilities
+
+#### Phase 6: Brain (Thinking/Reasoning) - Q2 2025
+**Advanced Cognitive Intelligence**
+- Sequential thinking with dynamic problem-solving
+- Multi-step analysis with hypothesis generation and testing
+- Thought revision and reflection capabilities
+- Branching logic for non-linear problem exploration
+- Meta-cognitive analysis and process optimization
+- Advanced reasoning patterns for complex technical problems
 
 #### Phase 4: Speech Generation - Mouth ✅ COMPLETE
 **AI Voice Capabilities** - Production Ready (v1.3.0)
@@ -1348,7 +1573,7 @@ For detailed architecture information and future development plans, see:
 
 ### Target Architecture (End 2025)
 
-The evolution from single-capability visual analysis to comprehensive human-like sensory intelligence:
+The evolution from single-capability visual analysis to comprehensive human-like sensory and cognitive intelligence:
 
 ```
 ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
@@ -1370,6 +1595,11 @@ The evolution from single-capability visual analysis to comprehensive human-like
                        │  ✋ Hands (Creation) │
                        │  • Image Generation ✅│
                        │  • Video Generation ✅│
+                       │                      │
+                       │  🧠 Brain (Reasoning)│
+                       │  • Sequential Think  │
+                       │  • Hypothesis Test   │
+                       │  • Reflection        │
                        └──────────────────────┘
 ```
 
@@ -1381,6 +1611,7 @@ The evolution from single-capability visual analysis to comprehensive human-like
 - Visual regression testing and quality assurance
 - Document analysis for technical specifications
 - Audio processing for voice interfaces and content
+- Advanced reasoning and hypothesis-driven problem solving
 
 **For AI Agents:**
 - Human-like understanding of visual, audio, and document content
@@ -1388,20 +1619,23 @@ The evolution from single-capability visual analysis to comprehensive human-like
 - Sophisticated analysis capabilities beyond text processing
 - Enhanced debugging and problem-solving workflows
 - Creative content generation and editing capabilities
+- Advanced cognitive processing with sequential thinking and reflection
 
 ### Success Metrics & Timeline
 
-- **Phase 2 (Document Understanding)**: January - March 2025
-- **Phase 3 (Audio Processing)**: April - June 2025
+- **Phase 2 (Document Understanding)**: ✅ Completed September 2025
+- **Phase 3 (Audio Processing)**: January - March 2025
 - **Phase 4 (Speech Generation)**: ✅ Completed September 2025
 - **Phase 5 (Content Generation)**: ✅ Completed September 2025
+- **Phase 6 (Brain/Reasoning)**: April - June 2025
 
 **Target Goals:**
 - Support 50+ file formats across all modalities
 - 99%+ success rate with optimized processing times (images <30s, videos <5min)
+- Advanced reasoning with 95%+ logical consistency
 - 1000+ MCP client integrations and 100K+ monthly API calls
 - Comprehensive documentation with real-world examples
-- Professional-grade content generation capabilities
+- Professional-grade content generation and reasoning capabilities
 
 ### Getting Involved
 
@@ -1413,17 +1647,34 @@ Human MCP is built for the developer community. Whether you're integrating with 
 
 ## Supported Formats
 
-**Analysis Formats**:
+**Visual Analysis Formats**:
 - **Images**: PNG, JPEG, WebP, GIF (static)
 - **Videos**: MP4, WebM, MOV, AVI
 - **GIFs**: Animated GIF with frame extraction
 - **Sources**: File paths, URLs, base64 data URLs
 
-**Generation Formats**:
+**Document Processing Formats (v2.0.0)**:
+- **Documents**: PDF, DOCX, XLSX, PPTX, TXT, MD, RTF, ODT
+- **Data**: CSV, JSON, XML, HTML
+- **Features**: Text extraction, table processing, structured data extraction
+- **Auto-detection**: Automatic format detection from content and extensions
+
+**Speech Generation Formats**:
+- **Output**: WAV (Base64 encoded), 24kHz mono
+- **Languages**: 24+ languages supported
+- **Voices**: 30+ voice options with style control
+
+**Content Generation Formats**:
 - **Images**: PNG, JPEG (Base64 output)
 - **Videos**: MP4 (Base64 output)
 - **Durations**: 4s, 8s, 12s video lengths
 - **Quality**: Professional-grade output with customizable FPS (1-60)
+
+**Reasoning Capabilities (Future)**:
+- **Thinking Styles**: Analytical, systematic, creative, scientific reasoning approaches
+- **Problem Types**: Technical debugging, architecture decisions, hypothesis testing
+- **Output Formats**: Structured reasoning chains, hypothesis validation, reflection analysis
+- **Complexity**: Multi-step analysis with branching logic and thought revision
 
 ## Contributing
 

@@ -6,43 +6,52 @@
 
 Human MCP follows a modular, event-driven architecture built around the Model Context Protocol (MCP). The system is designed as a server that exposes multimodal analysis capabilities through standardized MCP tools.
 
-#### Current Architecture (Phase 1 - v1.2.1)
+#### Current Architecture (v2.0.0 - Multi-Modal Complete)
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   MCP Client    │◄──►│   Human MCP      │◄──►│  Google Gemini  │
-│   (AI Agent)    │    │   Server         │    │   Vision API    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                    ┌──────────────────┐
-                    │  Media Processors │
-                    │ (Image/Video/GIF) │
-                    └──────────────────┘
-                              │
-                              ▼
-                    ┌──────────────────┐
-                    │  System Tools    │
-                    │ (ffmpeg/sharp)   │
-                    └──────────────────┘
+┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
+│   MCP Client    │◄──►│    Human MCP         │◄──►│  Google AI Services     │
+│   (AI Agent)    │    │    Server            │    │ ┌─────────────────────┐ │
+└─────────────────┘    │                      │    │ │ Gemini Vision API   │ │
+                       │  ┌─────────────────┐ │    │ │ Gemini Document API │ │
+                       │  │ Eyes (Vision) ✅│ │    │ │ Gemini Speech API   │ │
+                       │  │ • Images/Video  │ │    │ │ Imagen API (Gen)    │ │
+                       │  │ • Documents ✅  │ │    │ │ Veo3 Video API      │ │
+                       │  └─────────────────┘ │    │ └─────────────────────┘ │
+                       │  ┌─────────────────┐ │    └─────────────────────────┘
+                       │  │ Mouth (Speech)✅│ │               │
+                       │  │ • TTS Complete  │ │               │
+                       │  │ • Narration ✅  │ │               ▼
+                       │  └─────────────────┘ │    ┌─────────────────────────┐
+                       │  ┌─────────────────┐ │    │  System Dependencies   │
+                       │  │ Hands (Create)✅│ │    │ ┌─────────────────────┐ │
+                       │  │ • Image Gen ✅  │ │    │ │ ffmpeg (A/V proc)   │ │
+                       │  │ • Video Gen ✅  │ │    │ │ Sharp (Images)      │ │
+                       │  └─────────────────┘ │    │ │ mammoth (Word)      │ │
+                       └──────────────────────┘    │ │ xlsx (Excel)        │ │
+                                                   │ │ pptx (PowerPoint)   │ │
+                                                   │ └─────────────────────┘ │
+                                                   └─────────────────────────┘
 ```
 
-#### Target Architecture (Full Roadmap - v2.0.0 by End 2025)
+#### Next Architecture Target (v3.0.0 - Q1 2025)
 
 For complete architectural evolution and development phases, see **[Project Roadmap](project-roadmap.md)** - Target Architecture section.
 
-The roadmap extends the current visual analysis foundation to include:
-- **Phase 2**: Document Understanding (Eyes extension for PDFs, Word docs, Excel)
-- **Phase 3**: Audio Processing (Ears - speech-to-text, audio analysis)
-- **Phase 4**: Speech Generation (Mouth - text-to-speech, narration)
-- **Phase 5**: Content Generation (Hands - image/video creation)
+The next phase completes the human sensory capabilities:
+- **Phase 3**: Audio Processing (Ears - speech-to-text, audio analysis) - Only remaining phase
 
 ### Core Components
 
 1. **MCP Server Layer**: Protocol implementation and tool registration
-2. **Tool Layer**: Visual analysis and comparison tools (`eyes.analyze`, `eyes.compare`)
-3. **Processing Layer**: Media-specific processors for different content types
-4. **Integration Layer**: External service integration (Gemini API)
-5. **Utility Layer**: Configuration, logging, error handling, and validation
+2. **Tool Layer**: Multi-modal capabilities across 4 complete phases
+   - **Eyes Tools**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
+   - **Mouth Tools**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
+   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`)
+   - **Ears Tools**: Audio processing (planned Phase 3)
+3. **Processing Layer**: Media and document processors with factory patterns
+4. **Transport Layer**: STDIO and HTTP transports with SSE fallback
+5. **Integration Layer**: Google AI services integration (Vision, Document, Speech, Imagen, Veo3)
+6. **Utility Layer**: Configuration, logging, error handling, validation, and security
 
 ## Directory Structure
 
@@ -65,17 +74,45 @@ human-mcp/
 ├── src/                       # Source code
 │   ├── index.ts              # Entry point - starts stdio server
 │   ├── server.ts             # MCP server setup and initialization
-│   ├── tools/                # MCP tools implementation
-│   │   └── eyes/             # Vision analysis tools
-│   │       ├── index.ts      # Tool registration and orchestration
-│   │       ├── schemas.ts    # Zod validation schemas
-│   │       ├── processors/   # Media type processors
-│   │       │   ├── image.ts  # Image processing logic
-│   │       │   ├── video.ts  # Video processing with ffmpeg
-│   │       │   └── gif.ts    # GIF frame extraction
-│   │       └── utils/        # Tool-specific utilities
-│   │           ├── gemini-client.ts  # Google Gemini API client
-│   │           └── formatters.ts     # Output formatting utilities
+│   ├── tools/                # MCP tools implementation (46 TypeScript files)
+│   │   ├── eyes/             # Visual analysis and document processing
+│   │   │   ├── index.ts      # Eyes tool registration
+│   │   │   ├── schemas.ts    # Zod validation schemas
+│   │   │   ├── types/        # TypeScript type definitions
+│   │   │   │   └── document.ts # Document processing types
+│   │   │   ├── processors/   # Media and document processors
+│   │   │   │   ├── image.ts  # Image analysis
+│   │   │   │   ├── video.ts  # Video processing
+│   │   │   │   ├── gif.ts    # GIF frame extraction
+│   │   │   │   ├── document.ts # Base document processor
+│   │   │   │   ├── pdf.ts    # PDF processing
+│   │   │   │   ├── word.ts   # Word document processing
+│   │   │   │   ├── excel.ts  # Excel spreadsheet processing
+│   │   │   │   ├── powerpoint.ts # PowerPoint presentation processing
+│   │   │   │   ├── text.ts   # Text file processing
+│   │   │   │   └── factory.ts # Document processor factory
+│   │   │   └── utils/        # Tool-specific utilities
+│   │   │       ├── gemini-client.ts # Google Gemini API integration
+│   │   │       └── formatters.ts    # Output formatting utilities
+│   │   ├── hands/            # Content generation tools
+│   │   │   ├── index.ts      # Hands tool registration
+│   │   │   ├── schemas.ts    # Content generation schemas
+│   │   │   └── processors/   # Generation processors
+│   │   │       ├── image-generator.ts # Image generation using Imagen API
+│   │   │       └── video-generator.ts # Video generation using Veo 3.0 API
+│   │   └── mouth/            # Speech generation tools
+│   │       ├── index.ts      # Mouth tool registration
+│   │       ├── schemas.ts    # Speech generation schemas
+│   │       ├── utils/        # Speech utilities
+│   │       │   └── audio-export.ts # Audio file export functionality
+│   │       └── processors/   # Speech processors
+│   │           ├── speech-synthesis.ts    # Basic text-to-speech
+│   │           ├── narration.ts          # Long-form narration
+│   │           ├── code-explanation.ts   # Code explanation speech
+│   │           └── voice-customization.ts # Voice customization
+│   ├── transports/           # Transport layer implementations
+│   │   ├── stdio/            # Standard I/O transport
+│   │   └── http/             # HTTP transport with SSE fallback
 │   ├── prompts/              # Pre-built debugging prompts
 │   │   ├── index.ts          # Prompt registration
 │   │   └── debugging-prompts.ts      # Debugging workflow templates
@@ -109,23 +146,28 @@ human-mcp/
 
 **Pattern**: Server-Client Protocol Implementation
 - **Server Component**: Human MCP implements MCP server specification
-- **Transport Layer**: Stdio transport for command-line integration
-- **Tool Registration**: Dynamic tool registration with schema validation
+- **Transport Layer**: STDIO and HTTP transports with SSE fallback support
+- **Tool Registration**: Dynamic multi-modal tool registration with schema validation
 - **Resource Exposure**: Documentation and examples exposed as MCP resources
 
 ```typescript
-// MCP Server Setup Pattern
+// MCP Server Setup Pattern (v2.0.0)
 export async function createServer() {
   const config = loadConfig();
   const server = new McpServer({
     name: "human-mcp",
-    version: "1.0.0",
+    version: "2.0.0",
   });
 
-  await registerEyesTool(server, config);
+  // Register all human capability tools
+  await registerEyesTool(server, config);      // Visual analysis + document processing
+  await registerMouthTool(server, config);    // Speech generation
+  await registerHandsTool(server, config);    // Content generation
+  // await registerEarsTool(server, config);  // Audio processing (Phase 3)
+
   await registerPrompts(server);
   await registerResources(server);
-  
+
   return server;
 }
 ```
@@ -138,18 +180,24 @@ export async function createServer() {
 - **Configuration Injection**: Environment-based configuration passed to tools
 
 ```typescript
-// Tool Registration Pattern
-server.registerTool(
-  "eyes.analyze",
-  {
-    title: "Vision Analysis Tool",
-    description: "Analyze images, videos, and GIFs using AI vision capabilities",
-    inputSchema: EyesInputSchema
-  },
-  async (args) => {
-    return await handleAnalyze(geminiClient, args, config);
-  }
-);
+// Tool Registration Pattern (Multi-Modal v2.0.0)
+// Eyes Tools - Visual Analysis + Document Processing
+server.registerTool("eyes_analyze", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_compare", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_read_document", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_extract_data", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_summarize", { /* ... */ }, async (args) => { /* ... */ });
+
+// Mouth Tools - Speech Generation
+server.registerTool("mouth_speak", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("mouth_narrate", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("mouth_explain", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("mouth_customize", { /* ... */ }, async (args) => { /* ... */ });
+
+// Hands Tools - Content Generation
+server.registerTool("gemini_gen_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_gen_video", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_image_to_video", { /* ... */ }, async (args) => { /* ... */ });
 ```
 
 ### 3. Strategy Pattern for Media Processing
@@ -160,7 +208,7 @@ server.registerTool(
 - **GIF Processor**: Frame extraction using Sharp, animation sequence analysis
 
 ```typescript
-// Strategy Pattern Implementation
+// Media Processing Strategy Pattern
 switch (type) {
   case "image":
     result = await processImage(model, source, options);
@@ -176,7 +224,39 @@ switch (type) {
 }
 ```
 
-### 4. Configuration-driven Architecture
+### 4. Factory Pattern for Document Processing
+
+**Pattern**: Document Processor Factory with Auto-Detection
+- **Format Detection**: Automatic format detection from file content and extensions
+- **Processor Creation**: Factory method creates appropriate processor for format
+- **Unified Interface**: Common interface for all document processors
+
+```typescript
+// Document Processing Factory Pattern (v2.0.0)
+class DocumentProcessorFactory {
+  static create(format: DocumentFormat, geminiClient: GeminiClient): DocumentProcessor {
+    switch (format) {
+      case 'pdf': return new PDFProcessor(geminiClient);
+      case 'docx': return new WordProcessor(geminiClient);
+      case 'xlsx': return new ExcelProcessor(geminiClient);
+      case 'pptx': return new PowerPointProcessor(geminiClient);
+      case 'txt':
+      case 'md': return new TextProcessor(geminiClient);
+      default: throw new Error(`Unsupported document format: ${format}`);
+    }
+  }
+
+  static detectFormat(source: string, buffer: Buffer): DocumentFormat {
+    // Auto-detection logic based on file content and extension
+  }
+}
+
+// Usage Pattern
+const processor = DocumentProcessorFactory.create(detectedFormat, geminiClient);
+const result = await processor.process(source, options);
+```
+
+### 5. Configuration-driven Architecture
 
 **Pattern**: Environment-based Configuration with Validation
 - **Schema Validation**: Zod schemas for runtime configuration validation
