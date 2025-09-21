@@ -1,3 +1,25 @@
+# [2.0.0](https://github.com/mrgoonie/human-mcp/compare/v1.4.0...v2.0.0) (2025-09-21)
+
+
+### Bug Fixes
+
+* **ci:** resolve TypeScript compilation errors for Bun compatibility ([cf63114](https://github.com/mrgoonie/human-mcp/commit/cf6311453ec2c7028198a750fe2c908705085179))
+* update lockfile to sync with package.json dependencies ([647c862](https://github.com/mrgoonie/human-mcp/commit/647c86285679dcc3f7727b2d59a774d8c5ea7280))
+
+
+### Features
+
+* add document processing capabilities to eyes tools ([082cae7](https://github.com/mrgoonie/human-mcp/commit/082cae779d99d1221d05dc4f30021371d1909ec2))
+* **hands:** implement image generation tool using Gemini Imagen API ([a8304a5](https://github.com/mrgoonie/human-mcp/commit/a8304a5293eb76465fcc7a55263b74505e03a8e2))
+* **mouth:** implement comprehensive speech generation tools ([ebbae52](https://github.com/mrgoonie/human-mcp/commit/ebbae52cdb345888221a4eebd473ad7ad0a29f1e))
+
+
+### BREAKING CHANGES
+
+* **hands:** None - additive feature implementation
+
+Closes: Phase 5 Content Generation milestone
+
 # [1.4.0](https://github.com/mrgoonie/human-mcp/compare/v1.3.0...v1.4.0) (2025-09-15)
 
 

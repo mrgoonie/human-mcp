@@ -1,6 +1,6 @@
 {
   "name": "@goonnguyen/human-mcp",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Human MCP: Bringing Human Capabilities to Coding Agents",
   "type": "module",
   "main": "dist/index.js",
@@ -31,10 +31,8 @@
     "marked": "^16.3.0",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
-
     "pptx-automizer": "^0.7.4",
     "sharp": "^0.33.0",
-
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5",
     "zod": "^3.23.0"
