@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/mrgoonie/human-mcp/compare/v2.0.0...v2.1.0) (2025-09-21)
+
+
+### Features
+
+* **hands:** complete Phase 5 - Professional Video Generation with Veo 3.0 API ([21edbc9](https://github.com/mrgoonie/human-mcp/commit/21edbc9e6a783953de32310d76230da776244ec6))
+
 # [2.0.0](https://github.com/mrgoonie/human-mcp/compare/v1.4.0...v2.0.0) (2025-09-21)
 
 
