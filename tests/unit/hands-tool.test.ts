@@ -42,10 +42,6 @@ describe('Hands Tool', () => {
     server = new McpServer({
       name: 'test-server',
       version: '1.0.0'
-    }, {
-      capabilities: {
-        tools: {}
-      }
     });
 
     await registerHandsTool(server, config);
@@ -81,13 +77,7 @@ describe('Hands Tool', () => {
     });
 
     it('should handle mock image generation calls', async () => {
-      const result = await mockGenerateImage({
-        prompt: 'Test prompt',
-        model: 'gemini-2.5-flash-image-preview',
-        outputFormat: 'base64',
-        aspectRatio: '1:1',
-        fetchTimeout: 60000
-      });
+      const result = await mockGenerateImage();
 
       expect(result.imageData).toBeDefined();
       expect(result.format).toBe('base64_data_uri');
@@ -143,7 +133,7 @@ describe('Hands Tool', () => {
       mockGenerateImage.mockImplementationOnce(errorMock);
 
       try {
-        await mockGenerateImage({});
+        await mockGenerateImage();
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toBe('Generation failed');

@@ -77,10 +77,6 @@ describe('Eyes Analyze Tool', () => {
     server = new McpServer({
       name: 'test-server',
       version: '1.0.0'
-    }, {
-      capabilities: {
-        tools: {}
-      }
     });
 
     await registerEyesTool(server, config);

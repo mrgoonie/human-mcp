@@ -87,14 +87,10 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
     server = new McpServer({
       name: 'test-server-e2e',
       version: '1.0.0'
-    }, {
-      capabilities: {
-        tools: {}
-      }
     });
 
     await registerHandsTool(server, REAL_API_CONFIG);
-  }, testTimeout);
+  });
 
   beforeEach(() => {
     if (!shouldRunRealApiTests()) {
@@ -132,7 +128,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(result.size).toBeDefined();
 
       console.log(`✓ Generated image in ${result.generationTime}ms, size: ${result.size}`);
-    }, testTimeout);
+    });
 
     it('should generate photorealistic image', async () => {
       if (!shouldRunRealApiTests()) {
@@ -156,7 +152,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(result.generationTime).toBeGreaterThan(0);
 
       console.log(`✓ Generated photorealistic image in ${result.generationTime}ms`);
-    }, testTimeout);
+    });
 
     it('should generate artistic image', async () => {
       if (!shouldRunRealApiTests()) {
@@ -180,7 +176,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(result.generationTime).toBeGreaterThan(0);
 
       console.log(`✓ Generated artistic image in ${result.generationTime}ms`);
-    }, testTimeout);
+    });
 
     it('should handle negative prompts', async () => {
       if (!shouldRunRealApiTests()) {
@@ -204,7 +200,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(result.generationTime).toBeGreaterThan(0);
 
       console.log(`✓ Generated image with negative prompt in ${result.generationTime}ms`);
-    }, testTimeout);
+    });
 
     it('should generate different aspect ratios', async () => {
       if (!shouldRunRealApiTests()) {
@@ -231,7 +227,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
         console.log(`✓ Generated ${ratio} image in ${result.generationTime}ms`);
       }
-    }, testTimeout * 3);
+    });
 
     it('should handle cartoon style', async () => {
       if (!shouldRunRealApiTests()) {
@@ -255,7 +251,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(result.generationTime).toBeGreaterThan(0);
 
       console.log(`✓ Generated cartoon image in ${result.generationTime}ms`);
-    }, testTimeout);
+    });
   });
 
   describe('Real API Error Handling', () => {
@@ -281,7 +277,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
         expect(error).toBeInstanceOf(Error);
         console.log(`✓ API correctly rejected unsafe prompt: ${(error as Error).message}`);
       }
-    }, testTimeout);
+    });
 
     it('should handle very long prompts', async () => {
       if (!shouldRunRealApiTests()) {
@@ -307,7 +303,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
         expect(error).toBeInstanceOf(Error);
         console.log(`✓ API correctly rejected overly long prompt: ${(error as Error).message}`);
       }
-    }, testTimeout);
+    });
   });
 
   describe('Performance Tests', () => {
@@ -336,7 +332,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(totalTime).toBeLessThan(60000); // Should complete within 1 minute
 
       console.log(`✓ Image generated in ${totalTime}ms (reported: ${result.generationTime}ms)`);
-    }, testTimeout);
+    });
 
     it('should handle concurrent generation requests', async () => {
       if (!shouldRunRealApiTests()) {
@@ -364,7 +360,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
         expect(isValidBase64Image(result.imageData)).toBe(true);
         console.log(`✓ Concurrent request ${i + 1} completed in ${result.generationTime}ms`);
       });
-    }, testTimeout * 2);
+    });
   });
 
   describe('Quality Validation', () => {
@@ -394,7 +390,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(buffer.length).toBeGreaterThan(0);
 
       console.log(`✓ Generated valid base64 image, size: ${buffer.length} bytes`);
-    }, testTimeout);
+    });
 
     it('should include complete metadata', async () => {
       if (!shouldRunRealApiTests()) {
@@ -423,6 +419,6 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
         generationTime: result.generationTime,
         size: result.size
       })}`);
-    }, testTimeout);
+    });
   });
 });

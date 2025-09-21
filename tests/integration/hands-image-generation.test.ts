@@ -14,9 +14,14 @@ const mockGeminiModel = {
   })
 };
 
-const mockGeminiClient = {
-  getImageGenerationModel: mock(() => mockGeminiModel)
-} as unknown as GeminiClient;
+let mockGeminiClient: any;
+
+// Initialize mock client
+function initializeMockClient() {
+  mockGeminiClient = {
+    getImageGenerationModel: mock(() => mockGeminiModel)
+  } as unknown as GeminiClient;
+}
 
 describe('Image Generation Integration Tests', () => {
   let config: any;
@@ -24,6 +29,7 @@ describe('Image Generation Integration Tests', () => {
   beforeAll(() => {
     process.env.GOOGLE_GEMINI_API_KEY = 'test-key';
     config = loadConfig();
+    initializeMockClient();
   });
 
   afterAll(() => {
@@ -32,8 +38,7 @@ describe('Image Generation Integration Tests', () => {
 
   beforeEach(() => {
     // Reset mocks before each test
-    mockGeminiModel.generateContent.mockClear();
-    mockGeminiClient.getImageGenerationModel.mockClear();
+    initializeMockClient();
   });
 
   describe('generateImage function', () => {
@@ -146,7 +151,7 @@ describe('Image Generation Integration Tests', () => {
           ])
         );
 
-        mockGeminiModel.generateContent.mockClear();
+        initializeMockClient();
       }
     });
 

@@ -44,7 +44,7 @@ describe('Hands Tool Schemas', () => {
         const result = ImageGenerationInputSchema.safeParse(input);
         expect(result.success).toBe(true);
         if (result.success) {
-          expect(result.data.style).toBe(style);
+          expect(result.data.style).toBe(style as 'photorealistic' | 'artistic' | 'cartoon' | 'sketch' | 'digital_art');
         }
       });
     });
@@ -61,7 +61,7 @@ describe('Hands Tool Schemas', () => {
         const result = ImageGenerationInputSchema.safeParse(input);
         expect(result.success).toBe(true);
         if (result.success) {
-          expect(result.data.aspect_ratio).toBe(ratio);
+          expect(result.data.aspect_ratio).toBe(ratio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4');
         }
       });
     });
@@ -78,7 +78,7 @@ describe('Hands Tool Schemas', () => {
         const result = ImageGenerationInputSchema.safeParse(input);
         expect(result.success).toBe(true);
         if (result.success) {
-          expect(result.data.output_format).toBe(format);
+          expect(result.data.output_format).toBe(format as 'base64' | 'url');
         }
       });
     });
@@ -211,11 +211,11 @@ describe('Hands Tool Schemas', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.prompt).toBe(input.prompt);
-        expect(result.data.model).toBe(input.model);
-        expect(result.data.output_format).toBe(input.output_format);
+        expect(result.data.model).toBe(input.model as 'gemini-2.5-flash-image-preview');
+        expect(result.data.output_format).toBe(input.output_format as 'base64' | 'url');
         expect(result.data.negative_prompt).toBe(input.negative_prompt);
-        expect(result.data.style).toBe(input.style);
-        expect(result.data.aspect_ratio).toBe(input.aspect_ratio);
+        expect(result.data.style).toBe(input.style as 'photorealistic' | 'artistic' | 'cartoon' | 'sketch' | 'digital_art');
+        expect(result.data.aspect_ratio).toBe(input.aspect_ratio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4');
         expect(result.data.seed).toBe(input.seed);
       }
     });

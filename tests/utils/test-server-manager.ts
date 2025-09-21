@@ -57,16 +57,10 @@ export class TestServerManager {
     const port = await this.getAvailablePort();
     
     // Create a basic MCP server for testing
-    const mcpServer = new McpServer(
-      {
-        name: "test-server",
-        version: "1.0.0"
-      },
-      {
-        capabilities: {
-          tools: {}
-        }
-      }
+    const mcpServer = new McpServer({
+      name: "test-server",
+      version: "1.0.0"
+    }
     );
 
     const serverConfig: HttpTransportConfig = {
