@@ -152,7 +152,7 @@ async function handleImageGeneration(
   if (result.imageData.startsWith('data:')) {
     // Extract MIME type and base64 data from data URI
     const matches = result.imageData.match(/data:([^;]+);base64,(.+)/);
-    if (matches) {
+    if (matches && matches[1] && matches[2]) {
       const mimeType = matches[1];
       const base64Data = matches[2];
 
