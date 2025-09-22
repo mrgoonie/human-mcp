@@ -148,22 +148,37 @@ async function handleImageGeneration(
 
   const result = await generateImage(geminiClient, generationOptions);
 
+  // Return image as proper MCP content type instead of JSON text
+  if (result.imageData.startsWith('data:')) {
+    // Extract MIME type and base64 data from data URI
+    const matches = result.imageData.match(/data:([^;]+);base64,(.+)/);
+    if (matches) {
+      const mimeType = matches[1];
+      const base64Data = matches[2];
+
+      return {
+        content: [
+          {
+            type: "image" as const,
+            data: base64Data,
+            mimeType: mimeType
+          },
+          {
+            type: "text" as const,
+            text: `✅ Image generated successfully using ${result.model}\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}`
+          }
+        ],
+        isError: false
+      };
+    }
+  }
+
+  // Fallback to text format if data URI parsing fails
   return {
     content: [
       {
         type: "text" as const,
-        text: JSON.stringify({
-          success: true,
-          image: result.imageData,
-          format: result.format,
-          model: result.model,
-          prompt: prompt,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            generation_time: result.generationTime,
-            size: result.size
-          }
-        }, null, 2)
+        text: `✅ Image generated successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n\n**Image Data:** ${result.imageData.substring(0, 100)}...`
       }
     ],
     isError: false
