@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/mrgoonie/human-mcp/compare/v2.3.0...v2.4.0) (2025-09-28)
+
+
+### Features
+
+* **eyes_analyze:** improve API reliability and image processing ([c53c4f9](https://github.com/mrgoonie/human-mcp/commit/c53c4f9f6226b843a7e7d1e3be7752ca9e9b48fc))
+
 # [2.3.0](https://github.com/mrgoonie/human-mcp/compare/v2.2.0...v2.3.0) (2025-09-22)
 
 
