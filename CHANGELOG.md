@@ -1,3 +1,15 @@
+# [2.3.0](https://github.com/mrgoonie/human-mcp/compare/v2.2.0...v2.3.0) (2025-09-22)
+
+
+### Bug Fixes
+
+* **typescript:** resolve null safety in image content block parsing ([4ddaa3e](https://github.com/mrgoonie/human-mcp/commit/4ddaa3eb0e9e7aae7e294ca603ca3f12a395636c))
+
+
+### Features
+
+* improve dev workflows and image generation response format ([15f2f51](https://github.com/mrgoonie/human-mcp/commit/15f2f51890b3cb262dd303c0f7ec1aeadded15c2))
+
 # [2.2.0](https://github.com/mrgoonie/human-mcp/compare/v2.1.0...v2.2.0) (2025-09-21)
 
 
