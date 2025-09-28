@@ -325,6 +325,14 @@ Be precise with locations and measurements where possible.`;
 }
 
 async function loadImageForComparison(source: string): Promise<{ data: string; mimeType: string }> {
+  // Handle Claude Code virtual image references
+  if (source.match(/^\[Image #\d+\]$/)) {
+    throw new Error(
+      `Virtual image reference "${source}" cannot be processed. ` +
+      `Please use a direct file path, URL, or base64 data URI instead.`
+    );
+  }
+
   if (source.startsWith('data:image/')) {
     const [header, data] = source.split(',');
     if (!header || !data) {

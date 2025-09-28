@@ -150,41 +150,63 @@ export class GeminiClient {
     prompt: string,
     mediaData: Array<{ mimeType: string; data: string }>
   ): Promise<string> {
-    try {
-      logger.debug(`Analyzing content with ${mediaData.length} media files`);
-      
-      const parts = [
-        { text: prompt },
-        ...mediaData.map(media => ({
-          inlineData: {
-            mimeType: media.mimeType,
-            data: media.data
-          }
-        }))
-      ];
-      
-      // Add timeout wrapper
-      const analysisPromise = model.generateContent(parts);
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new APIError("Gemini API request timed out")), this.config.server.requestTimeout);
-      });
-      
-      const result = await Promise.race([analysisPromise, timeoutPromise]);
-      const response = await result.response;
-      const text = response.text();
-      
-      if (!text) {
-        throw new APIError("No response from Gemini API");
+    return this.analyzeContentWithRetry(model, prompt, mediaData, 3);
+  }
+
+  async analyzeContentWithRetry(
+    model: GenerativeModel,
+    prompt: string,
+    mediaData: Array<{ mimeType: string; data: string }>,
+    maxRetries: number = 3
+  ): Promise<string> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.debug(`Analyzing content with ${mediaData.length} media files (attempt ${attempt}/${maxRetries})`);
+
+        const parts = [
+          { text: prompt },
+          ...mediaData.map(media => ({
+            inlineData: {
+              mimeType: media.mimeType,
+              data: media.data
+            }
+          }))
+        ];
+
+        // Add timeout wrapper
+        const analysisPromise = model.generateContent(parts);
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new APIError("Gemini API request timed out")), this.config.server.requestTimeout);
+        });
+
+        const result = await Promise.race([analysisPromise, timeoutPromise]);
+        const response = await result.response;
+        const text = response.text();
+
+        if (!text) {
+          throw new APIError("No response from Gemini API");
+        }
+
+        return text;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        logger.warn(`Content analysis attempt ${attempt} failed:`, lastError.message);
+
+        // Check if error is retryable
+        if (!this.isRetryableError(error) || attempt === maxRetries) {
+          break;
+        }
+
+        // Calculate backoff delay
+        const delay = this.createBackoffDelay(attempt);
+        logger.debug(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
-      return text;
-    } catch (error) {
-      logger.error("Gemini API error:", error);
-      if (error instanceof Error) {
-        throw new APIError(`Gemini API error: ${error.message}`);
-      }
-      throw new APIError("Unknown Gemini API error");
     }
+
+    this.handleGeminiError(lastError, "Content analysis");
   }
 
   /**
@@ -1084,12 +1106,31 @@ Extract as much metadata as possible from the document properties and content.`;
     }
 
     if (error?.status === 503) {
-      throw new APIError(`${operation}: Gemini API temporarily unavailable`);
+      throw new APIError(
+        `${operation}: Gemini API is currently unavailable (503 Service Unavailable). ` +
+        `This is usually temporary. Please try again in a few moments. ` +
+        `If the issue persists, check Google's Gemini API status page.`
+      );
     }
 
     // Network or timeout errors
     if (error?.code === 'ECONNRESET' || error?.code === 'ETIMEDOUT') {
       throw new APIError(`${operation}: Network error - check connection and retry`);
+    }
+
+    // Gemini-specific errors
+    if (error?.message?.includes('GoogleGenerativeAI Error')) {
+      const geminiErrorMatch = error.message.match(/\[(\d+)\s+([^\]]+)\]\s+(.+)/);
+      if (geminiErrorMatch) {
+        const [, statusCode, statusText, details] = geminiErrorMatch;
+        if (statusCode === '503') {
+          throw new APIError(
+            `${operation}: Google Gemini API is temporarily unavailable (${statusText}). ` +
+            `This is a service-side issue. Please try again in a few moments.`
+          );
+        }
+        throw new APIError(`${operation}: Gemini API error [${statusCode} ${statusText}] ${details}`);
+      }
     }
 
     // Default error

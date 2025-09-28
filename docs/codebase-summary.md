@@ -89,11 +89,11 @@ src/
 ```
 
 ### File Count Summary
-- **Total TypeScript Files**: 50+ files
-- **Eyes Tools**: 26 files (visual analysis + document processing)
+- **Total TypeScript Files**: 35+ files in tools directory
+- **Eyes Tools**: 15+ files (visual analysis + document processing)
 - **Brain Tools**: 8 files (advanced reasoning)
 - **Hands Tools**: 4 files (content generation)
-- **Mouth Tools**: 8 files (speech generation)
+- **Mouth Tools**: 6 files (speech generation)
 - **Transport Layer**: 6 files (HTTP + STDIO)
 - **Core Utilities**: 8 files
 

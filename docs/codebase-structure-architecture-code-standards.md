@@ -6,7 +6,7 @@
 
 Human MCP follows a modular, event-driven architecture built around the Model Context Protocol (MCP). The system is designed as a server that exposes multimodal analysis capabilities through standardized MCP tools.
 
-#### Current Architecture (v2.0.0 - Multi-Modal Complete)
+#### Current Architecture (v2.2.0 - Multi-Modal + Advanced Reasoning Complete)
 ```
 ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
 │   MCP Client    │◄──►│    Human MCP         │◄──►│  Google AI Services     │
@@ -37,20 +37,21 @@ Human MCP follows a modular, event-driven architecture built around the Model Co
 
 For complete architectural evolution and development phases, see **[Project Roadmap](project-roadmap.md)** - Target Architecture section.
 
-The next phase completes the human sensory capabilities:
-- **Phase 3**: Audio Processing (Ears - speech-to-text, audio analysis) - Only remaining phase
+The final phase completes all human sensory capabilities:
+- **Phase 3**: Audio Processing (Ears - speech-to-text, audio analysis) - Only remaining phase (5 of 6 phases complete)
 
 ### Core Components
 
 1. **MCP Server Layer**: Protocol implementation and tool registration
-2. **Tool Layer**: Multi-modal capabilities across 4 complete phases
+2. **Tool Layer**: Multi-modal capabilities across 5 complete phases
    - **Eyes Tools**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
+   - **Brain Tools**: Advanced reasoning (`brain_think`, `brain_analyze`, `brain_solve`, `brain_reflect`)
    - **Mouth Tools**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
    - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`)
    - **Ears Tools**: Audio processing (planned Phase 3)
-3. **Processing Layer**: Media and document processors with factory patterns
+3. **Processing Layer**: Media, document, and reasoning processors with factory patterns
 4. **Transport Layer**: STDIO and HTTP transports with SSE fallback
-5. **Integration Layer**: Google AI services integration (Vision, Document, Speech, Imagen, Veo3)
+5. **Integration Layer**: Google AI services integration (Vision, Document, Speech, Imagen, Veo3, Advanced Reasoning)
 6. **Utility Layer**: Configuration, logging, error handling, validation, and security
 
 ## Directory Structure
@@ -151,16 +152,17 @@ human-mcp/
 - **Resource Exposure**: Documentation and examples exposed as MCP resources
 
 ```typescript
-// MCP Server Setup Pattern (v2.0.0)
+// MCP Server Setup Pattern (v2.2.0)
 export async function createServer() {
   const config = loadConfig();
   const server = new McpServer({
     name: "human-mcp",
-    version: "2.0.0",
+    version: "2.2.0",
   });
 
   // Register all human capability tools
   await registerEyesTool(server, config);      // Visual analysis + document processing
+  await registerBrainTools(server, config);   // Advanced reasoning (NEW in v2.2.0)
   await registerMouthTool(server, config);    // Speech generation
   await registerHandsTool(server, config);    // Content generation
   // await registerEarsTool(server, config);  // Audio processing (Phase 3)
@@ -180,13 +182,19 @@ export async function createServer() {
 - **Configuration Injection**: Environment-based configuration passed to tools
 
 ```typescript
-// Tool Registration Pattern (Multi-Modal v2.0.0)
+// Tool Registration Pattern (Multi-Modal + Advanced Reasoning v2.2.0)
 // Eyes Tools - Visual Analysis + Document Processing
 server.registerTool("eyes_analyze", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_compare", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_read_document", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_extract_data", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_summarize", { /* ... */ }, async (args) => { /* ... */ });
+
+// Brain Tools - Advanced Reasoning (NEW in v2.2.0)
+server.registerTool("brain_think", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("brain_analyze", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("brain_solve", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("brain_reflect", { /* ... */ }, async (args) => { /* ... */ });
 
 // Mouth Tools - Speech Generation
 server.registerTool("mouth_speak", { /* ... */ }, async (args) => { /* ... */ });

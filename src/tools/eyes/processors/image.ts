@@ -59,29 +59,44 @@ export async function processImage(
 }
 
 async function loadImage(source: string, fetchTimeout?: number): Promise<{ imageData: string; mimeType: string }> {
+  // Handle Claude Code virtual image references like "[Image #1]"
+  if (source.match(/^\[Image #\d+\]$/)) {
+    throw new ProcessingError(
+      `Virtual image reference "${source}" cannot be processed directly.\n\n` +
+      `This occurs when Claude Code references an uploaded image that hasn't been properly resolved.\n\n` +
+      `Solutions:\n` +
+      `1. Use a direct file path instead (e.g., "/path/to/image.png")\n` +
+      `2. Use a public URL (e.g., "https://example.com/image.png")\n` +
+      `3. Convert your image to a base64 data URI and pass that instead\n` +
+      `4. If using HTTP transport, configure Cloudflare R2 for automatic file uploads\n\n` +
+      `Example of base64 data URI format:\n` +
+      `"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="`
+    );
+  }
+
   // Detect Claude Desktop virtual paths and auto-upload to Cloudflare
   if (source.startsWith('/mnt/user-data/') || source.startsWith('/mnt/')) {
     logger.info(`Detected Claude Desktop virtual path: ${source}`);
-    
+
     // Extract filename from path
     const filename = source.split('/').pop() || 'upload.jpg';
-    
+
     // Try to read from a temporary upload directory (if middleware saved it)
     const tempPath = `/tmp/mcp-uploads/${filename}`;
-    
+
     try {
       // Check if file was temporarily saved by middleware
       if (await fs.access(tempPath).then(() => true).catch(() => false)) {
         const buffer = await fs.readFile(tempPath);
-        
+
         // Upload to Cloudflare R2 if configured
         const cloudflare = getCloudflareR2();
         if (cloudflare) {
           const publicUrl = await cloudflare.uploadFile(buffer, filename);
-          
+
           // Clean up temp file
           await fs.unlink(tempPath).catch(() => {});
-          
+
           // Now fetch from the CDN URL
           return loadImage(publicUrl, fetchTimeout);
         }
@@ -89,7 +104,7 @@ async function loadImage(source: string, fetchTimeout?: number): Promise<{ image
     } catch (error) {
       logger.warn(`Could not process temp file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
+
     // If no temp file or Cloudflare not configured, provide helpful error
     throw new ProcessingError(
       `Local file access not supported via HTTP transport.\n` +
