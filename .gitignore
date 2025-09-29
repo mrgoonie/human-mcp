@@ -55,5 +55,7 @@ coverage/
 *.pid.lock
 
 # Claude Code
-plans/reports/
-screenshots/
+plans/reports/**/*
+screenshots/**/*
+audio-outputs/**/*
+data/**/*
