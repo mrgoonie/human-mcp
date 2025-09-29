@@ -18,7 +18,7 @@ import type { BrainReflectInput } from "./types.js";
  * Register optimized Brain tools with hybrid native/enhanced approach
  *
  * Native Tools (70% usage):
- * - mcp__sequential-thinking__sequentialthinking: Native sequential thinking
+ * - mcp__reasoning__sequentialthinking: Native sequential thinking
  * - mcp__memory__store: Knowledge graph persistence
  * - mcp__memory__recall: Memory retrieval
  * - brain_analyze_simple: Pattern-based reasoning
@@ -171,7 +171,7 @@ function formatEnhancedReflectionResult(result: any): string {
 export const BRAIN_TOOL_RECOMMENDATIONS = {
   // Use native tools for these scenarios (fast, no API cost)
   native: {
-    "mcp__sequential-thinking__sequentialthinking": [
+    "mcp__reasoning__sequentialthinking": [
       "Complex problem-solving requiring step-by-step thinking",
       "Dynamic reasoning with thought revision and branching",
       "Multi-step analysis with session management"

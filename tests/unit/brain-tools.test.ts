@@ -40,7 +40,7 @@ describe("Brain Tools Optimization", () => {
   test("should register all native brain tools", async () => {
     // Check that all expected native tools are registered
     const expectedNativeTools = [
-      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__reasoning__sequentialthinking",
       "mcp__memory__store",
       "mcp__memory__recall",
       "brain_analyze_simple",
@@ -59,7 +59,7 @@ describe("Brain Tools Optimization", () => {
   });
 
   test("sequential thinking tool should have simplified schema", async () => {
-    const toolData = registeredTools.get("mcp__sequential-thinking__sequentialthinking");
+    const toolData = registeredTools.get("mcp__reasoning__sequentialthinking");
 
     expect(toolData).toBeDefined();
     expect(toolData.schema.description).toContain("Advanced sequential thinking");
@@ -137,7 +137,7 @@ describe("Brain Tools Optimization", () => {
 
   test("native tools should have fast response indicators", async () => {
     const nativeTools = [
-      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__reasoning__sequentialthinking",
       "mcp__memory__store",
       "mcp__memory__recall",
       "brain_analyze_simple",
@@ -174,7 +174,7 @@ describe("Brain Tools Optimization", () => {
   test("brain tools should be properly categorized", async () => {
     // Count tools by category
     const nativeToolNames = [
-      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__reasoning__sequentialthinking",
       "mcp__memory__store",
       "mcp__memory__recall",
       "brain_analyze_simple",
@@ -215,7 +215,7 @@ describe("Brain Tools Functional Tests", () => {
   });
 
   test("sequential thinking tool should process thoughts", async () => {
-    const toolData = registeredTools.get("mcp__sequential-thinking__sequentialthinking");
+    const toolData = registeredTools.get("mcp__reasoning__sequentialthinking");
     expect(toolData).toBeDefined();
 
     // Test basic sequential thinking
@@ -317,7 +317,7 @@ describe("Brain Tools Error Handling", () => {
   });
 
   test("sequential thinking should handle missing problem", async () => {
-    const toolData = registeredTools.get("mcp__sequential-thinking__sequentialthinking");
+    const toolData = registeredTools.get("mcp__reasoning__sequentialthinking");
     expect(toolData).toBeDefined();
 
     const args = {
