@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/mrgoonie/human-mcp/compare/v2.4.1...v2.5.0) (2025-09-29)
+
+
+### Features
+
+* **logging:** enhance logging infrastructure and analysis ([a82167d](https://github.com/mrgoonie/human-mcp/commit/a82167d35c1b1954a6d6522dbe4a57cb4462ae33))
+
 ## [2.4.1](https://github.com/mrgoonie/human-mcp/compare/v2.4.0...v2.4.1) (2025-09-29)
 
 
