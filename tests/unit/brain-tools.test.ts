@@ -81,7 +81,8 @@ describe("Brain Tools Optimization", () => {
     const storeSchema = memoryStoreData.schema.inputSchema as any;
     expect(storeSchema.action).toBeDefined();
     expect(storeSchema.entityName).toBeDefined();
-    expect(storeSchema.entityType?.optional).toBe(true);
+    // Check if entityType is optional by checking the Zod type
+    expect(storeSchema.entityType._def.typeName).toBe("ZodOptional");
 
     // Test memory recall tool
     const memoryRecallData = registeredTools.get("mcp__memory__recall");
@@ -90,7 +91,8 @@ describe("Brain Tools Optimization", () => {
 
     const recallSchema = memoryRecallData.schema.inputSchema as any;
     expect(recallSchema.action).toBeDefined();
-    expect(recallSchema.query?.optional).toBe(true);
+    // Check if query is optional by checking the Zod type
+    expect(recallSchema.query._def.typeName).toBe("ZodOptional");
   });
 
   test("simple reasoning tool should work with pattern-based analysis", async () => {
@@ -102,11 +104,12 @@ describe("Brain Tools Optimization", () => {
     const schema = simpleReasoningData.schema.inputSchema as any;
     expect(schema.problem).toBeDefined();
     expect(schema.pattern).toBeDefined();
-    expect(schema.pattern.enum).toContain("problem_solving");
-    expect(schema.pattern.enum).toContain("root_cause");
-    expect(schema.pattern.enum).toContain("pros_cons");
-    expect(schema.pattern.enum).toContain("swot");
-    expect(schema.pattern.enum).toContain("cause_effect");
+    // Check enum values in Zod's _def.values
+    expect(schema.pattern._def.values).toContain("problem_solving");
+    expect(schema.pattern._def.values).toContain("root_cause");
+    expect(schema.pattern._def.values).toContain("pros_cons");
+    expect(schema.pattern._def.values).toContain("swot");
+    expect(schema.pattern._def.values).toContain("cause_effect");
   });
 
   test("enhanced reflection tool should have simplified interface", async () => {
@@ -118,10 +121,12 @@ describe("Brain Tools Optimization", () => {
     const schema = enhancedReflectionData.schema.inputSchema as any;
     expect(schema.originalAnalysis).toBeDefined();
     expect(schema.focusAreas).toBeDefined();
-    expect(schema.focusAreas.items.enum).toContain("assumptions");
-    expect(schema.focusAreas.items.enum).toContain("logic_gaps");
-    expect(schema.improvementGoal?.optional).toBe(true);
-    expect(schema.detailLevel?.optional).toBe(true);
+    // Check array item enum values - focusAreas is ZodArray with ZodEnum element
+    expect(schema.focusAreas._def.type._def.values).toContain("assumptions");
+    expect(schema.focusAreas._def.type._def.values).toContain("logic_gaps");
+    // Check if fields are optional by checking Zod type
+    expect(schema.improvementGoal._def.typeName).toBe("ZodOptional");
+    expect(schema.detailLevel._def.typeName).toBe("ZodOptional");
   });
 
   test("tools should follow MCP naming conventions", async () => {

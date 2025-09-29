@@ -1,27 +1,22 @@
-import { beforeAll, afterAll, mock } from "bun:test";
-import { MockHelpers } from "./utils/mock-helpers.js";
+import { beforeAll, afterAll } from "bun:test";
+import {
+  applyConditionalMocks,
+  resetConditionalMocks,
+  globalMocks,
+  getTestType,
+  getMockInfo
+} from "./utils/mock-control.js";
 
-// Global mock instances
-export const globalMocks = {
-  logger: MockHelpers.createLoggerMock(),
-  fs: MockHelpers.createFileSystemMock(),
-  geminiClient: MockHelpers.createGeminiClientMock()
-};
+// Apply mocks conditionally based on TEST_TYPE environment variable
+const testType = getTestType();
+console.log(`[TestSetup] Initializing test environment for type: ${testType}`);
+console.log(`[TestSetup] Mock configuration:`, getMockInfo(testType));
 
-// Mock logger globally for all tests
-mock.module("@/utils/logger", () => ({
-  logger: globalMocks.logger
-}));
+// Apply conditional mocks
+applyConditionalMocks(testType);
 
-// Mock fs module for Bun compatibility (disabled for integration tests)
-// mock.module("fs", () => globalMocks.fs);
-
-// Mock Google Gemini client
-mock.module("@google/generative-ai", () => ({
-  GoogleGenerativeAI: mock(() => ({
-    getGenerativeModel: globalMocks.geminiClient.getGenerativeModel
-  }))
-}));
+// Export global mocks for compatibility
+export { globalMocks };
 
 beforeAll(() => {
   // Set up test environment variables
@@ -50,6 +45,6 @@ afterAll(() => {
   // Clean up global test state
   delete (globalThis as any).__TEST_MODE__;
   
-  // Reset all mocks
-  MockHelpers.resetAllMocks(globalMocks);
+  // Reset conditional mocks
+  resetConditionalMocks(testType);
 });
