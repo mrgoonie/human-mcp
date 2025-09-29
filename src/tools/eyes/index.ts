@@ -51,12 +51,38 @@ async function registerVisionTools(server: McpServer, geminiClient: GeminiClient
         return await handleAnalyze(geminiClient, args, config);
       } catch (error) {
         const mcpError = handleError(error);
-        logger.error(`Tool eyes_analyze error:`, mcpError);
+
+        // Enhanced error logging
+        logger.error(`Tool eyes_analyze error:`, {
+          message: mcpError.message,
+          code: mcpError.code,
+          args: args,
+          timestamp: new Date().toISOString(),
+          stackTrace: error instanceof Error ? error.stack : 'No stack trace available'
+        });
+
+        // Provide more helpful error messages to users
+        let userMessage = mcpError.message;
+        if (mcpError.message.includes("No analysis result from Gemini")) {
+          userMessage = "The image analysis service returned an empty response. This can happen due to:\n" +
+            "• API rate limits or quota exceeded\n" +
+            "• Image content restrictions\n" +
+            "• Temporary service issues\n" +
+            "• Network connectivity problems\n\n" +
+            "Please try again in a few moments, or check if your image meets the requirements.";
+        } else if (mcpError.message.includes("Failed to process image after")) {
+          userMessage = "Image processing failed after multiple attempts. This could be due to:\n" +
+            "• Network connectivity issues\n" +
+            "• API service unavailability\n" +
+            "• Image format or size issues\n" +
+            "• Rate limiting\n\n" +
+            "Please check your internet connection and try again.";
+        }
 
         return {
           content: [{
             type: "text" as const,
-            text: `Error: ${mcpError.message}`
+            text: `Error: ${userMessage}`
           }],
           isError: true
         };
@@ -214,22 +240,26 @@ async function registerDocumentTools(server: McpServer, geminiClient: GeminiClie
 }
 
 async function handleAnalyze(
-  geminiClient: GeminiClient, 
+  geminiClient: GeminiClient,
   args: unknown,
   config: Config
 ) {
   const input = EyesInputSchema.parse(args) as EyesInput;
   const { source, type, detail_level } = input;
-  
-  logger.info(`Analyzing ${type} with detail level: ${detail_level}`);
-  
+  const customPrompt = 'prompt' in input ? (input.prompt as string | undefined) : undefined;
+
+  logger.info(`Analyzing ${type} with detail level: ${detail_level}, source: ${source.substring(0, 50)}...`);
+
   const model = geminiClient.getModel(detail_level || "detailed");
   const options = {
-    ...input,
+    analysis_type: "general" as const,
+    detail_level: detail_level || "detailed",
+    specific_focus: customPrompt,
     fetchTimeout: config.server.fetchTimeout
   };
+
   let result;
-  
+
   switch (type) {
     case "image":
       result = await processImage(model, source, options);
@@ -243,7 +273,9 @@ async function handleAnalyze(
     default:
       throw new Error(`Unsupported media type: ${type}`);
   }
-  
+
+  logger.info(`Analysis completed for ${type}. Processing time: ${result.metadata.processing_time_ms}ms`);
+
   return {
     content: [
       {

@@ -19,6 +19,8 @@ export interface ProcessingResult {
     processing_time_ms: number;
     model_used: string;
     frames_analyzed?: number;
+    attempts_made?: number;
+    status?: string;
   };
 }
 

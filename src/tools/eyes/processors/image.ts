@@ -13,49 +13,119 @@ export async function processImage(
   options: AnalysisOptions
 ): Promise<ProcessingResult> {
   const startTime = Date.now();
-  
-  try {
-    logger.debug(`Processing image: ${source.substring(0, 50)}...`);
-    
-    const { imageData, mimeType } = await loadImage(source, options.fetchTimeout);
-    const prompt = createPrompt(options);
-    
-    const response = await model.generateContent([
-      { text: prompt },
-      {
-        inlineData: {
-          mimeType,
-          data: imageData
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      logger.debug(`Processing image (attempt ${attempt}/${maxRetries}): ${source.substring(0, 50)}...`);
+
+      const { imageData, mimeType } = await loadImage(source, options.fetchTimeout);
+      const prompt = createPrompt(options);
+
+      logger.debug(`Generated prompt for analysis: ${prompt.substring(0, 100)}...`);
+      logger.debug(`Image data size: ${imageData.length} characters, MIME type: ${mimeType}`);
+
+      const response = await model.generateContent([
+        { text: prompt },
+        {
+          inlineData: {
+            mimeType,
+            data: imageData
+          }
         }
+      ]);
+
+      const result = await response.response;
+      const analysisText = result.text();
+
+      logger.debug(`Gemini response received. Text length: ${analysisText ? analysisText.length : 0}`);
+
+      if (!analysisText || analysisText.trim().length === 0) {
+        const errorMsg = `Gemini returned empty response on attempt ${attempt}/${maxRetries}`;
+        logger.warn(errorMsg);
+
+        if (attempt === maxRetries) {
+          // On final attempt, provide fallback analysis
+          logger.info("Using fallback analysis due to empty Gemini response");
+          const fallbackAnalysis = "Image was processed but detailed analysis is unavailable. This may be due to API limitations or content restrictions.";
+
+          return {
+            description: "Image analysis completed with limited results",
+            analysis: fallbackAnalysis,
+            elements: [],
+            insights: ["Gemini API returned empty response", "Consider retrying the analysis"],
+            recommendations: ["Check image format and content", "Verify API key and quotas"],
+            metadata: {
+              processing_time_ms: Date.now() - startTime,
+              model_used: model.model,
+              attempts_made: maxRetries,
+              status: "partial_success"
+            }
+          };
+        }
+
+        // Retry with exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        logger.debug(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
       }
-    ]);
-    
-    const result = await response.response;
-    const analysisText = result.text();
-    
-    if (!analysisText) {
-      throw new ProcessingError("No analysis result from Gemini");
+
+      const parsed = parseAnalysisResponse(analysisText);
+      const processingTime = Date.now() - startTime;
+
+      logger.info(`Image analysis successful on attempt ${attempt}. Processing time: ${processingTime}ms`);
+
+      return {
+        description: parsed.description || "Image analysis completed",
+        analysis: parsed.analysis || analysisText,
+        elements: parsed.elements || [],
+        insights: parsed.insights || [],
+        recommendations: parsed.recommendations || [],
+        metadata: {
+          processing_time_ms: processingTime,
+          model_used: model.model,
+          attempts_made: attempt,
+          status: "success"
+        }
+      };
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error');
+      logger.warn(`Image processing attempt ${attempt} failed:`, lastError.message);
+
+      // Check if this is a retryable error
+      if (attempt < maxRetries && isRetryableError(lastError)) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        logger.debug(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      } else if (attempt === maxRetries) {
+        break;
+      }
     }
-    
-    const parsed = parseAnalysisResponse(analysisText);
-    const processingTime = Date.now() - startTime;
-    
-    return {
-      description: parsed.description || "Image analysis completed",
-      analysis: parsed.analysis || analysisText,
-      elements: parsed.elements || [],
-      insights: parsed.insights || [],
-      recommendations: parsed.recommendations || [],
-      metadata: {
-        processing_time_ms: processingTime,
-        model_used: model.model,
-      }
-    };
-    
-  } catch (error) {
-    logger.error("Image processing error:", error);
-    throw new ProcessingError(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+
+  logger.error("Image processing failed after all retries:", lastError);
+  throw new ProcessingError(`Failed to process image after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+}
+
+function isRetryableError(error: Error): boolean {
+  const retryableMessages = [
+    'timeout',
+    'network',
+    'rate limit',
+    'temporary',
+    '429',
+    '500',
+    '502',
+    '503',
+    '504'
+  ];
+
+  const errorMessage = error.message.toLowerCase();
+  return retryableMessages.some(msg => errorMessage.includes(msg));
 }
 
 async function loadImage(source: string, fetchTimeout?: number): Promise<{ imageData: string; mimeType: string }> {
