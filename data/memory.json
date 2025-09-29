@@ -1,0 +1,54 @@
+{
+  "entities": [
+    {
+      "name": "test_entity_1759124572213",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759124572214,
+      "updatedAt": 1759124572214
+    },
+    {
+      "name": "test_entity_1759124604293",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759124604293,
+      "updatedAt": 1759124604293
+    },
+    {
+      "name": "test_entity_1759124627319",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759124627319,
+      "updatedAt": 1759124627319
+    },
+    {
+      "name": "test_entity_1759124654985",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759124654986,
+      "updatedAt": 1759124654986
+    },
+    {
+      "name": "test_entity_1759124677636",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759124677636,
+      "updatedAt": 1759124677636
+    },
+    {
+      "name": "test_entity_1759124772630",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759124772630,
+      "updatedAt": 1759124772630
+    }
+  ],
+  "relations": [],
+  "metadata": {
+    "version": "1.0.0",
+    "createdAt": 1759124175581,
+    "updatedAt": 1759124772630,
+    "totalEntities": 6,
+    "totalRelations": 0
+  }
+}
