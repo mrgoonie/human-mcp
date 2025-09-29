@@ -6,6 +6,7 @@ import {
   NarrationInputSchema,
   CodeExplanationInputSchema,
   VoiceCustomizationInputSchema,
+  SupportedLanguages,
   type SpeechInput,
   type NarrationInput,
   type CodeExplanationInput,
@@ -38,11 +39,7 @@ export async function registerMouthTool(server: McpServer, config: Config) {
           "Hyperion", "Iapetus", "Kronos", "Leto", "Maia", "Mnemosyne"
         ]).optional().default("Zephyr").describe("Voice to use for speech generation"),
         model: z.enum(["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]).optional().default("gemini-2.5-flash-preview-tts").describe("Speech generation model"),
-        language: z.enum([
-          "en-US", "en-IN", "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR",
-          "pt-PT", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "zh-TW", "ar-SA", "hi-IN",
-          "tr-TR", "pl-PL", "nl-NL", "sv-SE", "da-DK", "no-NO", "fi-FI", "hu-HU"
-        ]).optional().default("en-US").describe("Language for speech generation"),
+        language: z.enum(SupportedLanguages).optional().default("en-US").describe("Language for speech generation"),
         output_format: z.enum(["wav", "base64", "url"]).optional().default("base64").describe("Output format for generated audio"),
         style_prompt: z.string().optional().describe("Natural language prompt to control speaking style")
       }
@@ -80,11 +77,7 @@ export async function registerMouthTool(server: McpServer, config: Config) {
           "Hyperion", "Iapetus", "Kronos", "Leto", "Maia", "Mnemosyne"
         ]).optional().default("Sage").describe("Voice to use for narration"),
         model: z.enum(["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]).optional().default("gemini-2.5-pro-preview-tts").describe("Speech generation model"),
-        language: z.enum([
-          "en-US", "en-IN", "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR",
-          "pt-PT", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "zh-TW", "ar-SA", "hi-IN",
-          "tr-TR", "pl-PL", "nl-NL", "sv-SE", "da-DK", "no-NO", "fi-FI", "hu-HU"
-        ]).optional().default("en-US").describe("Language for narration"),
+        language: z.enum(SupportedLanguages).optional().default("en-US").describe("Language for narration"),
         output_format: z.enum(["wav", "base64", "url"]).optional().default("base64").describe("Output format for generated audio"),
         narration_style: z.enum(["professional", "casual", "educational", "storytelling"]).optional().default("professional").describe("Narration style"),
         chapter_breaks: z.boolean().optional().default(false).describe("Add pauses between chapters/sections"),
@@ -117,11 +110,7 @@ export async function registerMouthTool(server: McpServer, config: Config) {
       description: "Generate spoken explanations of code with technical analysis",
       inputSchema: {
         code: z.string().min(1).describe("Code to explain"),
-        language: z.enum([
-          "en-US", "en-IN", "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR",
-          "pt-PT", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "zh-TW", "ar-SA", "hi-IN",
-          "tr-TR", "pl-PL", "nl-NL", "sv-SE", "da-DK", "no-NO", "fi-FI", "hu-HU"
-        ]).optional().default("en-US").describe("Language for explanation"),
+        language: z.enum(SupportedLanguages).optional().default("en-US").describe("Language for explanation"),
         programming_language: z.string().optional().describe("Programming language of the code"),
         voice: z.enum([
           "Astrid", "Charon", "Fenrir", "Kore", "Odin", "Puck", "Sage", "Vox", "Zephyr",
@@ -168,11 +157,7 @@ export async function registerMouthTool(server: McpServer, config: Config) {
           "Hyperion", "Iapetus", "Kronos", "Leto", "Maia", "Mnemosyne"
         ]).describe("Base voice to customize"),
         model: z.enum(["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]).optional().default("gemini-2.5-flash-preview-tts").describe("Speech generation model"),
-        language: z.enum([
-          "en-US", "en-IN", "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR",
-          "pt-PT", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "zh-TW", "ar-SA", "hi-IN",
-          "tr-TR", "pl-PL", "nl-NL", "sv-SE", "da-DK", "no-NO", "fi-FI", "hu-HU"
-        ]).optional().default("en-US").describe("Language for speech generation"),
+        language: z.enum(SupportedLanguages).optional().default("en-US").describe("Language for speech generation"),
         output_format: z.enum(["wav", "base64", "url"]).optional().default("base64").describe("Output format for generated audio"),
         style_variations: z.array(z.string()).optional().describe("Array of different style prompts to test"),
         compare_voices: z.array(z.enum([
@@ -213,7 +198,8 @@ async function handleSpeech(
 
   const options = {
     ...input,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    config
   };
 
   const result = await generateSpeech(geminiClient, options);
@@ -225,14 +211,19 @@ async function handleSpeech(
         text: JSON.stringify({
           success: true,
           audio: result.audioData.startsWith('data:') ?
-            `Audio generated (${Math.round(result.audioData.length / 1000)}KB base64 data - recommend saving to file)` :
+            `Audio generated (${Math.round(result.audioData.length / 1000)}KB base64 data)` :
             result.audioData,
           format: result.format,
           voice: result.voice,
           language: result.language,
           model: result.model,
+          filename: result.filename,
+          localPath: result.localPath,
+          cloudUrl: result.cloudUrl,
+          fileSize: result.fileSize,
+          storage: result.storage,
           metadata: result.metadata,
-          note: "Consider implementing file saving to reduce token usage"
+          note: result.localPath ? `Audio automatically saved to: ${result.localPath}${result.cloudUrl ? ` and uploaded to: ${result.cloudUrl}` : ''}` : "Audio generation completed"
         }, null, 2)
       }
     ],
@@ -251,7 +242,8 @@ async function handleNarration(
 
   const options = {
     ...input,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    config
   };
 
   const result = await generateNarration(geminiClient, options);
@@ -291,7 +283,8 @@ async function handleCodeExplanation(
 
   const options = {
     ...input,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    config
   };
 
   const result = await generateCodeExplanation(geminiClient, options);
@@ -330,7 +323,8 @@ async function handleVoiceCustomization(
 
   const options = {
     ...input,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    config
   };
 
   const result = await generateVoiceCustomization(geminiClient, options);

@@ -8,11 +8,12 @@ export const VoiceNames = [
   "Hyperion", "Iapetus", "Kronos", "Leto", "Maia", "Mnemosyne"
 ] as const;
 
-// Supported languages from Gemini Speech Generation API
+// Supported languages from Gemini Speech Generation API (September 2025 update)
+// Reference: Gemini TTS supported locales documentation
 export const SupportedLanguages = [
-  "en-US", "en-IN", "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR",
-  "pt-PT", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "zh-TW", "ar-SA", "hi-IN",
-  "tr-TR", "pl-PL", "nl-NL", "sv-SE", "da-DK", "no-NO", "fi-FI", "hu-HU"
+  "ar-EG", "de-DE", "en-US", "es-US", "fr-FR", "hi-IN", "id-ID", "it-IT",
+  "ja-JP", "ko-KR", "pt-BR", "ru-RU", "nl-NL", "pl-PL", "th-TH", "tr-TR",
+  "vi-VN", "ro-RO", "uk-UA", "bn-BD", "en-IN", "mr-IN", "ta-IN", "te-IN"
 ] as const;
 
 // Speech generation models
@@ -87,12 +88,24 @@ export interface SpeechGenerationResult {
   voice: string;
   language: string;
   generationTime: number;
+  localPath?: string;
+  cloudUrl?: string;
+  filename?: string;
+  fileSize?: number;
+  storage?: {
+    local: boolean;
+    cloud: boolean;
+  };
   metadata: {
     timestamp: string;
     textLength: number;
     audioLength?: number;
     sampleRate: number;
     channels: number;
+    voice?: string;
+    language?: string;
+    textPreview?: string;
+    format?: string;
   };
 }
 
