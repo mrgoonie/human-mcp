@@ -1,3 +1,19 @@
+# [2.6.0](https://github.com/mrgoonie/human-mcp/compare/v2.5.0...v2.6.0) (2025-09-29)
+
+
+### Bug Fixes
+
+* **brain-tools:** standardize sequential thinking tool to use reasoning namespace ([d87c04d](https://github.com/mrgoonie/human-mcp/commit/d87c04d945866f7256e4748e2c06292f14187185))
+* **deps:** sync bun.lock with package.json for wav dependencies ([d2632be](https://github.com/mrgoonie/human-mcp/commit/d2632be988a9970a5e042cd41b4ee582ad65d3fe))
+* **mouth-tools:** resolve audio generation and playback issues ([37c6528](https://github.com/mrgoonie/human-mcp/commit/37c65287b2bc24dcac1591a869d67d21b19ff8a3))
+* **tests:** resolve mock contamination and improve test isolation ([f4e1a8d](https://github.com/mrgoonie/human-mcp/commit/f4e1a8df008d2a6d97b194b67591d46698086c16))
+
+
+### Features
+
+* **brain_tools:** add optimization plan and initial implementation artifacts ([062f821](https://github.com/mrgoonie/human-mcp/commit/062f821183ef12617299fde9a350166c3254123d))
+* **media-generation:** optimize token usage with automatic file storage ([461bdf6](https://github.com/mrgoonie/human-mcp/commit/461bdf64bbe0c571a36e196b715dcb0992590f94))
+
 # [2.5.0](https://github.com/mrgoonie/human-mcp/compare/v2.4.1...v2.5.0) (2025-09-29)
 
 
