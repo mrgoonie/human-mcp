@@ -1428,21 +1428,49 @@ Extract as much metadata as possible from the document properties and content.`;
 
       logger.debug(`Generating speech with voice: ${voice}, model: ${model}, language: ${language}`);
 
-      const speechModel = this.getSpeechModel(model);
-
       // Build prompt with style if provided
       let prompt = text;
       if (stylePrompt) {
         prompt = `${stylePrompt}: ${text}`;
       }
 
-      // Generate content with speech configuration
-      const result = await speechModel.generateContent(prompt);
+      // Use direct fetch to the TTS API since the SDK doesn't support TTS yet
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-      const response = await result.response;
+      const requestBody = {
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: voice
+              }
+            }
+          }
+        }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.config.gemini.apiKey
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new APIError(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json() as any;
 
       // Extract audio data from response
-      const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      const audioData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
       if (!audioData) {
         throw new APIError("No audio data received from Gemini Speech API");
