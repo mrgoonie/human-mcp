@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/mrgoonie/human-mcp/compare/v2.4.0...v2.4.1) (2025-09-29)
+
+
+### Bug Fixes
+
+* **eyes_analyze:** enhance image analysis with retry and fallback mechanisms ([8f46f96](https://github.com/mrgoonie/human-mcp/commit/8f46f969e3891392526f838847cfbc6a48011878))
+
 # [2.4.0](https://github.com/mrgoonie/human-mcp/compare/v2.3.0...v2.4.0) (2025-09-28)
 
 
