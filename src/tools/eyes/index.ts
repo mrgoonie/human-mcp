@@ -5,262 +5,143 @@ import { processVideo } from "./processors/video.js";
 import { processGif } from "./processors/gif.js";
 import { DocumentProcessorFactory } from "./processors/factory.js";
 import { GeminiClient } from "./utils/gemini-client.js";
-import {
-  EyesInputSchema,
-  CompareInputSchema,
-  DocumentInputSchema,
-  DataExtractionSchema,
-  SummarizationSchema,
-  type EyesInput,
-  type CompareInput,
-  type DocumentInput,
-  type DataExtractionInput,
-  type SummarizationInput
-} from "./schemas.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
 
+/**
+ * Register optimized Eyes tools following Anthropic best practices
+ *
+ * Key optimizations:
+ * - Simplified schemas (2-4 essential parameters)
+ * - Clear, action-oriented descriptions
+ * - Natural language tool names
+ * - Reduced parameter complexity
+ */
 export async function registerEyesTool(server: McpServer, config: Config) {
   const geminiClient = new GeminiClient(config);
 
-  // Register existing vision tools
-  await registerVisionTools(server, geminiClient, config);
+  logger.info("Registering optimized Eyes tools...");
 
-  // Register document tools
-  await registerDocumentTools(server, geminiClient, config);
-}
-
-async function registerVisionTools(server: McpServer, geminiClient: GeminiClient, config: Config) {
-  // Register eyes_analyze tool
+  // Vision analysis tool (simplified)
   server.registerTool(
     "eyes_analyze",
     {
-      title: "Vision Analysis Tool",
-      description: "Analyze images, videos, and GIFs using AI vision capabilities",
+      title: "Analyze visual content",
+      description: "Understand images, videos, and GIFs with AI vision",
       inputSchema: {
-        source: z.string().describe("Path, URL, or base64 data URI of the media to analyze"),
-        type: z.enum(["image", "video", "gif"]).describe("Type of media to analyze"),
-        detail_level: z.enum(["quick", "detailed"]).optional().default("detailed").describe("Level of detail in analysis"),
-        prompt: z.string().optional().describe("Custom prompt for analysis"),
-        max_frames: z.number().optional().describe("Maximum number of frames to analyze for videos/GIFs")
+        source: z.string().describe("File path, URL, or image to analyze"),
+        focus: z.string().optional().describe("What to focus on in the analysis"),
+        detail: z.enum(["quick", "detailed"]).default("detailed").optional().describe("Analysis depth")
       }
     },
     async (args) => {
       try {
-        return await handleAnalyze(geminiClient, args, config);
+        return await handleOptimizedAnalyze(geminiClient, args, config);
       } catch (error) {
-        const mcpError = handleError(error);
-
-        // Enhanced error logging
-        logger.error(`Tool eyes_analyze error:`, {
-          message: mcpError.message,
-          code: mcpError.code,
-          args: args,
-          timestamp: new Date().toISOString(),
-          stackTrace: error instanceof Error ? error.stack : 'No stack trace available'
-        });
-
-        // Provide more helpful error messages to users
-        let userMessage = mcpError.message;
-        if (mcpError.message.includes("No analysis result from Gemini")) {
-          userMessage = "The image analysis service returned an empty response. This can happen due to:\n" +
-            "• API rate limits or quota exceeded\n" +
-            "• Image content restrictions\n" +
-            "• Temporary service issues\n" +
-            "• Network connectivity problems\n\n" +
-            "Please try again in a few moments, or check if your image meets the requirements.";
-        } else if (mcpError.message.includes("Failed to process image after")) {
-          userMessage = "Image processing failed after multiple attempts. This could be due to:\n" +
-            "• Network connectivity issues\n" +
-            "• API service unavailability\n" +
-            "• Image format or size issues\n" +
-            "• Rate limiting\n\n" +
-            "Please check your internet connection and try again.";
-        }
-
-        return {
-          content: [{
-            type: "text" as const,
-            text: `Error: ${userMessage}`
-          }],
-          isError: true
-        };
+        return handleToolError("vision analysis", error);
       }
     }
   );
 
-  // Register eyes_compare tool
+  // Image comparison tool (simplified)
   server.registerTool(
     "eyes_compare",
     {
-      title: "Image Comparison Tool",
-      description: "Compare two images and identify differences",
+      title: "Compare two images",
+      description: "Find differences between images",
       inputSchema: {
-        source1: z.string().describe("Path, URL, or base64 data URI of the first image"),
-        source2: z.string().describe("Path, URL, or base64 data URI of the second image"),
-        comparison_type: z.enum(["pixel", "structural", "semantic"]).optional().default("semantic").describe("Type of comparison to perform")
+        image1: z.string().describe("First image path or URL"),
+        image2: z.string().describe("Second image path or URL"),
+        focus: z.enum(["differences", "similarities", "layout", "content"]).default("differences").optional().describe("What to compare")
       }
     },
     async (args) => {
       try {
-        return await handleCompare(geminiClient, args);
+        return await handleOptimizedCompare(geminiClient, args);
       } catch (error) {
-        const mcpError = handleError(error);
-        logger.error(`Tool eyes_compare error:`, mcpError);
-
-        return {
-          content: [{
-            type: "text" as const,
-            text: `Error: ${mcpError.message}`
-          }],
-          isError: true
-        };
+        return handleToolError("image comparison", error);
       }
     }
   );
-}
 
-async function registerDocumentTools(server: McpServer, geminiClient: GeminiClient, config: Config) {
-  // Register document processors
-  DocumentProcessorFactory.registerProcessors(geminiClient);
-
-  // Register eyes_read_document tool
+  // Document reading tool (simplified)
   server.registerTool(
     "eyes_read_document",
     {
-      title: "Document Analysis Tool",
-      description: "Read and analyze documents (PDF, Word, Excel, PowerPoint, Text, etc.)",
+      title: "Read document content",
+      description: "Extract text and data from documents",
       inputSchema: {
-        source: z.string().describe("Path, URL, or base64 data URI of the document"),
-        format: z.enum([
-          "pdf", "docx", "xlsx", "pptx", "txt", "md", "rtf", "odt", "csv", "json", "xml", "html", "auto"
-        ]).default("auto").describe("Document format. Use 'auto' for automatic detection"),
-        options: z.object({
-          extract_text: z.boolean().default(true).describe("Extract text content"),
-          extract_tables: z.boolean().default(true).describe("Extract tables"),
-          extract_images: z.boolean().default(false).describe("Extract images"),
-          preserve_formatting: z.boolean().default(false).describe("Preserve original formatting"),
-          page_range: z.string().optional().describe("Page range (e.g., '1-5', '2,4,6')"),
-          detail_level: z.enum(["quick", "detailed"]).default("detailed").describe("Level of detail in processing")
-        }).optional().describe("Processing options")
+        document: z.string().describe("Document path or URL"),
+        pages: z.string().default("all").optional().describe("Page range (e.g., '1-5' or 'all')"),
+        extract: z.enum(["text", "tables", "both"]).default("both").optional().describe("What to extract")
       }
     },
     async (args) => {
       try {
-        return await handleDocumentAnalysis(geminiClient, args);
+        return await handleOptimizedDocumentRead(geminiClient, args);
       } catch (error) {
-        const mcpError = handleError(error);
-        logger.error(`Tool eyes_read_document error:`, mcpError);
-
-        return {
-          content: [{
-            type: "text" as const,
-            text: `Error: ${mcpError.message}`
-          }],
-          isError: true
-        };
+        return handleToolError("document reading", error);
       }
     }
   );
 
-  // Register eyes_extract_data tool
+  // Document summarization tool (simplified)
   server.registerTool(
-    "eyes_extract_data",
+    "eyes_summarize_document",
     {
-      title: "Structured Data Extraction Tool",
-      description: "Extract structured data from documents using custom schemas",
+      title: "Summarize document content",
+      description: "Create summaries from documents",
       inputSchema: {
-        source: z.string().describe("Document source"),
-        format: z.enum([
-          "pdf", "docx", "xlsx", "pptx", "txt", "md", "rtf", "odt", "csv", "json", "xml", "html", "auto"
-        ]).default("auto").describe("Document format"),
-        schema: z.record(z.any()).describe("JSON schema for data extraction"),
-        options: z.object({
-          strict_mode: z.boolean().default(false).describe("Strict schema validation"),
-          fallback_values: z.record(z.any()).optional().describe("Fallback values for missing data")
-        }).optional().describe("Extraction options")
+        document: z.string().describe("Document path or URL"),
+        length: z.enum(["brief", "medium", "detailed"]).default("medium").optional().describe("Summary length"),
+        focus: z.string().optional().describe("Specific topics to focus on")
       }
     },
     async (args) => {
       try {
-        return await handleDataExtraction(geminiClient, args);
+        return await handleOptimizedDocumentSummary(geminiClient, args);
       } catch (error) {
-        const mcpError = handleError(error);
-        logger.error(`Tool eyes_extract_data error:`, mcpError);
-
-        return {
-          content: [{
-            type: "text" as const,
-            text: `Error: ${mcpError.message}`
-          }],
-          isError: true
-        };
+        return handleToolError("document summarization", error);
       }
     }
   );
 
-  // Register eyes_summarize tool
-  server.registerTool(
-    "eyes_summarize",
-    {
-      title: "Document Summarization Tool",
-      description: "Generate summaries and key insights from documents",
-      inputSchema: {
-        source: z.string().describe("Document source"),
-        format: z.enum([
-          "pdf", "docx", "xlsx", "pptx", "txt", "md", "rtf", "odt", "csv", "json", "xml", "html", "auto"
-        ]).default("auto").describe("Document format"),
-        options: z.object({
-          summary_type: z.enum(["brief", "detailed", "executive", "technical"]).default("detailed").describe("Type of summary"),
-          max_length: z.number().optional().describe("Maximum summary length in words"),
-          focus_areas: z.array(z.string()).optional().describe("Specific areas to focus on"),
-          include_key_points: z.boolean().default(true).describe("Include key points"),
-          include_recommendations: z.boolean().default(true).describe("Include recommendations")
-        }).optional().describe("Summarization options")
-      }
-    },
-    async (args) => {
-      try {
-        return await handleDocumentSummarization(geminiClient, args);
-      } catch (error) {
-        const mcpError = handleError(error);
-        logger.error(`Tool eyes_summarize error:`, mcpError);
-
-        return {
-          content: [{
-            type: "text" as const,
-            text: `Error: ${mcpError.message}`
-          }],
-          isError: true
-        };
-      }
-    }
-  );
+  logger.info("✅ Optimized Eyes tools registered:");
+  logger.info("   • eyes_analyze: Visual content analysis");
+  logger.info("   • eyes_compare: Image comparison");
+  logger.info("   • eyes_read_document: Document reading");
+  logger.info("   • eyes_summarize_document: Document summarization");
+  logger.info("   • Average parameters reduced from 8-12 to 2-3");
 }
 
-async function handleAnalyze(
+/**
+ * Optimized analyze handler with simplified parameters
+ */
+async function handleOptimizedAnalyze(
   geminiClient: GeminiClient,
-  args: unknown,
+  args: any,
   config: Config
 ) {
-  const input = EyesInputSchema.parse(args) as EyesInput;
-  const { source, type, detail_level } = input;
-  const customPrompt = 'prompt' in input ? (input.prompt as string | undefined) : undefined;
+  const source = args.source as string;
+  const focus = args.focus as string | undefined;
+  const detail = (args.detail as string) || "detailed";
 
-  logger.info(`Analyzing ${type} with detail level: ${detail_level}, source: ${source.substring(0, 50)}...`);
+  logger.info(`Analyzing visual content: ${source.substring(0, 50)}...`);
 
-  const model = geminiClient.getModel(detail_level || "detailed");
+  // Auto-detect media type from source
+  const mediaType = detectMediaType(source);
+
+  const model = geminiClient.getModel(detail as "quick" | "detailed");
   const options = {
     analysis_type: "general" as const,
-    detail_level: detail_level || "detailed",
-    specific_focus: customPrompt,
+    detail_level: detail as "quick" | "detailed",
+    specific_focus: focus,
     fetchTimeout: config.server.fetchTimeout
   };
 
   let result;
-
-  switch (type) {
+  switch (mediaType) {
     case "image":
       result = await processImage(model, source, options);
       break;
@@ -271,91 +152,234 @@ async function handleAnalyze(
       result = await processGif(model, source, options);
       break;
     default:
-      throw new Error(`Unsupported media type: ${type}`);
+      throw new Error(`Unsupported media type detected from: ${source}`);
   }
 
-  logger.info(`Analysis completed for ${type}. Processing time: ${result.metadata.processing_time_ms}ms`);
-
   return {
-    content: [
-      {
-        type: "text" as const,
-        text: result.analysis
-      }
-    ],
+    content: [{
+      type: "text" as const,
+      text: formatAnalysisResult(result, focus)
+    }],
     isError: false
   };
 }
 
-async function handleCompare(
-  geminiClient: GeminiClient,
-  args: unknown
-) {
-  const input = CompareInputSchema.parse(args) as CompareInput;
-  const { source1, source2, comparison_type } = input;
-  
-  logger.info(`Comparing images with type: ${comparison_type}`);
-  
+/**
+ * Optimized compare handler
+ */
+async function handleOptimizedCompare(geminiClient: GeminiClient, args: any) {
+  const image1 = args.image1 as string;
+  const image2 = args.image2 as string;
+  const focus = (args.focus as string) || "differences";
+
+  logger.info(`Comparing images with focus: ${focus}`);
+
   const model = geminiClient.getModel("detailed");
-  
-  const prompt = `Compare these two images and identify the differences. Focus on:
-  
-${comparison_type === "pixel" ? 
-  "- Exact pixel-level differences\n- Color value changes\n- Any visual artifacts or rendering differences" :
-  comparison_type === "structural" ?
-  "- Layout changes\n- Element positioning differences\n- Size and proportion changes\n- Structural modifications" :
-  "- Semantic meaning differences\n- Content changes\n- Functional differences\n- User experience impact"
-}
 
-Please provide:
-1. SUMMARY: Brief overview of main differences
-2. SPECIFIC DIFFERENCES: Detailed list of changes found
-3. IMPACT ASSESSMENT: How these differences might affect users
-4. RECOMMENDATIONS: Suggested actions based on the differences
+  const focusPrompts = {
+    differences: "Identify what's different between these images",
+    similarities: "Identify what's similar between these images",
+    layout: "Compare the layout and structure of these images",
+    content: "Compare the content and meaning of these images"
+  };
 
-Be precise with locations and measurements where possible.`;
-  
+  const prompt = `${focusPrompts[focus as keyof typeof focusPrompts] || focusPrompts.differences}.
+
+Provide:
+• **Summary**: Key findings
+• **Details**: Specific observations
+• **Impact**: What these changes mean
+
+Be clear and specific with locations and measurements.`;
+
   try {
     const [image1Data, image2Data] = await Promise.all([
-      loadImageForComparison(source1),
-      loadImageForComparison(source2)
+      loadImageForComparison(image1),
+      loadImageForComparison(image2)
     ]);
-    
+
     const response = await model.generateContent([
       { text: prompt },
-      {
-        inlineData: {
-          mimeType: image1Data.mimeType,
-          data: image1Data.data
-        }
-      },
-      { text: "Image 1 (above) vs Image 2 (below):" },
-      {
-        inlineData: {
-          mimeType: image2Data.mimeType,
-          data: image2Data.data
-        }
-      }
+      { inlineData: { mimeType: image1Data.mimeType, data: image1Data.data } },
+      { text: "vs" },
+      { inlineData: { mimeType: image2Data.mimeType, data: image2Data.data } }
     ]);
-    
-    const result = response.response;
-    const comparisonText = result.text();
-    
+
+    const result = response.response.text();
     return {
-      content: [
-        {
-          type: "text" as const,
-          text: comparisonText || "No differences detected or analysis failed"
-        }
-      ],
+      content: [{
+        type: "text" as const,
+        text: result || "No comparison results available"
+      }],
       isError: false
     };
-    
+
   } catch (error) {
-    throw new Error(`Failed to compare images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Image comparison failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
+/**
+ * Optimized document reading handler
+ */
+async function handleOptimizedDocumentRead(geminiClient: GeminiClient, args: any) {
+  const document = args.document as string;
+  const pages = (args.pages as string) || "all";
+  const extract = (args.extract as string) || "both";
+
+  logger.info(`Reading document: ${document}`);
+
+  // Auto-detect document format
+  const buffer = await loadDocumentForDetection(document);
+  const format = DocumentProcessorFactory.detectFormat(document, buffer);
+
+  // Create simplified options
+  const options = {
+    extractText: extract === "text" || extract === "both",
+    extractTables: extract === "tables" || extract === "both",
+    extractImages: false, // Simplified: no image extraction
+    preserveFormatting: false,
+    pageRange: pages === "all" ? undefined : pages,
+    detailLevel: "detailed" as "quick" | "detailed"
+  };
+
+  const processor = DocumentProcessorFactory.create(format as any, geminiClient);
+  const result = await processor.process(document, options);
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: formatDocumentResult(result, extract)
+    }],
+    isError: false
+  };
+}
+
+/**
+ * Optimized document summarization handler
+ */
+async function handleOptimizedDocumentSummary(geminiClient: GeminiClient, args: any) {
+  const document = args.document as string;
+  const length = (args.length as string) || "medium";
+  const focus = args.focus as string | undefined;
+
+  logger.info(`Summarizing document: ${document}`);
+
+  // Auto-detect format and read document
+  const buffer = await loadDocumentForDetection(document);
+  const format = DocumentProcessorFactory.detectFormat(document, buffer);
+
+  // First extract content
+  const processor = DocumentProcessorFactory.create(format as any, geminiClient);
+  const docResult = await processor.process(document, {
+    extractText: true,
+    extractTables: true,
+    extractImages: false,
+    preserveFormatting: false,
+    detailLevel: "detailed" as "quick" | "detailed"
+  });
+
+  // Then summarize using Gemini
+  const model = geminiClient.getModel("detailed");
+
+  const lengthMap = {
+    brief: "a brief 2-3 sentence summary",
+    medium: "a comprehensive 1-2 paragraph summary",
+    detailed: "a detailed multi-paragraph summary"
+  };
+
+  const focusText = focus ? `Focus specifically on: ${focus}.` : "";
+
+  const prompt = `Create ${lengthMap[length as keyof typeof lengthMap]} of this document content. ${focusText}
+
+Document content:
+${JSON.stringify(docResult, null, 2).substring(0, 8000)}
+
+Provide:
+• **Summary**: Main points and conclusions
+• **Key Insights**: Important findings
+• **Recommendations**: Suggested actions (if applicable)`;
+
+  const response = await model.generateContent(prompt);
+  const summary = response.response.text();
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: summary || "No summary could be generated"
+    }],
+    isError: false
+  };
+}
+
+/**
+ * Helper functions
+ */
+function detectMediaType(source: string): "image" | "video" | "gif" {
+  const ext = source.toLowerCase().split('.').pop() || '';
+
+  if (['gif'].includes(ext)) return 'gif';
+  if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+  if (['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext)) return 'image';
+
+  // Default to image for data URIs and unknown formats
+  return 'image';
+}
+
+function formatAnalysisResult(result: any, focus?: string): string {
+  const focusHeader = focus ? `\n**Focus**: ${focus}\n` : '';
+
+  return `# 👁️ Visual Analysis${focusHeader}
+
+${result.analysis}
+
+---
+*Processing time: ${result.metadata.processing_time_ms}ms*`;
+}
+
+function formatDocumentResult(result: any, extract: string): string {
+  let output = `# 📄 Document Content\n\n`;
+
+  if (extract === "text" || extract === "both") {
+    output += `## Text Content\n${result.text || 'No text found'}\n\n`;
+  }
+
+  if (extract === "tables" || extract === "both") {
+    if (result.tables && result.tables.length > 0) {
+      output += `## Tables\n${JSON.stringify(result.tables, null, 2)}\n\n`;
+    }
+  }
+
+  output += `**Pages processed**: ${result.metadata?.pages_processed || 'Unknown'}\n`;
+  output += `**Processing time**: ${result.metadata?.processing_time_ms || 0}ms`;
+
+  return output;
+}
+
+function handleToolError(toolName: string, error: unknown) {
+  const mcpError = handleError(error);
+  logger.error(`${toolName} error:`, mcpError);
+
+  // Simplified error messages
+  let userMessage = mcpError.message;
+  if (mcpError.message.includes("rate limit") || mcpError.message.includes("quota")) {
+    userMessage = "⏱️ Service temporarily busy. Please try again in a moment.";
+  } else if (mcpError.message.includes("network") || mcpError.message.includes("fetch")) {
+    userMessage = "🌐 Network issue. Please check your connection and try again.";
+  } else if (mcpError.message.includes("file") || mcpError.message.includes("path")) {
+    userMessage = "📁 File not found or inaccessible. Please check the file path.";
+  }
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: `❌ ${userMessage}`
+    }],
+    isError: true
+  };
+}
+
+// Re-use existing helper functions from original implementation
 async function loadImageForComparison(source: string): Promise<{ data: string; mimeType: string }> {
   // Handle Claude Code virtual image references
   if (source.match(/^\[Image #\d+\]$/)) {
@@ -397,107 +421,6 @@ async function loadImageForComparison(source: string): Promise<{ data: string; m
   };
 }
 
-// Document tool handlers
-async function handleDocumentAnalysis(geminiClient: GeminiClient, args: unknown) {
-  const input = DocumentInputSchema.parse(args) as DocumentInput;
-  const { source, format, options } = input;
-
-  logger.info(`Analyzing document: ${source} (format: ${format})`);
-
-  // Detect format if auto
-  let detectedFormat = format;
-  if (format === 'auto') {
-    // Load a small portion to detect format
-    const buffer = await loadDocumentForDetection(source);
-    detectedFormat = DocumentProcessorFactory.detectFormat(source, buffer);
-  }
-
-  // Create processor and process document
-  const processor = DocumentProcessorFactory.create(detectedFormat as any, geminiClient);
-  const result = await processor.process(source, options as any);
-
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `Document Analysis Results:\n\n${JSON.stringify(result, null, 2)}`
-      }
-    ],
-    isError: false
-  };
-}
-
-async function handleDataExtraction(geminiClient: GeminiClient, args: unknown) {
-  const input = DataExtractionSchema.parse(args) as DataExtractionInput;
-  const { source, format, schema, options } = input;
-
-  logger.info(`Extracting data from document: ${source} (format: ${format})`);
-
-  // Detect format if auto
-  let detectedFormat = format;
-  if (format === 'auto') {
-    const buffer = await loadDocumentForDetection(source);
-    detectedFormat = DocumentProcessorFactory.detectFormat(source, buffer);
-  }
-
-  // Create processor and extract data
-  const processor = DocumentProcessorFactory.create(detectedFormat as any, geminiClient);
-  const extractedData = await processor.extractStructuredData(schema, options as any);
-
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `Extracted Data:\n\n${JSON.stringify(extractedData, null, 2)}`
-      }
-    ],
-    isError: false
-  };
-}
-
-async function handleDocumentSummarization(geminiClient: GeminiClient, args: unknown) {
-  const input = SummarizationSchema.parse(args) as SummarizationInput;
-  const { source, format, options } = input;
-
-  logger.info(`Summarizing document: ${source} (format: ${format})`);
-
-  // Detect format if auto
-  let detectedFormat = format;
-  if (format === 'auto') {
-    const buffer = await loadDocumentForDetection(source);
-    detectedFormat = DocumentProcessorFactory.detectFormat(source, buffer);
-  }
-
-  // Create summary options
-  const summaryOptions = {
-    summaryType: options?.summary_type || 'detailed',
-    maxLength: options?.max_length
-  };
-
-  // Generate summary using Gemini
-  const documentBuffer = await loadDocumentForProcessing(source);
-  if (!documentBuffer || !Buffer.isBuffer(documentBuffer)) {
-    throw new Error('Failed to load document buffer');
-  }
-
-  const formatInfo = DocumentProcessorFactory.getFormatInfo(detectedFormat as any);
-  const mimeType = formatInfo.mimeType || 'application/octet-stream';
-
-  // TODO: Fix summarizeDocument call - temporarily return placeholder
-  const summary = `Document summary for ${source} (${detectedFormat})`;
-
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `Document Summary:\n\n${summary}`
-      }
-    ],
-    isError: false
-  };
-}
-
-// Helper functions
 async function loadDocumentForDetection(source: string): Promise<Buffer> {
   if (source.startsWith('data:')) {
     const base64Data = source.split(',')[1];
@@ -521,9 +444,4 @@ async function loadDocumentForDetection(source: string): Promise<Buffer> {
 
   const fs = await import('fs/promises');
   return await fs.readFile(source);
-}
-
-async function loadDocumentForProcessing(source: string): Promise<Buffer> {
-  const buffer = await loadDocumentForDetection(source);
-  return buffer;
 }
