@@ -143,10 +143,13 @@ async function handleImageGeneration(
     style,
     aspectRatio: aspect_ratio || "1:1",
     seed,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'gemini-image'
   };
 
-  const result = await generateImage(geminiClient, generationOptions);
+  const result = await generateImage(geminiClient, generationOptions, config);
 
   // Return image as proper MCP content type instead of JSON text
   if (result.imageData.startsWith('data:')) {
@@ -165,7 +168,7 @@ async function handleImageGeneration(
           },
           {
             type: "text" as const,
-            text: `✅ Image generated successfully using ${result.model}\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}`
+            text: `✅ Image generated successfully using ${result.model}\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`
           }
         ],
         isError: false
@@ -178,7 +181,7 @@ async function handleImageGeneration(
     content: [
       {
         type: "text" as const,
-        text: `✅ Image generated successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n\n**Image Data:** ${result.imageData.substring(0, 100)}...`
+        text: `✅ Image generated successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}\n\n**Image Data:** ${result.imageData.substring(0, 100)}...`
       }
     ],
     isError: false
@@ -206,10 +209,13 @@ async function handleVideoGeneration(
     style,
     cameraMovement: camera_movement,
     seed,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'gemini-video'
   };
 
-  const result = await generateVideo(geminiClient, generationOptions);
+  const result = await generateVideo(geminiClient, generationOptions, config);
 
   return {
     content: [
@@ -217,11 +223,17 @@ async function handleVideoGeneration(
         type: "text" as const,
         text: JSON.stringify({
           success: true,
-          video: result.videoData,
+          video: result.filePath ? `File saved to: ${result.filePath}` : result.videoData.substring(0, 100) + "...",
           format: result.format,
           model: result.model,
           prompt: prompt,
           operation_id: result.operationId,
+          file_info: result.filePath ? {
+            file_path: result.filePath,
+            file_name: result.fileName,
+            file_size: result.fileSize,
+            public_url: result.fileUrl
+          } : null,
           metadata: {
             timestamp: new Date().toISOString(),
             generation_time: result.generationTime,
@@ -270,10 +282,13 @@ async function handleImageToVideoGeneration(
     style,
     cameraMovement: camera_movement,
     seed,
-    fetchTimeout: config.server.fetchTimeout
+    fetchTimeout: config.server.fetchTimeout,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'gemini-image-to-video'
   };
 
-  const result = await generateImageToVideo(geminiClient, prompt, image_input, generationOptions);
+  const result = await generateImageToVideo(geminiClient, prompt, image_input, generationOptions, config);
 
   return {
     content: [
@@ -281,12 +296,18 @@ async function handleImageToVideoGeneration(
         type: "text" as const,
         text: JSON.stringify({
           success: true,
-          video: result.videoData,
+          video: result.filePath ? `File saved to: ${result.filePath}` : result.videoData.substring(0, 100) + "...",
           format: result.format,
           model: result.model,
           prompt: prompt,
           image_input: image_input,
           operation_id: result.operationId,
+          file_info: result.filePath ? {
+            file_path: result.filePath,
+            file_name: result.fileName,
+            file_size: result.fileSize,
+            public_url: result.fileUrl
+          } : null,
           metadata: {
             timestamp: new Date().toISOString(),
             generation_time: result.generationTime,

@@ -18,6 +18,10 @@ export interface ImageGenerationResult {
   model: string;
   generationTime?: number;
   size?: string;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 export interface ImageGenerationOptions {
@@ -29,6 +33,10 @@ export interface ImageGenerationOptions {
   aspectRatio: string;
   seed?: number;
   fetchTimeout: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  saveDirectory?: string;
+  filePrefix?: string;
 }
 
 // Video Generation Schemas
@@ -57,6 +65,10 @@ export interface VideoGenerationResult {
   generationTime?: number;
   size?: string;
   operationId?: string;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 export interface VideoGenerationOptions {
@@ -71,4 +83,8 @@ export interface VideoGenerationOptions {
   cameraMovement?: string;
   seed?: number;
   fetchTimeout: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  saveDirectory?: string;
+  filePrefix?: string;
 }

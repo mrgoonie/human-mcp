@@ -41,14 +41,28 @@
       "observations": [],
       "createdAt": 1759124772630,
       "updatedAt": 1759124772630
+    },
+    {
+      "name": "test_entity_1759131936820",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759131936821,
+      "updatedAt": 1759131936821
+    },
+    {
+      "name": "test_entity_1759133739659",
+      "entityType": "concept",
+      "observations": [],
+      "createdAt": 1759133739660,
+      "updatedAt": 1759133739660
     }
   ],
   "relations": [],
   "metadata": {
     "version": "1.0.0",
     "createdAt": 1759124175581,
-    "updatedAt": 1759124772630,
-    "totalEntities": 6,
+    "updatedAt": 1759133739660,
+    "totalEntities": 8,
     "totalRelations": 0
   }
 }

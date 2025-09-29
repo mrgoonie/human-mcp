@@ -224,12 +224,15 @@ async function handleSpeech(
         type: "text" as const,
         text: JSON.stringify({
           success: true,
-          audioData: result.audioData,
+          audio: result.audioData.startsWith('data:') ?
+            `Audio generated (${Math.round(result.audioData.length / 1000)}KB base64 data - recommend saving to file)` :
+            result.audioData,
           format: result.format,
           voice: result.voice,
           language: result.language,
           model: result.model,
-          metadata: result.metadata
+          metadata: result.metadata,
+          note: "Consider implementing file saving to reduce token usage"
         }, null, 2)
       }
     ],
@@ -260,13 +263,16 @@ async function handleNarration(
         text: JSON.stringify({
           success: true,
           chunks: result.chunks.map(chunk => ({
-            audioData: chunk.audioData,
+            audio: chunk.audioData.startsWith('data:') ?
+              `Audio chunk (${Math.round(chunk.audioData.length / 1000)}KB base64 data)` :
+              chunk.audioData,
             format: chunk.format,
             metadata: chunk.metadata
           })),
           totalDuration: result.totalDuration,
           chapterBreaks: result.chapterBreaks,
-          metadata: result.metadata
+          metadata: result.metadata,
+          note: "Consider implementing file saving to reduce token usage"
         }, null, 2)
       }
     ],
@@ -297,12 +303,15 @@ async function handleCodeExplanation(
         text: JSON.stringify({
           success: true,
           explanation: {
-            audioData: result.explanation.audioData,
+            audio: result.explanation.audioData.startsWith('data:') ?
+              `Audio explanation (${Math.round(result.explanation.audioData.length / 1000)}KB base64 data)` :
+              result.explanation.audioData,
             format: result.explanation.format,
             metadata: result.explanation.metadata
           },
           codeAnalysis: result.codeAnalysis,
-          metadata: result.metadata
+          metadata: result.metadata,
+          note: "Consider implementing file saving to reduce token usage"
         }, null, 2)
       }
     ],
@@ -335,11 +344,14 @@ async function handleVoiceCustomization(
           samples: result.samples.map(sample => ({
             voice: sample.voice,
             stylePrompt: sample.stylePrompt,
-            audioData: sample.audioData,
+            audio: sample.audioData.startsWith('data:') ?
+              `Voice sample (${Math.round(sample.audioData.length / 1000)}KB base64 data)` :
+              sample.audioData,
             metadata: sample.metadata
           })),
           recommendation: result.recommendation,
-          metadata: result.metadata
+          metadata: result.metadata,
+          note: "Consider implementing file saving to reduce token usage"
         }, null, 2)
       }
     ],

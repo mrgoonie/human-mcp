@@ -2,10 +2,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GeminiClient } from "../../eyes/utils/gemini-client.js";
 import type { ImageGenerationOptions, ImageGenerationResult } from "../schemas.js";
 import { logger } from "@/utils/logger.js";
+import { saveBase64ToFile } from "@/utils/file-storage.js";
+import type { Config } from "@/utils/config.js";
 
 export async function generateImage(
   geminiClient: GeminiClient,
-  options: ImageGenerationOptions
+  options: ImageGenerationOptions,
+  config?: Config
 ): Promise<ImageGenerationResult> {
   const startTime = Date.now();
 
@@ -83,16 +86,59 @@ export async function generateImage(
     // Prepare the result based on output format
     let resultData: string;
     let format: string;
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
 
-    if (options.outputFormat === "base64") {
-      resultData = `data:${mimeType};base64,${imageData}`;
-      format = "base64_data_uri";
+    // Always save file to reduce token usage, unless explicitly disabled
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        const savedFile = await saveBase64ToFile(
+          imageData,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'gemini-image',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Image saved to file: ${filePath}`);
+
+        // For URL format, return the file URL if available, otherwise file path
+        if (options.outputFormat === "url") {
+          resultData = fileUrl || filePath || `data:${mimeType};base64,${imageData}`;
+          format = fileUrl ? "url" : "file_path";
+        } else {
+          // For base64 format, return base64 but also include file info
+          resultData = `data:${mimeType};base64,${imageData}`;
+          format = "base64_data_uri";
+        }
+      } catch (error) {
+        logger.warn(`Failed to save image file: ${error}. Falling back to base64 only.`);
+        resultData = `data:${mimeType};base64,${imageData}`;
+        format = "base64_data_uri";
+      }
     } else {
-      // For URL format, we would need to upload to a storage service
-      // For now, return as base64 data URI
-      resultData = `data:${mimeType};base64,${imageData}`;
-      format = "base64_data_uri";
-      logger.warn("URL output format not yet implemented, returning base64 data URI");
+      if (options.outputFormat === "base64") {
+        resultData = `data:${mimeType};base64,${imageData}`;
+        format = "base64_data_uri";
+      } else {
+        // For URL format without file saving, fall back to base64
+        resultData = `data:${mimeType};base64,${imageData}`;
+        format = "base64_data_uri";
+        logger.warn("URL output format requested but file saving disabled. Returning base64 data URI");
+      }
     }
 
     return {
@@ -100,7 +146,11 @@ export async function generateImage(
       format,
       model: options.model,
       generationTime,
-      size: estimateImageSize(imageData)
+      size: estimateImageSize(imageData),
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
 
   } catch (error) {

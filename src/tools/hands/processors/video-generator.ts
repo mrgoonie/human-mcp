@@ -1,10 +1,13 @@
 import { GeminiClient } from "../../eyes/utils/gemini-client.js";
 import type { VideoGenerationOptions, VideoGenerationResult } from "../schemas.js";
 import { logger } from "@/utils/logger.js";
+import { saveBase64ToFile } from "@/utils/file-storage.js";
+import type { Config } from "@/utils/config.js";
 
 export async function generateVideo(
   geminiClient: GeminiClient,
-  options: VideoGenerationOptions
+  options: VideoGenerationOptions,
+  config?: Config
 ): Promise<VideoGenerationResult> {
   const startTime = Date.now();
 
@@ -29,18 +32,56 @@ export async function generateVideo(
     // Parse the result and return formatted response
     let resultData: string;
     let format: string;
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
 
+    // Determine format
     if (options.outputFormat === "mp4") {
-      resultData = result.videoData;
       format = "mp4";
     } else if (options.outputFormat === "webm") {
-      // Convert or handle WebM format if needed
-      resultData = result.videoData;
       format = "webm";
       logger.warn("WebM format conversion not yet implemented, returning MP4");
     } else {
-      resultData = result.videoData;
       format = "mp4";
+    }
+
+    // Always save file to reduce token usage, unless explicitly disabled
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        // Determine MIME type based on format
+        const mimeType = format === "webm" ? "video/webm" : "video/mp4";
+
+        const savedFile = await saveBase64ToFile(
+          result.videoData,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'gemini-video',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Video saved to file: ${filePath}`);
+
+        // Return the file path/URL instead of base64 data for better token efficiency
+        resultData = fileUrl || filePath || result.videoData;
+      } catch (error) {
+        logger.warn(`Failed to save video file: ${error}. Falling back to base64 only.`);
+        resultData = result.videoData;
+      }
+    } else {
+      resultData = result.videoData;
     }
 
     return {
@@ -52,7 +93,11 @@ export async function generateVideo(
       fps: options.fps,
       generationTime,
       size: estimateVideoSize(options.duration, options.aspectRatio),
-      operationId: result.operationId
+      operationId: result.operationId,
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
 
   } catch (error) {
@@ -83,7 +128,8 @@ export async function generateImageToVideo(
   geminiClient: GeminiClient,
   prompt: string,
   imageInput: string,
-  options: Partial<VideoGenerationOptions> = {}
+  options: Partial<VideoGenerationOptions> = {},
+  config?: Config
 ): Promise<VideoGenerationResult> {
   logger.info(`Generating video from image with prompt: "${prompt}"`);
 
@@ -101,7 +147,7 @@ export async function generateImageToVideo(
     fetchTimeout: options.fetchTimeout || 300000
   };
 
-  return await generateVideo(geminiClient, videoOptions);
+  return await generateVideo(geminiClient, videoOptions, config);
 }
 
 export async function pollVideoGeneration(
