@@ -9,13 +9,13 @@
     "human-mcp": "bin/human-mcp.js"
   },
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --target=node --outdir=dist",
-    "start": "bun run dist/index.js",
-    "test": "bun test tests/unit/ && bun test tests/integration/sse-transport.test.ts && bun test tests/integration/server.test.ts && bun test tests/integration/http-transport-files.test.ts",
-    "test:parallel": "bun test",
-    "typecheck": "tsc --noEmit",
-    "inspector": "mcp-inspector stdio -- bun run src/index.ts"
+    "dev": "bun run --watch src/index.ts 2>&1 | tee -a ./logs.txt",
+    "build": "bun build src/index.ts --target=node --outdir=dist 2>&1 | tee -a ./logs.txt",
+    "start": "bun run dist/index.js 2>&1 | tee -a ./logs.txt",
+    "test": "bun test tests/unit/ && bun test tests/integration/sse-transport.test.ts && bun test tests/integration/server.test.ts && bun test tests/integration/http-transport-files.test.ts 2>&1 | tee -a ./logs.txt",
+    "test:parallel": "bun test 2>&1 | tee -a ./logs.txt",
+    "typecheck": "tsc --noEmit 2>&1 | tee -a ./logs.txt",
+    "inspector": "mcp-inspector stdio -- bun run src/index.ts 2>&1 | tee -a ./logs.txt"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.888.0",
