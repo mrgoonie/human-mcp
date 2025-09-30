@@ -104,9 +104,9 @@ This launches a web interface for testing tool functionality interactively.
 ## Development Rules
 
 ### General
-- Use `pnpm` instead of `npm` or `yarn` for package management
+- Use `bun` instead of `npm` or `yarn` or `pnpm` for package management
 - Use `context7` mcp tools for exploring latest docs of plugins/packages
-- Use `senera` mcp tools for semantic retrieval and editing capabilities
+- Follow [these principles](https://www.anthropic.com/engineering/writing-tools-for-agents) to write effective tools for AI agents.
 
 ### Code Quality Guidelines
 - Read and follow strictly codebase structure and code standards in `./docs`
@@ -115,6 +115,9 @@ This launches a web interface for testing tool functionality interactively.
 - Use reasonable code quality standards that enhance developer productivity
 - Use try catch error handling & cover security standards
 - Use `code-reviewer` agent to review code after every implementation
+- Always use `debugger` agent to analyze `./logs.txt` to find possible root causes and provide a report with solutions.
+- Use `bun run typecheck` to check type errors and fix them all.
+- Make sure the code is compilable and runs successfully without any errors.
 
 ### Pre-commit/Push Rules
 - Run linting before commit

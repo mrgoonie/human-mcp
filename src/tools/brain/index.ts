@@ -7,7 +7,7 @@ import type { Config } from "@/utils/config.js";
 
 // Import native tools (fast, API-free)
 import { registerSequentialThinkingTool } from "./native/sequential-thinking.js";
-import { registerMemoryTools } from "./native/memory.js";
+// import { registerMemoryTools } from "./native/memory.js";
 import { registerSimpleReasoningTools } from "./native/simple-reasoning.js";
 
 // Import enhanced processors (Gemini-powered for complex tasks)
@@ -19,8 +19,8 @@ import type { BrainReflectInput } from "./types.js";
  *
  * Native Tools (70% usage):
  * - mcp__reasoning__sequentialthinking: Native sequential thinking
- * - mcp__memory__store: Knowledge graph persistence
- * - mcp__memory__recall: Memory retrieval
+ * - mcp__memory__store: Knowledge graph persistence [DEPRECATED](https://www.anthropic.com/news/context-management)
+ * - mcp__memory__recall: Memory retrieval [DEPRECATED](https://www.anthropic.com/news/context-management)
  * - brain_analyze_simple: Pattern-based reasoning
  * - brain_patterns_info: Framework information
  *
@@ -32,7 +32,7 @@ export async function registerBrainTools(server: McpServer, config: Config) {
 
   // Register Native Tools (fast, no API calls)
   await registerSequentialThinkingTool(server, config);
-  await registerMemoryTools(server, config);
+  // await registerMemoryTools(server, config);
   await registerSimpleReasoningTools(server, config);
 
   // Register Enhanced Tools (for complex tasks requiring AI)
@@ -176,16 +176,16 @@ export const BRAIN_TOOL_RECOMMENDATIONS = {
       "Dynamic reasoning with thought revision and branching",
       "Multi-step analysis with session management"
     ],
-    "mcp__memory__store": [
-      "Storing entities, relationships, and observations",
-      "Building knowledge graphs for context retention",
-      "Creating persistent memory across sessions"
-    ],
-    "mcp__memory__recall": [
-      "Searching stored information and entities",
-      "Retrieving relationships and observations",
-      "Getting memory statistics and insights"
-    ],
+    // "mcp__memory__store": [
+    //   "Storing entities, relationships, and observations",
+    //   "Building knowledge graphs for context retention",
+    //   "Creating persistent memory across sessions"
+    // ],
+    // "mcp__memory__recall": [
+    //   "Searching stored information and entities",
+    //   "Retrieving relationships and observations",
+    //   "Getting memory statistics and insights"
+    // ],
     "brain_analyze_simple": [
       "Standard analytical frameworks (SWOT, pros/cons, root cause)",
       "Pattern-based reasoning for common scenarios",

@@ -4,11 +4,14 @@ import { GeminiClient } from "../eyes/utils/gemini-client.js";
 import {
   ImageGenerationInputSchema,
   VideoGenerationInputSchema,
+  ImageEditingInputSchema,
   type ImageGenerationInput,
-  type VideoGenerationInput
+  type VideoGenerationInput,
+  type ImageEditingInput
 } from "./schemas.js";
 import { generateImage } from "./processors/image-generator.js";
 import { generateVideo, generateImageToVideo, pollVideoGeneration } from "./processors/video-generator.js";
+import { editImage } from "./processors/image-editor.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
@@ -112,6 +115,209 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool gemini_image_to_video error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register gemini_edit_image tool - general image editing tool
+  server.registerTool(
+    "gemini_edit_image",
+    {
+      title: "Gemini Image Editing Tool",
+      description: "Edit images using AI with various operations like inpainting, outpainting, style transfer, object manipulation, and composition",
+      inputSchema: {
+        operation: z.enum([
+          "inpaint",
+          "outpaint",
+          "style_transfer",
+          "object_manipulation",
+          "multi_image_compose"
+        ]).describe("Type of image editing operation to perform"),
+        input_image: z.string().describe("Base64 encoded image or file path to the input image"),
+        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of the desired edit"),
+        mask_image: z.string().optional().describe("Base64 encoded mask image for inpainting (white = edit area, black = keep)"),
+        mask_prompt: z.string().optional().describe("Text description of the area to mask for editing"),
+        expand_direction: z.enum(["all", "left", "right", "top", "bottom", "horizontal", "vertical"]).optional().describe("Direction to expand the image"),
+        expansion_ratio: z.number().min(0.1).max(3.0).optional().default(1.5).describe("How much to expand the image (1.0 = no expansion)"),
+        style_image: z.string().optional().describe("Base64 encoded reference image for style transfer"),
+        style_strength: z.number().min(0.1).max(1.0).optional().default(0.7).describe("Strength of style application"),
+        target_object: z.string().optional().describe("Description of the object to manipulate"),
+        manipulation_type: z.enum(["move", "resize", "remove", "replace", "duplicate"]).optional().describe("Type of object manipulation"),
+        target_position: z.string().optional().describe("New position for the object (e.g., 'center', 'top-left')"),
+        secondary_images: z.array(z.string()).optional().describe("Array of base64 encoded images for composition"),
+        composition_layout: z.enum(["blend", "collage", "overlay", "side_by_side"]).optional().describe("How to combine multiple images"),
+        blend_mode: z.enum(["normal", "multiply", "screen", "overlay", "soft_light"]).optional().describe("Blending mode for image composition"),
+        negative_prompt: z.string().optional().describe("What to avoid in the edited image"),
+        strength: z.number().min(0.1).max(1.0).optional().default(0.8).describe("Strength of the editing effect"),
+        guidance_scale: z.number().min(1.0).max(20.0).optional().default(7.5).describe("How closely to follow the prompt"),
+        seed: z.number().int().min(0).optional().describe("Random seed for reproducible results"),
+        output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format for the edited image"),
+        quality: z.enum(["draft", "standard", "high"]).optional().default("standard").describe("Quality level of the editing")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleImageEditing(geminiClient, args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool gemini_edit_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register specialized image editing tools
+  server.registerTool(
+    "gemini_inpaint_image",
+    {
+      title: "Gemini Image Inpainting Tool",
+      description: "Fill or modify specific areas of an image based on a text prompt and mask",
+      inputSchema: {
+        input_image: z.string().describe("Base64 encoded image or file path to the input image"),
+        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of what to paint in the masked area"),
+        mask_image: z.string().optional().describe("Base64 encoded mask image (white = edit area, black = keep)"),
+        mask_prompt: z.string().optional().describe("Text description of the area to mask for editing"),
+        negative_prompt: z.string().optional().describe("What to avoid in the edited area"),
+        strength: z.number().min(0.1).max(1.0).optional().default(0.8).describe("Strength of the editing effect"),
+        guidance_scale: z.number().min(1.0).max(20.0).optional().default(7.5).describe("How closely to follow the prompt"),
+        seed: z.number().int().min(0).optional().describe("Random seed for reproducible results"),
+        output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format"),
+        quality: z.enum(["draft", "standard", "high"]).optional().default("standard").describe("Quality level")
+      }
+    },
+    async (args) => {
+      try {
+        const inpaintArgs = { ...args, operation: "inpaint" };
+        return await handleImageEditing(geminiClient, inpaintArgs, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool gemini_inpaint_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "gemini_outpaint_image",
+    {
+      title: "Gemini Image Outpainting Tool",
+      description: "Expand an image beyond its original borders in specified directions",
+      inputSchema: {
+        input_image: z.string().describe("Base64 encoded image or file path to the input image"),
+        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of what to add in the expanded areas"),
+        expand_direction: z.enum(["all", "left", "right", "top", "bottom", "horizontal", "vertical"]).optional().default("all").describe("Direction to expand the image"),
+        expansion_ratio: z.number().min(0.1).max(3.0).optional().default(1.5).describe("How much to expand the image (1.0 = no expansion)"),
+        negative_prompt: z.string().optional().describe("What to avoid in the expanded areas"),
+        strength: z.number().min(0.1).max(1.0).optional().default(0.8).describe("Strength of the editing effect"),
+        guidance_scale: z.number().min(1.0).max(20.0).optional().default(7.5).describe("How closely to follow the prompt"),
+        seed: z.number().int().min(0).optional().describe("Random seed for reproducible results"),
+        output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format"),
+        quality: z.enum(["draft", "standard", "high"]).optional().default("standard").describe("Quality level")
+      }
+    },
+    async (args) => {
+      try {
+        const outpaintArgs = { ...args, operation: "outpaint" };
+        return await handleImageEditing(geminiClient, outpaintArgs, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool gemini_outpaint_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "gemini_style_transfer_image",
+    {
+      title: "Gemini Style Transfer Tool",
+      description: "Transfer the style from one image to another using AI",
+      inputSchema: {
+        input_image: z.string().describe("Base64 encoded image or file path to the input image"),
+        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of the desired style"),
+        style_image: z.string().optional().describe("Base64 encoded reference image for style transfer"),
+        style_strength: z.number().min(0.1).max(1.0).optional().default(0.7).describe("Strength of style application"),
+        negative_prompt: z.string().optional().describe("What style elements to avoid"),
+        guidance_scale: z.number().min(1.0).max(20.0).optional().default(7.5).describe("How closely to follow the prompt"),
+        seed: z.number().int().min(0).optional().describe("Random seed for reproducible results"),
+        output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format"),
+        quality: z.enum(["draft", "standard", "high"]).optional().default("standard").describe("Quality level")
+      }
+    },
+    async (args) => {
+      try {
+        const styleArgs = { ...args, operation: "style_transfer" };
+        return await handleImageEditing(geminiClient, styleArgs, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool gemini_style_transfer_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "gemini_compose_images",
+    {
+      title: "Gemini Image Composition Tool",
+      description: "Combine multiple images into a single composition using AI",
+      inputSchema: {
+        input_image: z.string().describe("Base64 encoded primary image"),
+        secondary_images: z.array(z.string()).describe("Array of base64 encoded secondary images to compose"),
+        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of how to compose the images"),
+        composition_layout: z.enum(["blend", "collage", "overlay", "side_by_side"]).optional().default("blend").describe("How to combine the images"),
+        blend_mode: z.enum(["normal", "multiply", "screen", "overlay", "soft_light"]).optional().default("normal").describe("Blending mode for image composition"),
+        negative_prompt: z.string().optional().describe("What to avoid in the composition"),
+        strength: z.number().min(0.1).max(1.0).optional().default(0.8).describe("Strength of the composition effect"),
+        guidance_scale: z.number().min(1.0).max(20.0).optional().default(7.5).describe("How closely to follow the prompt"),
+        seed: z.number().int().min(0).optional().describe("Random seed for reproducible results"),
+        output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format"),
+        quality: z.enum(["draft", "standard", "high"]).optional().default("standard").describe("Quality level")
+      }
+    },
+    async (args) => {
+      try {
+        const composeArgs = { ...args, operation: "multi_image_compose" };
+        return await handleImageEditing(geminiClient, composeArgs, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool gemini_compose_images error:`, mcpError);
 
         return {
           content: [{
@@ -317,6 +523,105 @@ async function handleImageToVideoGeneration(
             size: result.size
           }
         }, null, 2)
+      }
+    ],
+    isError: false
+  };
+}
+
+async function handleImageEditing(
+  geminiClient: GeminiClient,
+  args: unknown,
+  config: Config
+) {
+  const input = ImageEditingInputSchema.parse(args) as ImageEditingInput;
+  const {
+    operation,
+    input_image,
+    prompt,
+    mask_image,
+    mask_prompt,
+    expand_direction,
+    expansion_ratio,
+    style_image,
+    style_strength,
+    target_object,
+    manipulation_type,
+    target_position,
+    secondary_images,
+    composition_layout,
+    blend_mode,
+    negative_prompt,
+    strength,
+    guidance_scale,
+    seed,
+    output_format,
+    quality
+  } = input;
+
+  logger.info(`Editing image with operation: "${operation}" and prompt: "${prompt}"`);
+
+  const editingOptions = {
+    operation,
+    inputImage: input_image,
+    prompt,
+    maskImage: mask_image,
+    maskPrompt: mask_prompt,
+    expandDirection: expand_direction,
+    expansionRatio: expansion_ratio || 1.5,
+    styleImage: style_image,
+    styleStrength: style_strength || 0.7,
+    targetObject: target_object,
+    manipulationType: manipulation_type,
+    targetPosition: target_position,
+    secondaryImages: secondary_images,
+    compositionLayout: composition_layout,
+    blendMode: blend_mode,
+    negativePrompt: negative_prompt,
+    strength: strength || 0.8,
+    guidanceScale: guidance_scale || 7.5,
+    seed,
+    outputFormat: output_format || "base64",
+    quality: quality || "standard",
+    fetchTimeout: config.server.fetchTimeout,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: `edited-${operation}`
+  };
+
+  const result = await editImage(geminiClient, editingOptions, config);
+
+  // Return edited image as proper MCP content type
+  if (result.editedImageData.startsWith('data:')) {
+    // Extract MIME type and base64 data from data URI
+    const matches = result.editedImageData.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      const mimeType = matches[1];
+      const base64Data = matches[2];
+
+      return {
+        content: [
+          {
+            type: "image" as const,
+            data: base64Data,
+            mimeType: mimeType
+          },
+          {
+            type: "text" as const,
+            text: `✅ Image edited successfully using ${operation} operation\n\n**Editing Details:**\n- Operation: ${operation}\n- Prompt: "${prompt}"\n- Format: ${result.format}\n- Original Size: ${result.originalSize}\n- Edited Size: ${result.editedSize}\n- Processing Time: ${result.processingTime}ms\n- Quality: ${quality}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}${result.metadata ? `\n\n**Operation Metadata:**\n- Strength: ${result.metadata.strength}\n- Guidance Scale: ${result.metadata.guidanceScale}\n- Seed: ${result.metadata.seed || 'random'}` : ''}`
+          }
+        ],
+        isError: false
+      };
+    }
+  }
+
+  // Fallback to text format if data URI parsing fails
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: `✅ Image edited successfully!\n\n**Editing Details:**\n- Operation: ${operation}\n- Prompt: "${prompt}"\n- Format: ${result.format}\n- Original Size: ${result.originalSize}\n- Edited Size: ${result.editedSize}\n- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}\n\n**Edited Image Data:** ${result.editedImageData.substring(0, 100)}...`
       }
     ],
     isError: false

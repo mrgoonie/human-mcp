@@ -47,7 +47,7 @@ The final phase completes all human sensory capabilities:
    - **Eyes Tools**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
    - **Brain Tools**: Advanced reasoning (`brain_think`, `brain_analyze`, `brain_solve`, `brain_reflect`)
    - **Mouth Tools**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
-   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`)
+   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`) + Image editing (`gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`)
    - **Ears Tools**: Audio processing (planned Phase 3)
 3. **Processing Layer**: Media, document, and reasoning processors with factory patterns
 4. **Transport Layer**: STDIO and HTTP transports with SSE fallback
@@ -100,7 +100,8 @@ human-mcp/
 │   │   │   ├── schemas.ts    # Content generation schemas
 │   │   │   └── processors/   # Generation processors
 │   │   │       ├── image-generator.ts # Image generation using Imagen API
-│   │   │       └── video-generator.ts # Video generation using Veo 3.0 API
+│   │   │       ├── video-generator.ts # Video generation using Veo 3.0 API
+│   │   │       └── image-editor.ts    # Image editing processor
 │   │   └── mouth/            # Speech generation tools
 │   │       ├── index.ts      # Mouth tool registration
 │   │       ├── schemas.ts    # Speech generation schemas
@@ -202,10 +203,15 @@ server.registerTool("mouth_narrate", { /* ... */ }, async (args) => { /* ... */ 
 server.registerTool("mouth_explain", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("mouth_customize", { /* ... */ }, async (args) => { /* ... */ });
 
-// Hands Tools - Content Generation
+// Hands Tools - Content Generation + Image Editing
 server.registerTool("gemini_gen_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_gen_video", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_image_to_video", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_edit_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_inpaint_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_outpaint_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_style_transfer_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_compose_images", { /* ... */ }, async (args) => { /* ... */ });
 ```
 
 ### 3. Strategy Pattern for Media Processing
@@ -264,7 +270,129 @@ const processor = DocumentProcessorFactory.create(detectedFormat, geminiClient);
 const result = await processor.process(source, options);
 ```
 
-### 5. Configuration-driven Architecture
+### 5. Image Editing Pipeline Architecture
+
+**Pattern**: Operation-Based Editing with Multi-Image Support
+- **Operation Types**: Five distinct editing operations (inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose)
+- **Flexible Input**: Support for base64 data URIs, file paths, and URLs
+- **Context Building**: Dynamic request content based on operation type
+- **Multi-Image Processing**: Support for mask images, style reference images, and secondary composition images
+- **Quality Control**: Three quality levels (draft, standard, high) with guidance scale and strength parameters
+
+```typescript
+// Image Editing Pipeline Pattern
+export async function editImage(
+  geminiClient: GeminiClient,
+  options: ImageEditingOptions,
+  config?: Config
+): Promise<ImageEditingResult> {
+  // Process input image to correct format
+  const processedInputImage = await processImageForEditing(options.inputImage);
+
+  // Build operation-specific editing prompt
+  const editingPrompt = buildEditingPrompt(options);
+
+  // Build multi-image request content based on operation
+  const requestContent = await buildRequestContent(options, processedInputImage, editingPrompt);
+
+  // Generate edited image using Gemini API
+  const response = await model.generateContent(requestContent);
+
+  // Save to file storage with optional R2 upload
+  const savedFile = await saveBase64ToFile(imageData, mimeType, config, {
+    prefix: `edited-${options.operation}`,
+    uploadToR2: shouldUploadToR2
+  });
+
+  return {
+    editedImageData: resultData,
+    format,
+    operation: options.operation,
+    processingTime,
+    filePath,
+    fileUrl,
+    metadata: { prompt, operation, strength, guidanceScale, seed }
+  };
+}
+
+// Operation-Specific Prompt Builder
+function buildEditingPrompt(options: ImageEditingOptions): string {
+  let prompt = options.prompt;
+
+  switch (options.operation) {
+    case "inpaint":
+      prompt = `Edit the specified area of this image: ${prompt}`;
+      if (options.maskPrompt) {
+        prompt += `. Focus on the area described as: ${options.maskPrompt}`;
+      }
+      break;
+
+    case "outpaint":
+      prompt = `Expand this image ${options.expandDirection || 'in all directions'}: ${prompt}`;
+      break;
+
+    case "style_transfer":
+      prompt = `Apply the following style to this image: ${prompt}`;
+      break;
+
+    case "object_manipulation":
+      prompt = `${options.manipulationType || 'modify'} the ${options.targetObject}: ${prompt}`;
+      break;
+
+    case "multi_image_compose":
+      prompt = `Compose multiple images together: ${prompt}`;
+      if (options.compositionLayout) {
+        prompt += `. Layout: ${options.compositionLayout}`;
+      }
+      break;
+  }
+
+  return prompt;
+}
+
+// Multi-Image Request Content Builder
+async function buildRequestContent(
+  options: ImageEditingOptions,
+  processedInputImage: { data: string; mimeType: string },
+  editingPrompt: string
+): Promise<any[]> {
+  const content: any[] = [
+    { text: editingPrompt },
+    { inlineData: { data: processedInputImage.data, mimeType: processedInputImage.mimeType } }
+  ];
+
+  // Add mask image for inpainting
+  if (options.operation === "inpaint" && options.maskImage) {
+    const processedMask = await processImageForEditing(options.maskImage);
+    content.push({ inlineData: { data: processedMask.data, mimeType: processedMask.mimeType } });
+  }
+
+  // Add style reference for style transfer
+  if (options.operation === "style_transfer" && options.styleImage) {
+    const processedStyle = await processImageForEditing(options.styleImage);
+    content.push({ inlineData: { data: processedStyle.data, mimeType: processedStyle.mimeType } });
+  }
+
+  // Add secondary images for composition
+  if (options.operation === "multi_image_compose" && options.secondaryImages) {
+    for (const secondaryImage of options.secondaryImages) {
+      const processedSecondary = await processImageForEditing(secondaryImage);
+      content.push({ inlineData: { data: processedSecondary.data, mimeType: processedSecondary.mimeType } });
+    }
+  }
+
+  return content;
+}
+```
+
+**Use Cases**:
+- **UI Debugging**: Edit screenshots to fix visual issues or test design variations
+- **Design Iteration**: Quickly modify UI elements without manual editing tools
+- **Content Enhancement**: Expand images, apply styles, or compose multiple screenshots
+- **Accessibility Testing**: Modify UI elements to test different visual states
+- **Documentation**: Create annotated screenshots with highlighted areas
+
+### 6. Configuration-driven Architecture
 
 **Pattern**: Environment-based Configuration with Validation
 - **Schema Validation**: Zod schemas for runtime configuration validation

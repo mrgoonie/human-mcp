@@ -216,7 +216,9 @@ class MemoryManager {
 let memoryManager: MemoryManager;
 
 /**
+ * [[DEPRECATED]](https://www.anthropic.com/news/context-management)
  * Register memory tools
+ * @deprecated Use native context management instead
  */
 export async function registerMemoryTools(server: McpServer, config: Config) {
   logger.info("Registering native memory tools...");

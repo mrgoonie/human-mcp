@@ -14,7 +14,7 @@ To transform AI coding agents with comprehensive human-like sensory capabilities
 - **Phase 2 (Document Understanding)**: ✅ 100% Complete (v2.0.0) - Production Ready
 - **Phase 3 (Ears - Audio Processing)**: ❌ 0% Complete - Planned Q1 2025
 - **Phase 4 (Mouth - Speech Generation)**: ✅ 100% Complete (v1.3.0) - Production Ready
-- **Phase 5 (Hands - Content Generation)**: ✅ 100% Complete (v2.0.0) - Production Ready
+- **Phase 5 (Hands - Content Generation)**: ✅ 100% Complete (v2.1.0) - Production Ready with Image Editing
 - **Phase 6 (Brain - Advanced Reasoning)**: ✅ 100% Complete (v2.2.0) - Production Ready
 
 For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
@@ -121,6 +121,20 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - **Requirement**: Convert images to animated videos with text guidance
 - **Features**: Imagen + Veo 3.0 pipeline, animation control, style preservation
 - **Use Cases**: Static image animation, presentation enhancement, creative content
+
+**FR-3.4: Image Editing Tool (`gemini_edit_image`) ✅ NEW**
+- **Status**: ✅ Production Ready (v2.1.0)
+- **Requirement**: Comprehensive AI-powered image editing with multiple operation types
+- **Operations**: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose
+- **Features**: Mask-based editing, style transfer, object manipulation, multi-image composition
+- **Advanced**: Quality levels, guidance scale, negative prompts, seed support
+- **Output**: Edited images with metadata and processing information
+
+**FR-3.5: Specialized Image Editing Tools ✅ NEW**
+- **Inpainting Tool (`gemini_inpaint_image`)**: Fill or modify specific areas using masks or text descriptions
+- **Outpainting Tool (`gemini_outpaint_image`)**: Expand image borders with directional control and expansion ratios
+- **Style Transfer Tool (`gemini_style_transfer_image`)**: Apply artistic styles from reference images or descriptions
+- **Image Composition Tool (`gemini_compose_images`)**: Combine multiple images with blend modes and layouts
 
 #### 1.4 Ears Tools (Audio Processing) - Planned Q1 2025
 
@@ -376,10 +390,12 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - **Long-form Content**: Chapter breaks and style control for extended content
 - **Voice Customization**: Style prompts and voice comparison tools
 
-#### 8.4 Phase 5: Hands - Content Generation ✅ COMPLETED (v2.0.0)
+#### 8.4 Phase 5: Hands - Content Generation ✅ COMPLETED (v2.1.0)
 - **Image Generation**: AI-powered image creation using Gemini Imagen API
 - **Video Generation**: Professional video content using Gemini Veo 3.0 API
 - **Image-to-Video**: Animation pipeline combining Imagen and Veo 3.0
+- **Image Editing**: Comprehensive editing with inpainting, outpainting, style transfer, object manipulation, and composition
+- **Specialized Tools**: Dedicated tools for specific editing operations with optimized workflows
 - **Style Control**: Multiple artistic styles and technical parameters
 
 #### 8.5 Phase 6: Brain - Advanced Reasoning ✅ COMPLETED (v2.2.0)
