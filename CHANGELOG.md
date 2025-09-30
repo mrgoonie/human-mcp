@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/mrgoonie/human-mcp/compare/v2.6.0...v2.7.0) (2025-09-30)
+
+
+### Features
+
+* **hands:** add image editing tool with multi-operation support ([f3a5f7c](https://github.com/mrgoonie/human-mcp/commit/f3a5f7cecbdf33179f1ccf6678a1c6e608f2b067))
+
 # [2.6.0](https://github.com/mrgoonie/human-mcp/compare/v2.5.0...v2.6.0) (2025-09-29)
 
 
