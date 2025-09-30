@@ -15,6 +15,7 @@ import { editImage } from "./processors/image-editor.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
+import { formatMediaResponse } from "@/utils/response-formatter.js";
 
 export async function registerHandsTool(server: McpServer, config: Config) {
   const geminiClient = new GeminiClient(config);
@@ -357,39 +358,35 @@ async function handleImageGeneration(
 
   const result = await generateImage(geminiClient, generationOptions, config);
 
-  // Return image as proper MCP content type instead of JSON text
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
   if (result.imageData.startsWith('data:')) {
-    // Extract MIME type and base64 data from data URI
     const matches = result.imageData.match(/data:([^;]+);base64,(.+)/);
     if (matches && matches[1] && matches[2]) {
-      const mimeType = matches[1];
-      const base64Data = matches[2];
-
-      return {
-        content: [
-          {
-            type: "image" as const,
-            data: base64Data,
-            mimeType: mimeType
-          },
-          {
-            type: "text" as const,
-            text: `✅ Image generated successfully using ${result.model}\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`
-          }
-        ],
-        isError: false
-      };
+      mimeType = matches[1];
+      base64Data = matches[2];
     }
   }
 
-  // Fallback to text format if data URI parsing fails
+  // Format response based on transport type
+  const contextText = `✅ Image generated successfully using ${result.model}\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
   return {
-    content: [
-      {
-        type: "text" as const,
-        text: `✅ Image generated successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}\n\n**Image Data:** ${result.imageData.substring(0, 100)}...`
-      }
-    ],
+    content: formattedResponse as any,
     isError: false
   };
 }
@@ -423,34 +420,22 @@ async function handleVideoGeneration(
 
   const result = await generateVideo(geminiClient, generationOptions, config);
 
+  // Format response based on transport type
+  const contextText = `✅ Video generated successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration}\n- Aspect Ratio: ${result.aspectRatio}\n- FPS: ${result.fps}\n- Generation Time: ${result.generationTime}ms\n- Operation ID: ${result.operationId}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      mimeType: `video/${result.format}`,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
   return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({
-          success: true,
-          video: result.filePath ? `File saved to: ${result.filePath}` : result.videoData.substring(0, 100) + "...",
-          format: result.format,
-          model: result.model,
-          prompt: prompt,
-          operation_id: result.operationId,
-          file_info: result.filePath ? {
-            file_path: result.filePath,
-            file_name: result.fileName,
-            file_size: result.fileSize,
-            public_url: result.fileUrl
-          } : null,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            generation_time: result.generationTime,
-            duration: result.duration,
-            aspect_ratio: result.aspectRatio,
-            fps: result.fps,
-            size: result.size
-          }
-        }, null, 2)
-      }
-    ],
+    content: formattedResponse as any,
     isError: false
   };
 }
@@ -496,35 +481,22 @@ async function handleImageToVideoGeneration(
 
   const result = await generateImageToVideo(geminiClient, prompt, image_input, generationOptions, config);
 
+  // Format response based on transport type
+  const contextText = `✅ Video generated from image successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration}\n- Aspect Ratio: ${result.aspectRatio}\n- FPS: ${result.fps}\n- Generation Time: ${result.generationTime}ms\n- Operation ID: ${result.operationId}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      mimeType: `video/${result.format}`,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
   return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({
-          success: true,
-          video: result.filePath ? `File saved to: ${result.filePath}` : result.videoData.substring(0, 100) + "...",
-          format: result.format,
-          model: result.model,
-          prompt: prompt,
-          image_input: image_input,
-          operation_id: result.operationId,
-          file_info: result.filePath ? {
-            file_path: result.filePath,
-            file_name: result.fileName,
-            file_size: result.fileSize,
-            public_url: result.fileUrl
-          } : null,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            generation_time: result.generationTime,
-            duration: result.duration,
-            aspect_ratio: result.aspectRatio,
-            fps: result.fps,
-            size: result.size
-          }
-        }, null, 2)
-      }
-    ],
+    content: formattedResponse as any,
     isError: false
   };
 }
@@ -591,39 +563,35 @@ async function handleImageEditing(
 
   const result = await editImage(geminiClient, editingOptions, config);
 
-  // Return edited image as proper MCP content type
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
   if (result.editedImageData.startsWith('data:')) {
-    // Extract MIME type and base64 data from data URI
     const matches = result.editedImageData.match(/data:([^;]+);base64,(.+)/);
     if (matches && matches[1] && matches[2]) {
-      const mimeType = matches[1];
-      const base64Data = matches[2];
-
-      return {
-        content: [
-          {
-            type: "image" as const,
-            data: base64Data,
-            mimeType: mimeType
-          },
-          {
-            type: "text" as const,
-            text: `✅ Image edited successfully using ${operation} operation\n\n**Editing Details:**\n- Operation: ${operation}\n- Prompt: "${prompt}"\n- Format: ${result.format}\n- Original Size: ${result.originalSize}\n- Edited Size: ${result.editedSize}\n- Processing Time: ${result.processingTime}ms\n- Quality: ${quality}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}${result.metadata ? `\n\n**Operation Metadata:**\n- Strength: ${result.metadata.strength}\n- Guidance Scale: ${result.metadata.guidanceScale}\n- Seed: ${result.metadata.seed || 'random'}` : ''}`
-          }
-        ],
-        isError: false
-      };
+      mimeType = matches[1];
+      base64Data = matches[2];
     }
   }
 
-  // Fallback to text format if data URI parsing fails
+  // Format response based on transport type
+  const contextText = `✅ Image edited successfully using ${operation} operation\n\n**Editing Details:**\n- Operation: ${operation}\n- Prompt: "${prompt}"\n- Format: ${result.format}\n- Original Size: ${result.originalSize}\n- Edited Size: ${result.editedSize}\n- Processing Time: ${result.processingTime}ms\n- Quality: ${quality}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}${result.metadata ? `\n\n**Operation Metadata:**\n- Strength: ${result.metadata.strength}\n- Guidance Scale: ${result.metadata.guidanceScale}\n- Seed: ${result.metadata.seed || 'random'}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
   return {
-    content: [
-      {
-        type: "text" as const,
-        text: `✅ Image edited successfully!\n\n**Editing Details:**\n- Operation: ${operation}\n- Prompt: "${prompt}"\n- Format: ${result.format}\n- Original Size: ${result.originalSize}\n- Edited Size: ${result.editedSize}\n- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}\n\n**Edited Image Data:** ${result.editedImageData.substring(0, 100)}...`
-      }
-    ],
+    content: formattedResponse as any,
     isError: false
   };
 }

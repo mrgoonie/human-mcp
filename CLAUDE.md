@@ -106,6 +106,9 @@ This launches a web interface for testing tool functionality interactively.
 ### General
 - Use `bun` instead of `npm` or `yarn` or `pnpm` for package management
 - Use `context7` mcp tools for exploring latest docs of plugins/packages
+- Use `eyes` mcp tools for describing details of images, videos, documents, etc.
+- Use `hands` mcp tools for generating images, videos, documents, etc.
+- Use `brain` mcp tools for sequential thinking, analyzing code, debugging, etc.
 - Follow [these principles](https://www.anthropic.com/engineering/writing-tools-for-agents) to write effective tools for AI agents.
 
 ### Code Quality Guidelines
