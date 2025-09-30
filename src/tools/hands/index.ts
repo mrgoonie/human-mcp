@@ -128,12 +128,17 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     }
   );
 
-  // Register gemini_edit_image tool - general image editing tool
+  // NOTE: Image editing is not currently supported by Gemini API
+  // The gemini-2.5-flash-image-preview model only supports image GENERATION, not editing
+  // Keeping tool registration disabled until API supports it
+
+  // Register gemini_edit_image tool - general image editing tool (DISABLED - API not supported)
+  /*
   server.registerTool(
     "gemini_edit_image",
     {
-      title: "Gemini Image Editing Tool",
-      description: "Edit images using AI with various operations like inpainting, outpainting, style transfer, object manipulation, and composition",
+      title: "Gemini Image Editing Tool (Currently Unavailable)",
+      description: "Note: Image editing is not currently supported by Gemini API. Use gemini_gen_image to generate new images instead.",
       inputSchema: {
         operation: z.enum([
           "inpaint",
@@ -182,7 +187,8 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     }
   );
 
-  // Register specialized image editing tools
+  // Register specialized image editing tools (ALL DISABLED - API not supported)
+  /*
   server.registerTool(
     "gemini_inpaint_image",
     {
@@ -330,6 +336,7 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       }
     }
   );
+  */
 }
 
 async function handleImageGeneration(
