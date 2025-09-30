@@ -22,15 +22,17 @@ export function getTestType(): TestType {
  * Check if a specific mock should be applied for the current test type
  */
 export function shouldApplyMock(mockName: string, testType: TestType = getTestType()): boolean {
-  const mockConfig = {
+  const mockConfig: Record<string, TestType[]> = {
     // Logger mock - apply to all test types
     logger: ["unit", "integration", "e2e", "all"],
 
     // File system mock - only for unit tests (avoid interfering with integration tests)
     fs: ["unit"],
 
-    // Gemini client mock - conditional based on test type
-    geminiClient: testType === "integration" ? [] : ["unit", "e2e", "all"]
+    // Gemini client mock - NEVER apply globally anymore
+    // Let individual test files handle their own Gemini client mocking
+    // This prevents mock contamination between test files
+    geminiClient: []
   };
 
   const allowedTypes = mockConfig[mockName as keyof typeof mockConfig] || [];

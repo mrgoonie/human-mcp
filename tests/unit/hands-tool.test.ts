@@ -1,10 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, mock } from 'bun:test';
-import { registerHandsTool } from '@/tools/hands/index';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, mock, afterEach } from 'bun:test';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { loadConfig } from '@/utils/config';
 import { MockHelpers, TestDataGenerators } from '../utils/index.js';
 
-// Mock the image generator processor
+// Create isolated mocks for this test file only (no global mock.module)
 const mockGenerateImage = mock(async () => ({
   imageData: TestDataGenerators.createMockImageGenerationResponse().image,
   format: 'base64_data_uri',
@@ -13,11 +11,6 @@ const mockGenerateImage = mock(async () => ({
   size: '1024x1024'
 }));
 
-mock.module('@/tools/hands/processors/image-generator', () => ({
-  generateImage: mockGenerateImage
-}));
-
-// Mock Gemini client
 const mockGeminiImageModel = {
   generateContent: mock(async () => TestDataGenerators.createMockGeminiImageGenerationResponse())
 };
@@ -27,15 +20,22 @@ const mockGeminiClient = {
   getImageGenerationModel: mock(() => mockGeminiImageModel)
 };
 
-mock.module('@/tools/eyes/utils/gemini-client', () => ({
-  GeminiClient: mock(() => mockGeminiClient)
-}));
+// Import functions dynamically to avoid module contamination
+let registerHandsTool: any;
+let loadConfig: any;
 
 describe('Hands Tool', () => {
   let server: McpServer;
 
   beforeAll(async () => {
     process.env.GOOGLE_GEMINI_API_KEY = 'test-key';
+
+    // Import modules first
+    const handsModule = await import('@/tools/hands/index');
+    const configModule = await import('@/utils/config');
+
+    registerHandsTool = handsModule.registerHandsTool;
+    loadConfig = configModule.loadConfig;
 
     const config = loadConfig();
 
@@ -49,6 +49,14 @@ describe('Hands Tool', () => {
 
   afterAll(() => {
     delete process.env.GOOGLE_GEMINI_API_KEY;
+  });
+
+  afterEach(() => {
+    // Clear mocks after each test
+    mockGenerateImage.mockClear();
+    if (mockGeminiImageModel.generateContent.mockClear) {
+      mockGeminiImageModel.generateContent.mockClear();
+    }
   });
 
   beforeEach(() => {

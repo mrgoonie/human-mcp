@@ -1,7 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, mock } from 'bun:test';
-import { registerEyesTool } from '@/tools/eyes/index';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, mock, afterEach } from 'bun:test';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { loadConfig } from '@/utils/config';
 import { MockHelpers, TestDataGenerators } from '../utils/index.js';
 
 // Import global mocks from setup
@@ -21,7 +19,7 @@ const mockFetch = mock(async (url: string) => {
   });
 });
 
-// Mock Gemini client
+// Mock Gemini client - no global mock.module() to avoid contaminating other tests
 const mockGeminiModel = {
   generateContent: mock(async () => ({
     response: {
@@ -34,9 +32,9 @@ const mockGeminiClient = {
   getModel: mock(() => mockGeminiModel)
 };
 
-mock.module('@/tools/eyes/utils/gemini-client', () => ({
-  GeminiClient: mock(() => mockGeminiClient)
-}));
+// Import functions dynamically to avoid module contamination
+let registerEyesTool: any;
+let loadConfig: any;
 
 // Mock processors
 mock.module('@/tools/eyes/processors/image', () => ({
@@ -71,7 +69,14 @@ describe('Eyes Analyze Tool', () => {
 
   beforeAll(async () => {
     process.env.GOOGLE_GEMINI_API_KEY = 'test-key';
-    
+
+    // Dynamically import modules after test setup
+    const eyesModule = await import('@/tools/eyes/index');
+    const configModule = await import('@/utils/config');
+
+    registerEyesTool = eyesModule.registerEyesTool;
+    loadConfig = configModule.loadConfig;
+
     const config = loadConfig();
 
     server = new McpServer({
@@ -84,6 +89,16 @@ describe('Eyes Analyze Tool', () => {
 
   afterAll(() => {
     delete process.env.GOOGLE_GEMINI_API_KEY;
+  });
+
+  afterEach(() => {
+    // Clear mock contamination
+    if (mockGeminiModel.generateContent.mockClear) {
+      mockGeminiModel.generateContent.mockClear();
+    }
+    if (mockFetch.mockClear) {
+      mockFetch.mockClear();
+    }
   });
 
   beforeEach(() => {

@@ -1,13 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, mock } from 'bun:test';
-import { generateImage } from '@/tools/hands/processors/image-generator';
-import { GeminiClient } from '@/tools/eyes/utils/gemini-client';
-import { loadConfig } from '@/utils/config';
-import { TestDataGenerators } from '../utils/index.js';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, mock, afterEach } from 'bun:test';
 import type { ImageGenerationOptions } from '@/tools/hands/schemas';
+import type { GeminiClient } from '@/tools/eyes/utils/gemini-client';
+import { TestDataGenerators } from '../utils/index.js';
 
-// Mock GeminiClient for integration tests
+// Create isolated mock for this test file
 let mockGenerateContent = mock(async () => {
-  // Simulate some processing time
   await new Promise(resolve => setTimeout(resolve, 100));
   return TestDataGenerators.createMockGeminiImageGenerationResponse();
 });
@@ -18,9 +15,8 @@ const mockGeminiModel = {
 
 let mockGeminiClient: any;
 
-// Initialize mock client
+// Initialize mock client with proper isolation
 function initializeMockClient() {
-  // Reset the mock
   mockGenerateContent.mockClear();
 
   mockGeminiClient = {
@@ -28,17 +24,33 @@ function initializeMockClient() {
   } as unknown as GeminiClient;
 }
 
+// Import generateImage AFTER setting up mocks to ensure proper isolation
+let generateImage: any;
+let loadConfig: any;
+
 describe('Image Generation Integration Tests', () => {
   let config: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     process.env.GOOGLE_GEMINI_API_KEY = 'test-key';
+
+    // Dynamically import modules AFTER mocks are ready
+    const generatorModule = await import('@/tools/hands/processors/image-generator');
+    const configModule = await import('@/utils/config');
+
+    generateImage = generatorModule.generateImage;
+    loadConfig = configModule.loadConfig;
     config = loadConfig();
     initializeMockClient();
   });
 
   afterAll(() => {
     delete process.env.GOOGLE_GEMINI_API_KEY;
+  });
+
+  afterEach(() => {
+    // Clear any module cache contamination
+    mockGenerateContent.mockClear();
   });
 
   beforeEach(() => {

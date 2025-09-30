@@ -1,14 +1,9 @@
 import { describe, test, expect, beforeAll, afterAll, mock } from "bun:test";
-import { registerBrainTools } from "../../src/tools/brain/index.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadConfig } from "../../src/utils/config.js";
 
-// Mock external dependencies
-mock.module("@/tools/eyes/utils/gemini-client.js", () => ({
-  GeminiClient: mock(() => ({
-    getModel: mock(() => ({}))
-  }))
-}));
+// Import functions dynamically to avoid contaminating other tests
+let registerBrainTools: any;
+let loadConfig: any;
 
 describe("Brain Tools Optimization", () => {
   let server: McpServer;
@@ -16,6 +11,13 @@ describe("Brain Tools Optimization", () => {
 
   beforeAll(async () => {
     process.env.GOOGLE_GEMINI_API_KEY = "test-key";
+
+    // Dynamically import modules to avoid contamination
+    const brainModule = await import("../../src/tools/brain/index.js");
+    const configModule = await import("../../src/utils/config.js");
+
+    registerBrainTools = brainModule.registerBrainTools;
+    loadConfig = configModule.loadConfig;
 
     const config = loadConfig();
     server = new McpServer({
@@ -41,8 +43,8 @@ describe("Brain Tools Optimization", () => {
     // Check that all expected native tools are registered
     const expectedNativeTools = [
       "mcp__reasoning__sequentialthinking",
-      "mcp__memory__store",
-      "mcp__memory__recall",
+      // "mcp__memory__store",
+      // "mcp__memory__recall",
       "brain_analyze_simple",
       "brain_patterns_info"
     ];
@@ -72,28 +74,32 @@ describe("Brain Tools Optimization", () => {
     expect(schema.totalThoughts).toBeDefined();
   });
 
-  test("memory tools should have simplified schemas", async () => {
-    // Test memory store tool
-    const memoryStoreData = registeredTools.get("mcp__memory__store");
-    expect(memoryStoreData).toBeDefined();
-    expect(memoryStoreData.schema.description).toContain("Create entities, relations, and observations");
+  /**
+   * @deprecated
+   * Memory tools are deprecated in favor of native context management
+   */
+  // test("memory tools should have simplified schemas", async () => {
+  //   // Test memory store tool
+  //   const memoryStoreData = registeredTools.get("mcp__memory__store");
+  //   expect(memoryStoreData).toBeDefined();
+  //   expect(memoryStoreData.schema.description).toContain("Create entities, relations, and observations");
 
-    const storeSchema = memoryStoreData.schema.inputSchema as any;
-    expect(storeSchema.action).toBeDefined();
-    expect(storeSchema.entityName).toBeDefined();
-    // Check if entityType is optional by checking the Zod type
-    expect(storeSchema.entityType._def.typeName).toBe("ZodOptional");
+  //   const storeSchema = memoryStoreData.schema.inputSchema as any;
+  //   expect(storeSchema.action).toBeDefined();
+  //   expect(storeSchema.entityName).toBeDefined();
+  //   // Check if entityType is optional by checking the Zod type
+  //   expect(storeSchema.entityType._def.typeName).toBe("ZodOptional");
 
-    // Test memory recall tool
-    const memoryRecallData = registeredTools.get("mcp__memory__recall");
-    expect(memoryRecallData).toBeDefined();
-    expect(memoryRecallData.schema.description).toContain("Search and retrieve entities");
+  //   // Test memory recall tool
+  //   const memoryRecallData = registeredTools.get("mcp__memory__recall");
+  //   expect(memoryRecallData).toBeDefined();
+  //   expect(memoryRecallData.schema.description).toContain("Search and retrieve entities");
 
-    const recallSchema = memoryRecallData.schema.inputSchema as any;
-    expect(recallSchema.action).toBeDefined();
-    // Check if query is optional by checking the Zod type
-    expect(recallSchema.query._def.typeName).toBe("ZodOptional");
-  });
+  //   const recallSchema = memoryRecallData.schema.inputSchema as any;
+  //   expect(recallSchema.action).toBeDefined();
+  //   // Check if query is optional by checking the Zod type
+  //   expect(recallSchema.query._def.typeName).toBe("ZodOptional");
+  // });
 
   test("simple reasoning tool should work with pattern-based analysis", async () => {
     const simpleReasoningData = registeredTools.get("brain_analyze_simple");
@@ -143,8 +149,8 @@ describe("Brain Tools Optimization", () => {
   test("native tools should have fast response indicators", async () => {
     const nativeTools = [
       "mcp__reasoning__sequentialthinking",
-      "mcp__memory__store",
-      "mcp__memory__recall",
+      // "mcp__memory__store",
+      // "mcp__memory__recall",
       "brain_analyze_simple",
       "brain_patterns_info"
     ];
@@ -180,8 +186,8 @@ describe("Brain Tools Optimization", () => {
     // Count tools by category
     const nativeToolNames = [
       "mcp__reasoning__sequentialthinking",
-      "mcp__memory__store",
-      "mcp__memory__recall",
+      // "mcp__memory__store",
+      // "mcp__memory__recall",
       "brain_analyze_simple",
       "brain_patterns_info"
     ];
@@ -238,35 +244,43 @@ describe("Brain Tools Functional Tests", () => {
     expect(result?.content[0]?.text).toContain("Sequential Thinking Progress");
   });
 
-  test("memory store tool should create entities", async () => {
-    const toolData = registeredTools.get("mcp__memory__store");
-    expect(toolData).toBeDefined();
+  /**
+   * @deprecated
+   * Memory tools are deprecated in favor of native context management
+   */
+  // test("memory store tool should create entities", async () => {
+  //   const toolData = registeredTools.get("mcp__memory__store");
+  //   expect(toolData).toBeDefined();
 
-    const args = {
-      action: "create_entity",
-      entityName: "test_entity_" + Date.now(),
-      entityType: "concept"
-    };
+  //   const args = {
+  //     action: "create_entity",
+  //     entityName: "test_entity_" + Date.now(),
+  //     entityType: "concept"
+  //   };
 
-    const result = await toolData.handler(args);
-    expect(result).toBeDefined();
-    expect(result?.isError).toBe(false);
-    expect(result?.content[0]?.text).toContain("CREATE ENTITY completed successfully");
-  });
+  //   const result = await toolData.handler(args);
+  //   expect(result).toBeDefined();
+  //   expect(result?.isError).toBe(false);
+  //   expect(result?.content[0]?.text).toContain("CREATE ENTITY completed successfully");
+  // });
 
-  test("memory recall tool should search entities", async () => {
-    const toolData = registeredTools.get("mcp__memory__recall");
-    expect(toolData).toBeDefined();
+  /**
+   * @deprecated
+   * Memory tools are deprecated in favor of native context management
+   */
+  // test("memory recall tool should search entities", async () => {
+  //   const toolData = registeredTools.get("mcp__memory__recall");
+  //   expect(toolData).toBeDefined();
 
-    const args = {
-      action: "get_stats"
-    };
+  //   const args = {
+  //     action: "get_stats"
+  //   };
 
-    const result = await toolData.handler(args);
-    expect(result).toBeDefined();
-    expect(result?.isError).toBe(false);
-    expect(result?.content[0]?.text).toContain("Memory Statistics");
-  });
+  //   const result = await toolData.handler(args);
+  //   expect(result).toBeDefined();
+  //   expect(result?.isError).toBe(false);
+  //   expect(result?.content[0]?.text).toContain("Memory Statistics");
+  // });
 
   test("simple reasoning tool should perform analysis", async () => {
     const toolData = registeredTools.get("brain_analyze_simple");
@@ -339,20 +353,24 @@ describe("Brain Tools Error Handling", () => {
     expect(result?.content[0]?.text).toContain("Either sessionId or problem is required");
   });
 
-  test("memory store should handle invalid action", async () => {
-    const toolData = registeredTools.get("mcp__memory__store");
-    expect(toolData).toBeDefined();
+  /**
+   * @deprecated
+   * Memory tools are deprecated in favor of native context management
+   */
+  // test("memory store should handle invalid action", async () => {
+  //   const toolData = registeredTools.get("mcp__memory__store");
+  //   expect(toolData).toBeDefined();
 
-    const args = {
-      action: "invalid_action",
-      entityName: "test"
-    };
+  //   const args = {
+  //     action: "invalid_action",
+  //     entityName: "test"
+  //   };
 
-    const result = await toolData.handler(args);
-    expect(result).toBeDefined();
-    expect(result?.isError).toBe(true);
-    expect(result?.content[0]?.text).toContain("Unknown action");
-  });
+  //   const result = await toolData.handler(args);
+  //   expect(result).toBeDefined();
+  //   expect(result?.isError).toBe(true);
+  //   expect(result?.content[0]?.text).toContain("Unknown action");
+  // });
 
   test("simple reasoning should handle invalid pattern", async () => {
     const toolData = registeredTools.get("brain_analyze_simple");
