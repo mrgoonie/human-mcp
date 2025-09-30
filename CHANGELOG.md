@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/mrgoonie/human-mcp/compare/v2.8.4...v2.9.0) (2025-09-30)
+
+
+### Features
+
+* **gemini:** add separate image model configuration ([9baa811](https://github.com/mrgoonie/human-mcp/commit/9baa811e699a4b47f5e4a9f9c04fdd666665d6aa))
+
 ## [2.8.4](https://github.com/mrgoonie/human-mcp/compare/v2.8.3...v2.8.4) (2025-09-30)
 
 
