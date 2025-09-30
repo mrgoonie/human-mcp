@@ -1,3 +1,10 @@
+## [2.8.2](https://github.com/mrgoonie/human-mcp/compare/v2.8.1...v2.8.2) (2025-09-30)
+
+
+### Bug Fixes
+
+* **hands:** optimize HTTP transport responses to prevent tool execution failures ([7e2475a](https://github.com/mrgoonie/human-mcp/commit/7e2475a03db2efbe1aa2203bb1e18df9f7fe545a))
+
 ## [2.8.1](https://github.com/mrgoonie/human-mcp/compare/v2.8.0...v2.8.1) (2025-09-30)
 
 
