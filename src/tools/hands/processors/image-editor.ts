@@ -24,7 +24,8 @@ export async function editImage(
     logger.info(`Editing prompt: "${editingPrompt}"`);
 
     // Get the appropriate model for image editing
-    const model = geminiClient.getModel("detailed");
+    // Image editing requires gemini-2.5-flash-image-preview model
+    const model = geminiClient.getImageGenerationModel();
 
     // Build the request content based on operation type
     const requestContent = await buildRequestContent(options, processedInputImage, editingPrompt);
@@ -35,29 +36,53 @@ export async function editImage(
 
     // Extract image data from the response
     const candidates = result.candidates;
+
+    // Debug: Log the full response structure
+    logger.debug(`Gemini API response structure: ${JSON.stringify({
+      hasCandidates: !!candidates,
+      candidatesLength: candidates?.length,
+      firstCandidate: candidates?.[0] ? {
+        hasContent: !!candidates[0].content,
+        hasParts: !!candidates[0].content?.parts,
+        partsLength: candidates[0].content?.parts?.length
+      } : null
+    })}`);
+
     if (!candidates || candidates.length === 0) {
-      throw new Error("No image candidates returned from Gemini API");
+      logger.error("No candidates in Gemini response. Full response:", JSON.stringify(result, null, 2));
+      throw new Error("No image candidates returned from Gemini API. This may indicate the API doesn't support image editing yet, or the request format is incorrect.");
     }
 
     const candidate = candidates[0];
-    if (!candidate || !candidate.content || !candidate.content.parts) {
-      throw new Error("Invalid response format from Gemini API");
+    if (!candidate || !candidate.content) {
+      logger.error("Invalid candidate structure:", JSON.stringify(candidate, null, 2));
+      throw new Error("Invalid response format from Gemini API: missing candidate content");
+    }
+
+    if (!candidate.content.parts || candidate.content.parts.length === 0) {
+      logger.error("No parts in candidate content:", JSON.stringify(candidate.content, null, 2));
+      throw new Error("Invalid response format from Gemini API: missing content parts. Note: Gemini image editing may not be available in the current API version.");
     }
 
     // Look for image data in the response parts
     let imageData: string | null = null;
     let mimeType = "image/jpeg";
 
+    logger.debug(`Searching for image data in ${candidate.content.parts.length} parts`);
+
     for (const part of candidate.content.parts) {
+      logger.debug(`Part type: ${JSON.stringify(Object.keys(part))}`);
       if ('inlineData' in part && part.inlineData) {
         imageData = part.inlineData.data;
         mimeType = part.inlineData.mimeType || "image/jpeg";
+        logger.info(`Found image data: ${imageData.length} bytes, type: ${mimeType}`);
         break;
       }
     }
 
     if (!imageData) {
-      throw new Error("No image data found in Gemini response");
+      logger.error("No image data found in response parts:", JSON.stringify(candidate.content.parts, null, 2));
+      throw new Error("No image data found in Gemini response. The API may have returned text instead of an edited image.");
     }
 
     const processingTime = Date.now() - startTime;
