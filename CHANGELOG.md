@@ -1,3 +1,10 @@
+## [2.8.3](https://github.com/mrgoonie/human-mcp/compare/v2.8.2...v2.8.3) (2025-09-30)
+
+
+### Bug Fixes
+
+* **hands:** disable unsupported image editing tools ([e18284d](https://github.com/mrgoonie/human-mcp/commit/e18284d02838022ad940353b2654cf4f60146205))
+
 ## [2.8.2](https://github.com/mrgoonie/human-mcp/compare/v2.8.1...v2.8.2) (2025-09-30)
 
 
