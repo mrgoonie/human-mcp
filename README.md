@@ -1454,6 +1454,7 @@ GOOGLE_GEMINI_API_KEY=your_api_key
 
 # Optional Core Configuration
 GOOGLE_GEMINI_MODEL=gemini-2.5-flash
+GOOGLE_GEMINI_IMAGE_MODEL=gemini-2.5-flash-image-preview
 LOG_LEVEL=info
 PORT=3000
 MAX_REQUEST_SIZE=50MB

@@ -4,6 +4,7 @@ const ConfigSchema = z.object({
   gemini: z.object({
     apiKey: z.string().min(1, "Google Gemini API key is required"),
     model: z.string().default("gemini-2.5-flash"),
+    imageModel: z.string().default("gemini-2.5-flash-image-preview"),
   }),
   transport: z.object({
     type: z.enum(["stdio", "http", "both"]).default("stdio"),
@@ -91,6 +92,7 @@ export function loadConfig(): Config {
     gemini: {
       apiKey: process.env.GOOGLE_GEMINI_API_KEY || "",
       model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.5-flash",
+      imageModel: process.env.GOOGLE_GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image-preview",
     },
     transport: {
       type: (process.env.TRANSPORT_TYPE as any) || "stdio",

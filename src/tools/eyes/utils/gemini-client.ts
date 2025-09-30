@@ -132,7 +132,8 @@ export class GeminiClient {
   }
 
   getImageGenerationModel(modelName?: string): GenerativeModel {
-    const imageModelName = modelName || "gemini-2.5-flash-image-preview";
+    // Use config.gemini.imageModel instead of hardcoded value
+    const imageModelName = modelName || this.config.gemini.imageModel || "gemini-2.5-flash-image-preview";
 
     return this.genAI.getGenerativeModel({
       model: imageModelName,
