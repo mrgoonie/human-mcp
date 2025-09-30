@@ -1,3 +1,10 @@
+## [2.8.1](https://github.com/mrgoonie/human-mcp/compare/v2.8.0...v2.8.1) (2025-09-30)
+
+
+### Bug Fixes
+
+* **hands:** use correct Gemini model for image editing and add debug logging ([8fc5618](https://github.com/mrgoonie/human-mcp/commit/8fc561804ca9d20e3d262f08299e890af8a3b8eb))
+
 # [2.8.0](https://github.com/mrgoonie/human-mcp/compare/v2.7.0...v2.8.0) (2025-09-30)
 
 
