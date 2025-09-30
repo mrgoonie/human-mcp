@@ -128,17 +128,16 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     }
   );
 
-  // NOTE: Image editing is not currently supported by Gemini API
-  // The gemini-2.5-flash-image-preview model only supports image GENERATION, not editing
-  // Keeping tool registration disabled until API supports it
+  // NOTE: Gemini 2.5 Flash uses TEXT-BASED conversational editing
+  // No explicit masks required - just describe what to change in natural language
+  // The model understands semantic editing through descriptive prompts
 
-  // Register gemini_edit_image tool - general image editing tool (DISABLED - API not supported)
-  /*
+  // Register gemini_edit_image tool - general image editing tool
   server.registerTool(
     "gemini_edit_image",
     {
-      title: "Gemini Image Editing Tool (Currently Unavailable)",
-      description: "Note: Image editing is not currently supported by Gemini API. Use gemini_gen_image to generate new images instead.",
+      title: "Gemini Image Editing Tool",
+      description: "Edit images using AI with text-based instructions for inpainting, outpainting, style transfer, object manipulation, and composition. No masks required - just describe what you want to change.",
       inputSchema: {
         operation: z.enum([
           "inpaint",
@@ -187,18 +186,17 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     }
   );
 
-  // Register specialized image editing tools (ALL DISABLED - API not supported)
-  /*
+  // Register specialized image editing tools
   server.registerTool(
     "gemini_inpaint_image",
     {
       title: "Gemini Image Inpainting Tool",
-      description: "Fill or modify specific areas of an image based on a text prompt and mask",
+      description: "Add or modify specific areas of an image using natural language descriptions. No mask required - just describe what to change and where.",
       inputSchema: {
         input_image: z.string().describe("Base64 encoded image or file path to the input image"),
-        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of what to paint in the masked area"),
-        mask_image: z.string().optional().describe("Base64 encoded mask image (white = edit area, black = keep)"),
-        mask_prompt: z.string().optional().describe("Text description of the area to mask for editing"),
+        prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of what to add or change in the image"),
+        mask_image: z.string().optional().describe("(Optional) Base64 encoded mask image - not used by Gemini but kept for compatibility"),
+        mask_prompt: z.string().optional().describe("Text description of WHERE in the image to make changes (e.g., 'the empty space beside the cat', 'the top-left corner')"),
         negative_prompt: z.string().optional().describe("What to avoid in the edited area"),
         strength: z.number().min(0.1).max(1.0).optional().default(0.8).describe("Strength of the editing effect"),
         guidance_scale: z.number().min(1.0).max(20.0).optional().default(7.5).describe("How closely to follow the prompt"),
@@ -336,7 +334,6 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       }
     }
   );
-  */
 }
 
 async function handleImageGeneration(

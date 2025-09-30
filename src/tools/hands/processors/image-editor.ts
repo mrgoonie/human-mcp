@@ -208,58 +208,68 @@ async function processImageForEditing(inputImage: string): Promise<{ data: strin
 function buildEditingPrompt(options: ImageEditingOptions): string {
   let prompt = options.prompt;
 
-  // Add operation-specific instructions
+  // Gemini 2.5 Flash uses conversational, descriptive prompts without masks
+  // Be hyper-specific about what to change and what to preserve
   switch (options.operation) {
     case "inpaint":
-      prompt = `Edit the specified area of this image: ${prompt}`;
+      // For inpainting, describe what to add/modify and where
       if (options.maskPrompt) {
-        prompt += `. Focus on the area described as: ${options.maskPrompt}`;
+        prompt = `Using the provided image, ${prompt}. Focus on ${options.maskPrompt}. Keep all other parts of the image unchanged.`;
+      } else {
+        prompt = `Using the provided image, ${prompt}. Ensure the changes blend naturally with the existing image style, lighting, and perspective.`;
       }
       break;
 
     case "outpaint":
-      prompt = `Expand this image ${options.expandDirection || 'in all directions'}: ${prompt}`;
+      // For outpainting, describe what to add beyond the borders
+      const direction = options.expandDirection || 'all directions';
+      prompt = `Expand the provided image ${direction === 'all' ? 'in all directions' : `to the ${direction}`} and add: ${prompt}. Match the original image's style, lighting, and perspective. Seamlessly blend the new content with the existing image.`;
       if (options.expansionRatio && options.expansionRatio !== 1.5) {
-        prompt += `. Expansion ratio: ${options.expansionRatio}x`;
+        prompt += ` Expand by approximately ${Math.round(options.expansionRatio * 100)}%.`;
       }
       break;
 
     case "style_transfer":
-      prompt = `Apply the following style to this image: ${prompt}`;
-      if (options.styleStrength && options.styleStrength !== 0.7) {
-        prompt += `. Style strength: ${options.styleStrength}`;
+      // For style transfer, describe the desired style clearly
+      prompt = `Transform the provided image to have this style: ${prompt}. Maintain the original composition, objects, and structure while applying the new artistic style.`;
+      if (options.styleStrength) {
+        const strength = options.styleStrength > 0.8 ? 'strongly' : options.styleStrength > 0.5 ? 'moderately' : 'subtly';
+        prompt += ` Apply the style ${strength}.`;
       }
       break;
 
     case "object_manipulation":
+      // For object manipulation, be very specific about what to change
       if (options.targetObject) {
-        prompt = `${options.manipulationType || 'modify'} the ${options.targetObject} in this image: ${prompt}`;
+        const action = options.manipulationType || 'modify';
+        prompt = `In the provided image, ${action} the ${options.targetObject}: ${prompt}`;
         if (options.targetPosition) {
           prompt += `. Position: ${options.targetPosition}`;
         }
+        prompt += `. Keep all other elements unchanged.`;
       }
       break;
 
     case "multi_image_compose":
-      prompt = `Compose multiple images together: ${prompt}`;
+      // For composition, describe how to combine images
+      prompt = `Combine the provided images: ${prompt}`;
       if (options.compositionLayout) {
-        prompt += `. Layout: ${options.compositionLayout}`;
+        prompt += `. Use a ${options.compositionLayout} layout`;
       }
-      if (options.blendMode) {
-        prompt += `. Blend mode: ${options.blendMode}`;
-      }
+      prompt += `. Ensure natural blending and consistent lighting across the composition.`;
       break;
   }
 
-  // Add quality and strength modifiers
+  // Add quality modifiers as descriptive instructions
   if (options.quality === "high") {
-    prompt += ". High quality, detailed result.";
+    prompt += " Generate a high-quality result with fine details and professional finish.";
   } else if (options.quality === "draft") {
-    prompt += ". Quick draft version.";
+    prompt += " Provide a quick draft version.";
   }
 
+  // Add negative prompt as avoidance instructions
   if (options.negativePrompt) {
-    prompt += ` Avoid: ${options.negativePrompt}`;
+    prompt += ` Do not include: ${options.negativePrompt}.`;
   }
 
   return prompt;
@@ -270,34 +280,21 @@ async function buildRequestContent(
   processedInputImage: { data: string; mimeType: string },
   editingPrompt: string
 ): Promise<any[]> {
+  // Gemini 2.5 Flash uses conversational/text-based editing without masks
+  // Format: [image, text_prompt] or [text_prompt, image]
   const content: any[] = [
-    {
-      text: editingPrompt
-    },
     {
       inlineData: {
         data: processedInputImage.data,
         mimeType: processedInputImage.mimeType
       }
+    },
+    {
+      text: editingPrompt
     }
   ];
 
-  // Add mask image for inpainting operations
-  if (options.operation === "inpaint" && options.maskImage) {
-    try {
-      const processedMask = await processImageForEditing(options.maskImage);
-      content.push({
-        inlineData: {
-          data: processedMask.data,
-          mimeType: processedMask.mimeType
-        }
-      });
-    } catch (error) {
-      logger.warn(`Failed to process mask image: ${error}. Proceeding without mask.`);
-    }
-  }
-
-  // Add style reference image for style transfer
+  // For style transfer, add reference image
   if (options.operation === "style_transfer" && options.styleImage) {
     try {
       const processedStyle = await processImageForEditing(options.styleImage);
@@ -312,9 +309,14 @@ async function buildRequestContent(
     }
   }
 
-  // Add secondary images for composition
+  // For composition, add secondary images (up to 3 total images)
   if (options.operation === "multi_image_compose" && options.secondaryImages) {
+    let imageCount = 1; // Already have the main image
     for (const secondaryImage of options.secondaryImages) {
+      if (imageCount >= 3) {
+        logger.warn("Gemini supports up to 3 images. Skipping additional images.");
+        break;
+      }
       try {
         const processedSecondary = await processImageForEditing(secondaryImage);
         content.push({
@@ -323,6 +325,7 @@ async function buildRequestContent(
             mimeType: processedSecondary.mimeType
           }
         });
+        imageCount++;
       } catch (error) {
         logger.warn(`Failed to process secondary image: ${error}. Skipping this image.`);
       }
