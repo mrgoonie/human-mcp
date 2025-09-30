@@ -1,3 +1,10 @@
+## [2.8.4](https://github.com/mrgoonie/human-mcp/compare/v2.8.3...v2.8.4) (2025-09-30)
+
+
+### Bug Fixes
+
+* **hands:** implement text-based image editing for Gemini 2.5 Flash ([79391a8](https://github.com/mrgoonie/human-mcp/commit/79391a8186f6896496c3f8e197c42bc09055ee56))
+
 ## [2.8.3](https://github.com/mrgoonie/human-mcp/compare/v2.8.2...v2.8.3) (2025-09-30)
 
 
