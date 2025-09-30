@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/mrgoonie/human-mcp/compare/v2.7.0...v2.8.0) (2025-09-30)
+
+
+### Features
+
+* **hands:** implement file path support for image editing tools ([5f81792](https://github.com/mrgoonie/human-mcp/commit/5f817922fc4cf3ac86cbc8b1535ea7682f7cfb46))
+
 # [2.7.0](https://github.com/mrgoonie/human-mcp/compare/v2.6.0...v2.7.0) (2025-09-30)
 
 
