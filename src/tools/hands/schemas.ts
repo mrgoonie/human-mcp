@@ -47,7 +47,7 @@ export const VideoGenerationInputSchema = z.object({
   output_format: z.enum(["mp4", "webm"]).optional().default("mp4"),
   aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("16:9"),
   fps: z.number().int().min(1).max(60).optional().default(24),
-  image_input: z.string().optional().describe("Base64 encoded image or image URL to use as starting frame"),
+  image_input: z.string().optional().describe("Starting frame image - supports file paths, URLs, or base64 data URIs"),
   style: z.enum(["realistic", "cinematic", "artistic", "cartoon", "animation"]).optional(),
   camera_movement: z.enum(["static", "pan_left", "pan_right", "zoom_in", "zoom_out", "dolly_forward", "dolly_backward"]).optional(),
   seed: z.number().int().min(0).optional()
@@ -99,12 +99,12 @@ export const ImageEditingInputSchema = z.object({
     "multi_image_compose"
   ]).describe("Type of image editing operation to perform"),
 
-  input_image: z.string().describe("Base64 encoded image or file path to the input image"),
+  input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs (e.g., '/path/to/image.png', 'https://example.com/image.jpg', or 'data:image/png;base64,...')"),
 
   prompt: z.string().min(1, "Prompt cannot be empty").describe("Text description of the desired edit"),
 
   // Inpainting specific fields
-  mask_image: z.string().optional().describe("Base64 encoded mask image for inpainting (white = edit area, black = keep)"),
+  mask_image: z.string().optional().describe("Mask image for inpainting - supports file paths, URLs, or base64 data URIs (white = edit area, black = keep)"),
   mask_prompt: z.string().optional().describe("Text description of the area to mask for editing"),
 
   // Outpainting specific fields
@@ -112,7 +112,7 @@ export const ImageEditingInputSchema = z.object({
   expansion_ratio: z.number().min(0.1).max(3.0).optional().default(1.5).describe("How much to expand the image (1.0 = no expansion)"),
 
   // Style transfer specific fields
-  style_image: z.string().optional().describe("Base64 encoded reference image for style transfer"),
+  style_image: z.string().optional().describe("Style reference image - supports file paths, URLs, or base64 data URIs"),
   style_strength: z.number().min(0.1).max(1.0).optional().default(0.7).describe("Strength of style application"),
 
   // Object manipulation specific fields
@@ -121,7 +121,7 @@ export const ImageEditingInputSchema = z.object({
   target_position: z.string().optional().describe("New position for the object (e.g., 'center', 'top-left')"),
 
   // Multi-image composition specific fields
-  secondary_images: z.array(z.string()).optional().describe("Array of base64 encoded images for composition"),
+  secondary_images: z.array(z.string()).optional().describe("Array of secondary images - each supports file paths, URLs, or base64 data URIs"),
   composition_layout: z.enum(["blend", "collage", "overlay", "side_by_side"]).optional().describe("How to combine multiple images"),
   blend_mode: z.enum(["normal", "multiply", "screen", "overlay", "soft_light"]).optional().describe("Blending mode for image composition"),
 

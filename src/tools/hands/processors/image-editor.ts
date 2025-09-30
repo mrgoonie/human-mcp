@@ -4,18 +4,7 @@ import type { ImageEditingOptions, ImageEditingResult } from "../schemas.js";
 import { logger } from "@/utils/logger.js";
 import { saveBase64ToFile } from "@/utils/file-storage.js";
 import type { Config } from "@/utils/config.js";
-// Simple image processing function
-function processImageDataUri(dataUri: string): { data: string; mimeType: string } {
-  // Extract mime type and data from data URI
-  const matches = dataUri.match(/^data:([^;]+);base64,(.+)$/);
-  if (!matches || !matches[1] || !matches[2]) {
-    throw new Error("Invalid data URI format");
-  }
-  return {
-    mimeType: matches[1],
-    data: matches[2]
-  };
-}
+import { loadImageForProcessing } from "@/utils/image-loader.js";
 
 export async function editImage(
   geminiClient: GeminiClient,
@@ -174,25 +163,17 @@ export async function editImage(
 
 async function processImageForEditing(inputImage: string): Promise<{ data: string; mimeType: string }> {
   try {
-    // If it's a data URI, extract the base64 data
-    if (inputImage.startsWith('data:')) {
-      const result = processImageDataUri(inputImage);
-      return {
-        data: result.data,
-        mimeType: result.mimeType
-      };
-    }
+    // Use centralized image loader that handles file paths, URLs, and base64
+    const result = await loadImageForProcessing(inputImage, {
+      fetchTimeout: 30000,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      quality: 85
+    });
 
-    // If it's a file path, read and convert to base64
-    if (inputImage.startsWith('/') || inputImage.startsWith('./')) {
-      // Handle file path - would need to implement file reading
-      throw new Error("File path input not yet implemented. Please use base64 data URI format.");
-    }
-
-    // Assume it's raw base64 data
     return {
-      data: inputImage,
-      mimeType: "image/jpeg"
+      data: result.data,
+      mimeType: result.mimeType
     };
   } catch (error) {
     throw new Error(`Failed to process input image: ${error instanceof Error ? error.message : error}`);

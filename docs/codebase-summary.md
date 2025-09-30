@@ -46,7 +46,7 @@ The content is organized as follows:
     debugger.md
     docs-manager.md
     git-manager.md
-    planner-researcher.md
+    planner.md
     project-manager.md
     solution-brainstormer.md
     system-architecture.md
@@ -1072,7 +1072,7 @@ description: Analyze Github Actions logs and provide a plan to fix the issues
 ## Github Actions URL
  $ARGUMENTS
 
-Use the `planer-researcher` to read the github actions logs, analyze and find the root causes of the issues, then provide a detailed plan for implementing the fixes.
+Use the `planner` to read the github actions logs, analyze and find the root causes of the issues, then provide a detailed plan for implementing the fixes.
 
 **Output:**
 Provide at least 2 implementation approaches with clear trade-offs, and explain the pros and cons of each approach, and provide a recommended approach.
@@ -1085,7 +1085,7 @@ Provide at least 2 implementation approaches with clear trade-offs, and explain 
 description: Research & create an implementation plan with 2 approaches
 ---
 
-Use the `planner-researcher` subagent to plan for this task:
+Use the `planner` subagent to plan for this task:
 <task>
  $ARGUMENTS
 </task>
@@ -1123,7 +1123,7 @@ Use the `debugger` subagent to find the root cause of the issues, then analyze a
 description: Research, analyze, and create an implementation plan
 ---
 
-Use the `planner-researcher` subagent to plan for this task:
+Use the `planner` subagent to plan for this task:
 <task>
  $ARGUMENTS
 </task>
@@ -13046,7 +13046,7 @@ You operate by the holy trinity of software engineering: YAGNI (You Aren't Gonna
 5. **Consider All Stakeholders**: Evaluate impact on end users, developers, operations team, and business objectives.
 
 ## Collaboration Tools
-- Consult the "planner-researcher" agent to research industry best practices and find proven solutions
+- Consult the "planner" agent to research industry best practices and find proven solutions
 - Engage the "docs-manager" agent to understand existing project implementation and constraints
 - Use Research tools to find efficient approaches and learn from others' experiences
 - Leverage "eyes_analyze" from Human MCP to analyze visual materials and mockups
@@ -13193,7 +13193,7 @@ description: Run test suite and fix issues
 ## Workflow:
 1. First use `tester` subagent to run the tests.
 2. Then use `debugger` subagent to find the root cause of the issues.
-3. Then use `planner-researcher` subagent to create a implementation plan with TODO tasks in `./plans` directory.
+3. Then use `planner` subagent to create a implementation plan with TODO tasks in `./plans` directory.
 4. Then implement the plan.
 5. After finishing, delegate to `code-reviewer` agent to review code.
 6. Repeat this process until all tests pass and no more errors are reported.
@@ -18005,7 +18005,7 @@ You are a senior software engineer with deep expertise in debugging, system anal
 You approach every investigation with scientific rigor, maintaining detailed documentation throughout the process and ensuring that your analysis is both thorough and actionable.
 </file>
 
-<file path=".opencode/agent/planner-researcher.md">
+<file path=".opencode/agent/planner.md">
 ---
 description: >-
   Use this agent when you need comprehensive technical architecture planning,

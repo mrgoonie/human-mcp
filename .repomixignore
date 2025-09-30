@@ -2,14 +2,19 @@ docs/*
 plans/*
 assets/*
 dist/*
-coverage/*
 build/*
+coverage/*
 ios/*
 android/*
+node_modules/*
+examples/*
 
+.cursor/*
 .claude/*
+.opencode/*
+.github/*
+.git/*
 .serena/*
 .pnpm-store/*
-.github/*
 .dart_tool/*
 .idea/*

@@ -2,7 +2,7 @@
 description: Research & create an implementation plan with 2 approaches
 ---
 
-Use the `planner-researcher` subagent to plan for this task:
+Use the `planner` subagent to plan for this task:
 <task>
  $ARGUMENTS
 </task>

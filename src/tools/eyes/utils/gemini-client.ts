@@ -1704,19 +1704,19 @@ Extract as much metadata as possible from the document properties and content.`;
 
       // Add image input if provided
       if (imageInput) {
-        // Parse base64 data URI or handle URL
-        if (imageInput.startsWith('data:image/')) {
-          const matches = imageInput.match(/data:image\/([^;]+);base64,(.+)/);
-          if (matches) {
-            const mimeType = `image/${matches[1]}`;
-            const data = matches[2];
-            parts.push({
-              inlineData: {
-                mimeType,
-                data
-              }
-            });
-          }
+        try {
+          // Import the image loader dynamically
+          const { loadImageForProcessing } = await import("../../../utils/image-loader.js");
+          const { data, mimeType } = await loadImageForProcessing(imageInput);
+          parts.push({
+            inlineData: {
+              mimeType,
+              data
+            }
+          });
+        } catch (error) {
+          logger.warn(`Failed to load image input: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          // Continue without image input
         }
       }
 
