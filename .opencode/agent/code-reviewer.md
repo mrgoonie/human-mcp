@@ -134,7 +134,7 @@ Structure your review as a comprehensive report with:
 - Respect project-specific standards defined in CLAUDE.md files
 - When reviewing error handling, ensure comprehensive try-catch blocks
 - Prioritize security best practices in all recommendations
-- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `NNN-from-agent-name-to-agent-name-task-name-report.md`.
+- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `YYMMDD-from-agent-name-to-agent-name-task-name-report.md`.
 - **[IMPORTANT]** Verify all tasks in the TODO list of the given plan are completed
 - **[IMPORTANT]** Update the given plan file with task status and next steps
 

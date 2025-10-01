@@ -24,7 +24,7 @@ You leverage the `sequential-thinking` MCP tools for dynamic and reflective prob
 - **Strategic Planning**: Create detailed, actionable implementation plans in `./plans` directory
 - **Architecture Documentation**: Maintain and update `./docs/system-architecture-blueprint.md`
 - **Report Generation**: Produce comprehensive reports in `./plans/reports` following naming convention:
-  `NNN-from-system-architect-to-[recipient]-[task-name]-report.md`
+  `YYMMDD-from-system-architect-to-[recipient]-[task-name]-report.md`
 - **Resource Planning**: Define timelines, dependencies, and resource requirements
 
 ### 2. Visual Analysis & Documentation Review
@@ -81,7 +81,7 @@ You leverage the `sequential-thinking` MCP tools for dynamic and reflective prob
 
 ### Report Naming Convention
 
-`./plans/reports/NNN-from-system-architect-to-[recipient]-[task-name]-report.md`
+`./plans/reports/YYMMDD-from-system-architect-to-[recipient]-[task-name]-report.md`
 
 Examples:
 - `001-from-system-architect-to-frontend-team-authentication-flow-report.md`

@@ -1017,7 +1017,7 @@ You should be familiar with common testing commands:
 - Ensure database migrations or seeds are applied for integration tests
 - Check for proper environment variable configuration
 - Never ignore failing tests just to pass the build
-- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `NNN-from-agent-name-to-agent-name-task-name-report.md`.
+- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `YYMMDD-from-agent-name-to-agent-name-task-name-report.md`.
 
 When encountering issues, provide clear, actionable feedback on how to resolve them. Your goal is to ensure the codebase maintains high quality standards through comprehensive testing practices.
 </file>
@@ -12796,7 +12796,7 @@ Structure your review as a comprehensive report with:
 - Respect project-specific standards defined in CLAUDE.md files
 - When reviewing error handling, ensure comprehensive try-catch blocks
 - Prioritize security best practices in all recommendations
-- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `NNN-from-agent-name-to-agent-name-task-name-report.md`.
+- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `YYMMDD-from-agent-name-to-agent-name-task-name-report.md`.
 - **[IMPORTANT]** Verify all tasks in the TODO list of the given plan are completed
 - **[IMPORTANT]** Update the given plan file with task status and next steps
 
@@ -12850,7 +12850,7 @@ You are a senior technical documentation specialist with deep expertise in creat
 
 3. **Naming Convention Compliance**: Meticulously verify that all variables, function names, class names, arguments, request/response queries, parameters, and body fields use the correct case conventions (PascalCase, camelCase, or snake_case) as established by the project's coding standards.
 
-4. **Inter-Agent Communication**: Create detailed reports in markdown format within the `./plans/reports` directory using the naming convention: `NNN-from-agent-name-to-agent-name-task-name-report.md` where NNN is a sequential number.
+4. **Inter-Agent Communication**: Create detailed reports in markdown format within the `./plans/reports` directory using the naming convention: `YYMMDD-from-agent-name-to-agent-name-task-name-report.md` where YYMMDD is a sequential number.
 
 ## Operational Workflow
 
@@ -13150,7 +13150,7 @@ You are responsible for maintaining and evolving the design system:
 ## Reporting and Documentation
 
 Create detailed reports in `./plans/reports` using the naming convention:
-`NNN-from-ui-ux-developer-to-[recipient]-[task-name]-report.md`
+`YYMMDD-from-ui-ux-developer-to-[recipient]-[task-name]-report.md`
 
 Reports should include:
 - Analysis summary of visual inputs
@@ -17986,7 +17986,7 @@ You are a senior software engineer with deep expertise in debugging, system anal
 
 **Reporting Standards:**
 - Use file system (in markdown format) to create reports in `./plans/reports` directory
-- Follow naming convention: `NNN-from-system-debugger-to-[recipient]-[task-name]-report.md`
+- Follow naming convention: `YYMMDD-from-system-debugger-to-[recipient]-[task-name]-report.md`
 - Include executive summary, detailed findings, root cause analysis, and actionable recommendations
 - Provide clear next steps and monitoring suggestions
 
@@ -18080,7 +18080,7 @@ Your core responsibilities include:
 - Create comprehensive technical documentation and diagrams
 - Provide actionable recommendations with clear implementation paths
 - Create a comprehensive plan document in `./plans` directory
-- Use clear naming as the following format: `NNN-feature-name-plan.md`
+- Use clear naming as the following format: `YYMMDD-feature-name-plan.md`
 - Include all research findings, design decisions, and implementation steps
 - Add a TODO checklist for tracking implementation progress
 
@@ -18135,7 +18135,7 @@ You leverage the `sequential-thinking` MCP tools for dynamic and reflective prob
 - **Strategic Planning**: Create detailed, actionable implementation plans in `./plans` directory
 - **Architecture Documentation**: Maintain and update `./docs/system-architecture-blueprint.md`
 - **Report Generation**: Produce comprehensive reports in `./plans/reports` following naming convention:
-  `NNN-from-system-architect-to-[recipient]-[task-name]-report.md`
+  `YYMMDD-from-system-architect-to-[recipient]-[task-name]-report.md`
 - **Resource Planning**: Define timelines, dependencies, and resource requirements
 
 ### 2. Visual Analysis & Documentation Review
@@ -18192,7 +18192,7 @@ You leverage the `sequential-thinking` MCP tools for dynamic and reflective prob
 
 ### Report Naming Convention
 
-`./plans/reports/NNN-from-system-architect-to-[recipient]-[task-name]-report.md`
+`./plans/reports/YYMMDD-from-system-architect-to-[recipient]-[task-name]-report.md`
 
 Examples:
 - `001-from-system-architect-to-frontend-team-authentication-flow-report.md`

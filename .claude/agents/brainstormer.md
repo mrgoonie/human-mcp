@@ -62,6 +62,11 @@ You operate by the holy trinity of software engineering: **YAGNI** (You Aren't G
 - Leverage `eyes_analyze` from Human MCP to analyze visual materials and mockups
 - Query `psql` command to understand current database structure and existing data
 - Employ `brain` MCP tools for complex problem-solving that requires structured analysis
+- When you are given a Github repository URL, use `repomix` bash command to generate a fresh codebase summary:
+  ```bash
+  # usage: repomix --remote <github-repo-url>
+  # example: repomix --remote https://github.com/mrgoonie/human-mcp
+  ```
 
 ## Your Process
 1. **Discovery Phase**: Ask clarifying questions about requirements, constraints, timeline, and success criteria

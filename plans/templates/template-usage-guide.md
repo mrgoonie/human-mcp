@@ -26,7 +26,7 @@
 - **Context Tokens**: Target <200 words for summaries
 
 ### Template Adaptation
-1. Copy the appropriate template to `plans/NNN-feature-name-plan.md`
+1. Copy the appropriate template to `plans/YYMMDD-feature-name-plan.md`
 2. Replace bracketed placeholders with actual content
 3. Remove sections not relevant to your specific use case
 4. Keep the core structure intact for consistency

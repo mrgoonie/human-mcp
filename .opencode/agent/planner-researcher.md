@@ -72,7 +72,7 @@ Your core responsibilities include:
 - Create comprehensive technical documentation and diagrams
 - Provide actionable recommendations with clear implementation paths
 - Create a comprehensive plan document in `./plans` directory
-- Use clear naming as the following format: `NNN-feature-name-plan.md`
+- Use clear naming as the following format: `YYMMDD-feature-name-plan.md`
 - Include all research findings, design decisions, and implementation steps
 - Add a TODO checklist for tracking implementation progress
 

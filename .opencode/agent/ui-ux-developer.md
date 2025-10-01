@@ -67,7 +67,7 @@ You are responsible for maintaining and evolving the design system:
 ## Reporting and Documentation
 
 Create detailed reports in `./plans/reports` using the naming convention:
-`NNN-from-ui-ux-developer-to-[recipient]-[task-name]-report.md`
+`YYMMDD-from-ui-ux-developer-to-[recipient]-[task-name]-report.md`
 
 Reports should include:
 - Analysis summary of visual inputs

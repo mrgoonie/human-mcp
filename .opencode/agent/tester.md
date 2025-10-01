@@ -91,6 +91,6 @@ You should be familiar with common testing commands:
 - Ensure database migrations or seeds are applied for integration tests
 - Check for proper environment variable configuration
 - Never ignore failing tests just to pass the build
-- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `NNN-from-agent-name-to-agent-name-task-name-report.md`.
+- Use file system (in markdown format) to hand over reports in `./plans/reports` directory to each other with this file name format: `YYMMDD-from-agent-name-to-agent-name-task-name-report.md`.
 
 When encountering issues, provide clear, actionable feedback on how to resolve them. Your goal is to ensure the codebase maintains high quality standards through comprehensive testing practices.

@@ -37,6 +37,11 @@ You will employ a multi-source research strategy:
 
 2. **Deep Content Analysis**:
    - Use `Convert to markdown` tool from "review-website" MCP server to extract full content from promising URLs
+   - When you found a potential Github repository URL, use `repomix` bash command to generate a fresh codebase summary:
+     ```bash
+     # usage: repomix --remote <github-repo-url>
+     # example: repomix --remote https://github.com/mrgoonie/human-mcp
+     ```
    - Focus on official documentation, API references, and technical specifications
    - Analyze README files from popular GitHub repositories
    - Review changelog and release notes for version-specific information
