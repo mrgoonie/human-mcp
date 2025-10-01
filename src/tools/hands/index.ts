@@ -5,13 +5,25 @@ import {
   ImageGenerationInputSchema,
   VideoGenerationInputSchema,
   ImageEditingInputSchema,
+  JimpCropInputSchema,
+  JimpResizeInputSchema,
+  JimpRotateInputSchema,
+  JimpMaskInputSchema,
+  BackgroundRemovalInputSchema,
   type ImageGenerationInput,
   type VideoGenerationInput,
-  type ImageEditingInput
+  type ImageEditingInput,
+  type JimpCropInput,
+  type JimpResizeInput,
+  type JimpRotateInput,
+  type JimpMaskInput,
+  type BackgroundRemovalInput
 } from "./schemas.js";
 import { generateImage } from "./processors/image-generator.js";
 import { generateVideo, generateImageToVideo, pollVideoGeneration } from "./processors/video-generator.js";
 import { editImage } from "./processors/image-editor.js";
+import { cropImage, resizeImage, rotateImage, maskImage } from "./processors/jimp-processor.js";
+import { removeImageBackground } from "./processors/background-remover.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
@@ -334,6 +346,172 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       }
     }
   );
+
+  // Register Jimp-based image editing tools
+  server.registerTool(
+    "jimp_crop_image",
+    {
+      title: "Jimp Image Crop Tool",
+      description: "Crop an image using Jimp with various modes (manual, center, aspect ratio, etc.)",
+      inputSchema: {
+        input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+        mode: z.enum(["manual", "center", "top_left", "top_right", "bottom_left", "bottom_right", "aspect_ratio"]).optional().default("manual").describe("Crop mode"),
+        x: z.number().int().min(0).optional().describe("X coordinate for crop start (manual mode)"),
+        y: z.number().int().min(0).optional().describe("Y coordinate for crop start (manual mode)"),
+        width: z.number().int().min(1).optional().describe("Width of crop region"),
+        height: z.number().int().min(1).optional().describe("Height of crop region"),
+        aspect_ratio: z.string().optional().describe("Aspect ratio (e.g., '16:9', '4:3')"),
+        output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleJimpCrop(args);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool jimp_crop_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "jimp_resize_image",
+    {
+      title: "Jimp Image Resize Tool",
+      description: "Resize an image using Jimp with various algorithms and options",
+      inputSchema: {
+        input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+        width: z.number().int().min(1).optional().describe("Target width in pixels"),
+        height: z.number().int().min(1).optional().describe("Target height in pixels"),
+        scale: z.number().min(0.01).max(10.0).optional().describe("Scale factor (e.g., 0.5 for 50%, 2.0 for 200%)"),
+        maintain_aspect_ratio: z.boolean().optional().default(true).describe("Maintain aspect ratio when resizing"),
+        algorithm: z.enum(["nearestNeighbor", "bilinear", "bicubic", "hermite", "bezier"]).optional().default("bilinear").describe("Resize algorithm"),
+        output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleJimpResize(args);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool jimp_resize_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "jimp_rotate_image",
+    {
+      title: "Jimp Image Rotate Tool",
+      description: "Rotate an image using Jimp by any angle",
+      inputSchema: {
+        input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+        angle: z.number().describe("Rotation angle in degrees (positive = clockwise, negative = counter-clockwise)"),
+        background_color: z.string().optional().describe("Background color for areas outside the rotated image (CSS color format, e.g., '#ffffff', 'white')"),
+        output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleJimpRotate(args);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool jimp_rotate_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "jimp_mask_image",
+    {
+      title: "Jimp Image Mask Tool",
+      description: "Apply a mask/overlay to an image using Jimp with various blend modes",
+      inputSchema: {
+        input_image: z.string().describe("Base input image - supports file paths, URLs, or base64 data URIs"),
+        mask_image: z.string().describe("Mask/overlay image - supports file paths, URLs, or base64 data URIs"),
+        x: z.number().int().optional().default(0).describe("X coordinate for mask placement"),
+        y: z.number().int().optional().default(0).describe("Y coordinate for mask placement"),
+        blend_mode: z.enum(["source_over", "multiply", "screen", "overlay", "darken", "lighten"]).optional().default("source_over").describe("Blend mode for compositing"),
+        opacity: z.number().min(0).max(1.0).optional().default(1.0).describe("Opacity of the mask (0.0 = transparent, 1.0 = opaque)"),
+        output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleJimpMask(args);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool jimp_mask_image error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "rmbg_remove_background",
+    {
+      title: "Background Removal Tool",
+      description: "Remove background from an image using AI-powered background removal",
+      inputSchema: {
+        input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+        quality: z.enum(["fast", "balanced", "high"]).optional().default("balanced").describe("Processing quality (fast = quick but less accurate, high = slower but more accurate)"),
+        output_format: z.enum(["png", "jpeg"]).optional().default("png").describe("Output image format (PNG preserves transparency, JPEG requires background color)"),
+        background_color: z.string().optional().describe("Background color for JPEG output (CSS color format, e.g., '#ffffff', 'white')"),
+        jpeg_quality: z.number().int().min(0).max(100).optional().default(85).describe("JPEG quality (0-100)")
+      }
+    },
+    async (args) => {
+      try {
+        return await handleBackgroundRemoval(args);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool rmbg_remove_background error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
 }
 
 async function handleImageGeneration(
@@ -599,3 +777,190 @@ async function handleImageEditing(
     isError: false
   };
 }
+// Jimp tool handlers
+async function handleJimpCrop(args: unknown) {
+  const input = JimpCropInputSchema.parse(args) as JimpCropInput;
+
+  logger.info(`Cropping image with mode: ${input.mode || "manual"}`);
+
+  const result = await cropImage({
+    inputImage: input.input_image,
+    mode: input.mode,
+    x: input.x,
+    y: input.y,
+    width: input.width,
+    height: input.height,
+    aspectRatio: input.aspect_ratio,
+    outputFormat: input.output_format,
+    quality: input.quality
+  });
+
+  const contextText = `✅ Image cropped successfully
+
+**Crop Details:**
+- Mode: ${input.mode || "manual"}
+- Original: ${result.originalDimensions.width}x${result.originalDimensions.height}
+- Cropped: ${result.croppedDimensions.width}x${result.croppedDimensions.height}
+- Region: (${result.cropRegion.x}, ${result.cropRegion.y}, ${result.cropRegion.width}, ${result.cropRegion.height})
+- Format: ${result.format}
+- Processing Time: ${result.processingTime}ms`;
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: contextText
+    }, {
+      type: "image" as const,
+      data: result.croppedImage.replace(/^data:image\/[^;]+;base64,/, ""),
+      mimeType: `image/${result.format}`
+    }],
+    isError: false
+  };
+}
+
+async function handleJimpResize(args: unknown) {
+  const input = JimpResizeInputSchema.parse(args) as JimpResizeInput;
+
+  logger.info(`Resizing image${input.scale ? ` by scale ${input.scale}` : ` to ${input.width || "?"}x${input.height || "?"}`}`);
+
+  const result = await resizeImage({
+    inputImage: input.input_image,
+    width: input.width,
+    height: input.height,
+    scale: input.scale,
+    maintainAspectRatio: input.maintain_aspect_ratio,
+    algorithm: input.algorithm,
+    outputFormat: input.output_format,
+    quality: input.quality
+  });
+
+  const contextText = `✅ Image resized successfully
+
+**Resize Details:**
+- Original: ${result.originalDimensions.width}x${result.originalDimensions.height}
+- Resized: ${result.resizedDimensions.width}x${result.resizedDimensions.height}
+- Algorithm: ${input.algorithm || "bilinear"}
+- Format: ${result.format}
+- Processing Time: ${result.processingTime}ms`;
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: contextText
+    }, {
+      type: "image" as const,
+      data: result.resizedImage.replace(/^data:image\/[^;]+;base64,/, ""),
+      mimeType: `image/${result.format}`
+    }],
+    isError: false
+  };
+}
+
+async function handleJimpRotate(args: unknown) {
+  const input = JimpRotateInputSchema.parse(args) as JimpRotateInput;
+
+  logger.info(`Rotating image by ${input.angle} degrees`);
+
+  const result = await rotateImage({
+    inputImage: input.input_image,
+    angle: input.angle,
+    backgroundColor: input.background_color,
+    outputFormat: input.output_format,
+    quality: input.quality
+  });
+
+  const contextText = `✅ Image rotated successfully
+
+**Rotation Details:**
+- Angle: ${result.angle}°
+- Original: ${result.originalDimensions.width}x${result.originalDimensions.height}
+- Rotated: ${result.rotatedDimensions.width}x${result.rotatedDimensions.height}
+- Format: ${result.format}
+- Processing Time: ${result.processingTime}ms`;
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: contextText
+    }, {
+      type: "image" as const,
+      data: result.rotatedImage.replace(/^data:image\/[^;]+;base64,/, ""),
+      mimeType: `image/${result.format}`
+    }],
+    isError: false
+  };
+}
+
+async function handleJimpMask(args: unknown) {
+  const input = JimpMaskInputSchema.parse(args) as JimpMaskInput;
+
+  logger.info(`Applying mask to image with blend mode: ${input.blend_mode || "source_over"}`);
+
+  const result = await maskImage({
+    inputImage: input.input_image,
+    maskImage: input.mask_image,
+    x: input.x,
+    y: input.y,
+    blendMode: input.blend_mode,
+    opacity: input.opacity,
+    outputFormat: input.output_format,
+    quality: input.quality
+  });
+
+  const contextText = `✅ Mask applied successfully
+
+**Mask Details:**
+- Blend Mode: ${input.blend_mode || "source_over"}
+- Position: (${input.x || 0}, ${input.y || 0})
+- Opacity: ${input.opacity || 1.0}
+- Dimensions: ${result.dimensions.width}x${result.dimensions.height}
+- Format: ${result.format}
+- Processing Time: ${result.processingTime}ms`;
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: contextText
+    }, {
+      type: "image" as const,
+      data: result.maskedImage.replace(/^data:image\/[^;]+;base64,/, ""),
+      mimeType: `image/${result.format}`
+    }],
+    isError: false
+  };
+}
+
+async function handleBackgroundRemoval(args: unknown) {
+  const input = BackgroundRemovalInputSchema.parse(args) as BackgroundRemovalInput;
+
+  logger.info(`Removing background with quality: ${input.quality || "balanced"}`);
+
+  const result = await removeImageBackground({
+    inputImage: input.input_image,
+    quality: input.quality,
+    outputFormat: input.output_format,
+    backgroundColor: input.background_color,
+    jpegQuality: input.jpeg_quality
+  });
+
+  const contextText = `✅ Background removed successfully
+
+**Background Removal Details:**
+- Quality: ${result.quality}
+- Original Dimensions: ${result.originalDimensions.width}x${result.originalDimensions.height}
+- Format: ${result.format}
+- Processing Time: ${result.processingTime}ms`;
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: contextText
+    }, {
+      type: "image" as const,
+      data: result.imageWithoutBackground.replace(/^data:image\/[^;]+;base64,/, ""),
+      mimeType: `image/${result.format}`
+    }],
+    isError: false
+  };
+}
+
