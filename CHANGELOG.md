@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/mrgoonie/human-mcp/compare/v2.9.0...v2.10.0) (2025-10-01)
+
+
+### Features
+
+* **hands:** add Jimp image editing tools ([e7ec6b1](https://github.com/mrgoonie/human-mcp/commit/e7ec6b14741353a2e6a4471752da46572713da69))
+
 # [2.9.0](https://github.com/mrgoonie/human-mcp/compare/v2.8.4...v2.9.0) (2025-09-30)
 
 
