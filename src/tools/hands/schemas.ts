@@ -184,3 +184,68 @@ export interface ImageEditingOptions {
   saveDirectory?: string;
   filePrefix?: string;
 }
+
+// Jimp Image Crop Schemas
+export const JimpCropInputSchema = z.object({
+  input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+  mode: z.enum(["manual", "center", "top_left", "top_right", "bottom_left", "bottom_right", "aspect_ratio"]).optional().default("manual").describe("Crop mode"),
+  x: z.number().int().min(0).optional().describe("X coordinate for crop start (manual mode)"),
+  y: z.number().int().min(0).optional().describe("Y coordinate for crop start (manual mode)"),
+  width: z.number().int().min(1).optional().describe("Width of crop region"),
+  height: z.number().int().min(1).optional().describe("Height of crop region"),
+  aspect_ratio: z.string().optional().describe("Aspect ratio (e.g., '16:9', '4:3')"),
+  output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+});
+
+export type JimpCropInput = z.infer<typeof JimpCropInputSchema>;
+
+// Jimp Image Resize Schemas
+export const JimpResizeInputSchema = z.object({
+  input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+  width: z.number().int().min(1).optional().describe("Target width in pixels"),
+  height: z.number().int().min(1).optional().describe("Target height in pixels"),
+  scale: z.number().min(0.01).max(10.0).optional().describe("Scale factor (e.g., 0.5 for 50%, 2.0 for 200%)"),
+  maintain_aspect_ratio: z.boolean().optional().default(true).describe("Maintain aspect ratio when resizing"),
+  algorithm: z.enum(["nearestNeighbor", "bilinear", "bicubic", "hermite", "bezier"]).optional().default("bilinear").describe("Resize algorithm"),
+  output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+});
+
+export type JimpResizeInput = z.infer<typeof JimpResizeInputSchema>;
+
+// Jimp Image Rotate Schemas
+export const JimpRotateInputSchema = z.object({
+  input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+  angle: z.number().describe("Rotation angle in degrees (positive = clockwise, negative = counter-clockwise)"),
+  background_color: z.string().optional().describe("Background color for areas outside the rotated image (CSS color format, e.g., '#ffffff', 'white')"),
+  output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+});
+
+export type JimpRotateInput = z.infer<typeof JimpRotateInputSchema>;
+
+// Jimp Image Mask Schemas
+export const JimpMaskInputSchema = z.object({
+  input_image: z.string().describe("Base input image - supports file paths, URLs, or base64 data URIs"),
+  mask_image: z.string().describe("Mask/overlay image - supports file paths, URLs, or base64 data URIs"),
+  x: z.number().int().optional().default(0).describe("X coordinate for mask placement"),
+  y: z.number().int().optional().default(0).describe("Y coordinate for mask placement"),
+  blend_mode: z.enum(["source_over", "multiply", "screen", "overlay", "darken", "lighten"]).optional().default("source_over").describe("Blend mode for compositing"),
+  opacity: z.number().min(0).max(1.0).optional().default(1.0).describe("Opacity of the mask (0.0 = transparent, 1.0 = opaque)"),
+  output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
+});
+
+export type JimpMaskInput = z.infer<typeof JimpMaskInputSchema>;
+
+// Background Removal Schemas
+export const BackgroundRemovalInputSchema = z.object({
+  input_image: z.string().describe("Input image - supports file paths, URLs, or base64 data URIs"),
+  quality: z.enum(["fast", "balanced", "high"]).optional().default("balanced").describe("Processing quality (fast = quick but less accurate, high = slower but more accurate)"),
+  output_format: z.enum(["png", "jpeg"]).optional().default("png").describe("Output image format (PNG preserves transparency, JPEG requires background color)"),
+  background_color: z.string().optional().describe("Background color for JPEG output (CSS color format, e.g., '#ffffff', 'white')"),
+  jpeg_quality: z.number().int().min(0).max(100).optional().default(85).describe("JPEG quality (0-100)")
+});
+
+export type BackgroundRemovalInput = z.infer<typeof BackgroundRemovalInputSchema>;
