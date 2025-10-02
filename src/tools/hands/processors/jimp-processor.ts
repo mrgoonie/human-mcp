@@ -1,11 +1,12 @@
 import { Jimp } from "jimp";
 import { logger } from "@/utils/logger.js";
+import { saveBase64ToFile } from "@/utils/file-storage.js";
+import type { Config } from "@/utils/config.js";
 import {
   loadJimpImage,
   jimpToBase64,
   getResizeAlgorithm,
-  calculateAspectRatioDimensions,
-  getBlendMode
+  calculateAspectRatioDimensions
 } from "../utils/jimp-helpers.js";
 import {
   validateCropParams,
@@ -25,6 +26,10 @@ export interface CropOptions {
   aspectRatio?: string;
   outputFormat?: "png" | "jpeg" | "bmp";
   quality?: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  filePrefix?: string;
+  saveDirectory?: string;
 }
 
 export interface CropResult {
@@ -34,6 +39,10 @@ export interface CropResult {
   croppedDimensions: { width: number; height: number };
   cropRegion: { x: number; y: number; width: number; height: number };
   processingTime: number;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 export interface ResizeOptions {
@@ -45,6 +54,10 @@ export interface ResizeOptions {
   algorithm?: "nearestNeighbor" | "bilinear" | "bicubic" | "hermite" | "bezier";
   outputFormat?: "png" | "jpeg" | "bmp";
   quality?: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  filePrefix?: string;
+  saveDirectory?: string;
 }
 
 export interface ResizeResult {
@@ -53,6 +66,10 @@ export interface ResizeResult {
   originalDimensions: { width: number; height: number };
   resizedDimensions: { width: number; height: number };
   processingTime: number;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 export interface RotateOptions {
@@ -61,6 +78,10 @@ export interface RotateOptions {
   backgroundColor?: string;
   outputFormat?: "png" | "jpeg" | "bmp";
   quality?: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  filePrefix?: string;
+  saveDirectory?: string;
 }
 
 export interface RotateResult {
@@ -70,17 +91,21 @@ export interface RotateResult {
   rotatedDimensions: { width: number; height: number };
   angle: number;
   processingTime: number;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 export interface MaskOptions {
   inputImage: string;
   maskImage: string;
-  x?: number;
-  y?: number;
-  blendMode?: "source_over" | "multiply" | "screen" | "overlay" | "darken" | "lighten";
-  opacity?: number;
   outputFormat?: "png" | "jpeg" | "bmp";
   quality?: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  filePrefix?: string;
+  saveDirectory?: string;
 }
 
 export interface MaskResult {
@@ -88,12 +113,16 @@ export interface MaskResult {
   format: string;
   dimensions: { width: number; height: number };
   processingTime: number;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 /**
  * Crop an image using various modes
  */
-export async function cropImage(options: CropOptions): Promise<CropResult> {
+export async function cropImage(options: CropOptions, config?: Config): Promise<CropResult> {
   const startTime = Date.now();
 
   try {
@@ -156,13 +185,54 @@ export async function cropImage(options: CropOptions): Promise<CropResult> {
 
     const processingTime = Date.now() - startTime;
 
+    // Save file and upload to R2 if configured
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
+
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        const base64Match = croppedImage.match(/base64,(.+)/);
+        const base64Data = base64Match?.[1] ?? croppedImage.replace(/^data:image\/[^;]+;base64,/, '');
+        const mimeType = `image/${outputFormat}`;
+
+        const savedFile = await saveBase64ToFile(
+          base64Data,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'jimp-crop',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Cropped image saved to: ${filePath}`);
+      } catch (error) {
+        logger.warn(`Failed to save cropped image: ${error}. Returning base64 only.`);
+      }
+    }
+
     return {
       croppedImage,
       format: outputFormat,
       originalDimensions: { width: originalWidth, height: originalHeight },
       croppedDimensions: { width: croppedWidth, height: croppedHeight },
       cropRegion,
-      processingTime
+      processingTime,
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
   } catch (error) {
     const processingTime = Date.now() - startTime;
@@ -177,7 +247,7 @@ export async function cropImage(options: CropOptions): Promise<CropResult> {
 /**
  * Resize an image
  */
-export async function resizeImage(options: ResizeOptions): Promise<ResizeResult> {
+export async function resizeImage(options: ResizeOptions, config?: Config): Promise<ResizeResult> {
   const startTime = Date.now();
 
   try {
@@ -243,12 +313,53 @@ export async function resizeImage(options: ResizeOptions): Promise<ResizeResult>
 
     const processingTime = Date.now() - startTime;
 
+    // Save file and upload to R2 if configured
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
+
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        const base64Match = resizedImage.match(/base64,(.+)/);
+        const base64Data = base64Match?.[1] ?? resizedImage.replace(/^data:image\/[^;]+;base64,/, '');
+        const mimeType = `image/${outputFormat}`;
+
+        const savedFile = await saveBase64ToFile(
+          base64Data,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'jimp-resize',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Resized image saved to: ${filePath}`);
+      } catch (error) {
+        logger.warn(`Failed to save resized image: ${error}. Returning base64 only.`);
+      }
+    }
+
     return {
       resizedImage,
       format: outputFormat,
       originalDimensions: { width: originalWidth, height: originalHeight },
       resizedDimensions: { width: resizedWidth, height: resizedHeight },
-      processingTime
+      processingTime,
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
   } catch (error) {
     const processingTime = Date.now() - startTime;
@@ -263,7 +374,7 @@ export async function resizeImage(options: ResizeOptions): Promise<ResizeResult>
 /**
  * Rotate an image
  */
-export async function rotateImage(options: RotateOptions): Promise<RotateResult> {
+export async function rotateImage(options: RotateOptions, config?: Config): Promise<RotateResult> {
   const startTime = Date.now();
 
   try {
@@ -292,13 +403,54 @@ export async function rotateImage(options: RotateOptions): Promise<RotateResult>
 
     const processingTime = Date.now() - startTime;
 
+    // Save file and upload to R2 if configured
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
+
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        const base64Match = rotatedImage.match(/base64,(.+)/);
+        const base64Data = base64Match?.[1] ?? rotatedImage.replace(/^data:image\/[^;]+;base64,/, '');
+        const mimeType = `image/${outputFormat}`;
+
+        const savedFile = await saveBase64ToFile(
+          base64Data,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'jimp-rotate',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Rotated image saved to: ${filePath}`);
+      } catch (error) {
+        logger.warn(`Failed to save rotated image: ${error}. Returning base64 only.`);
+      }
+    }
+
     return {
       rotatedImage,
       format: outputFormat,
       originalDimensions: { width: originalWidth, height: originalHeight },
       rotatedDimensions: { width: rotatedWidth, height: rotatedHeight },
       angle: options.angle,
-      processingTime
+      processingTime,
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
   } catch (error) {
     const processingTime = Date.now() - startTime;
@@ -311,9 +463,23 @@ export async function rotateImage(options: RotateOptions): Promise<RotateResult>
 }
 
 /**
- * Apply a mask to an image
+ * Apply a grayscale alpha mask to an image using Jimp's .mask() method
+ *
+ * The mask uses the average pixel color (grayscale value) to determine transparency:
+ * - Black pixels (0, 0, 0) in mask = fully transparent in result
+ * - White pixels (255, 255, 255) in mask = fully opaque in result
+ * - Gray pixels (e.g., 128, 128, 128) = partial transparency
+ *
+ * For colored masks, Jimp converts them to grayscale using the average of R, G, B values.
+ *
+ * Important: The mask image will be automatically resized to match the base image dimensions
+ * if they don't match. This ensures compatibility with Jimp's .mask() API requirements.
+ *
+ * @param options - Mask operation options
+ * @param config - Application configuration (for file saving and R2 upload)
+ * @returns MaskResult with processed image data and file information
  */
-export async function maskImage(options: MaskOptions): Promise<MaskResult> {
+export async function maskImage(options: MaskOptions, config?: Config): Promise<MaskResult> {
   const startTime = Date.now();
 
   try {
@@ -322,13 +488,11 @@ export async function maskImage(options: MaskOptions): Promise<MaskResult> {
     const baseWidth = baseImage.width;
     const baseHeight = baseImage.height;
 
-    logger.info(`Masking image: ${baseWidth}x${baseHeight}`);
+    logger.info(`Applying mask to image: ${baseWidth}x${baseHeight}`);
 
     // Validate mask parameters
     validateMaskParams({
       maskImage: options.maskImage,
-      x: options.x,
-      y: options.y,
       imageWidth: baseWidth,
       imageHeight: baseHeight
     });
@@ -338,32 +502,27 @@ export async function maskImage(options: MaskOptions): Promise<MaskResult> {
     const maskWidth = maskImage.width;
     const maskHeight = maskImage.height;
 
-    logger.info(`Mask image: ${maskWidth}x${maskHeight}`);
+    logger.info(`Mask dimensions: ${maskWidth}x${maskHeight}`);
 
-    // Apply opacity to mask if specified
-    if (options.opacity !== undefined && options.opacity !== 1.0) {
-      const opacityValue = Math.max(0, Math.min(1, options.opacity));
-      maskImage.opacity(opacityValue);
+    // Validate and resize mask if dimensions don't match
+    // Jimp's .mask() requires mask to be the same size as the base image
+    if (maskWidth !== baseWidth || maskHeight !== baseHeight) {
+      logger.warn(
+        `Mask size (${maskWidth}x${maskHeight}) doesn't match base image (${baseWidth}x${baseHeight}), resizing mask...`
+      );
+      maskImage.resize({ w: baseWidth, h: baseHeight });
+      logger.info(`Mask resized to ${baseWidth}x${baseHeight}`);
     }
 
-    // Get blend mode
-    const blendMode = getBlendMode(options.blendMode);
-
-    // Composite the mask onto the base image using Jimp v1 API
-    const x = options.x || 0;
-    const y = options.y || 0;
-
-    baseImage.composite(maskImage, x, y, {
-      mode: blendMode as any,
-      opacitySource: 1.0,
-      opacityDest: 1.0
-    });
+    // Apply the mask using Jimp's .mask() method
+    // The mask uses average pixel color (grayscale): black = transparent, white = opaque
+    baseImage.mask(maskImage);
 
     const resultWidth = baseImage.width;
     const resultHeight = baseImage.height;
 
     logger.info(
-      `Mask applied at position (${x}, ${y}), blend mode: ${options.blendMode || "source_over"}`
+      `Mask applied successfully`
     );
 
     // Convert to base64
@@ -372,11 +531,52 @@ export async function maskImage(options: MaskOptions): Promise<MaskResult> {
 
     const processingTime = Date.now() - startTime;
 
+    // Save file and upload to R2 if configured
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
+
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        const base64Match = maskedImage.match(/base64,(.+)/);
+        const base64Data = base64Match?.[1] ?? maskedImage.replace(/^data:image\/[^;]+;base64,/, '');
+        const mimeType = `image/${outputFormat}`;
+
+        const savedFile = await saveBase64ToFile(
+          base64Data,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'jimp-mask',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Masked image saved to: ${filePath}`);
+      } catch (error) {
+        logger.warn(`Failed to save masked image: ${error}. Returning base64 only.`);
+      }
+    }
+
     return {
       maskedImage,
       format: outputFormat,
       dimensions: { width: resultWidth, height: resultHeight },
-      processingTime
+      processingTime,
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
   } catch (error) {
     const processingTime = Date.now() - startTime;

@@ -367,7 +367,7 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     },
     async (args) => {
       try {
-        return await handleJimpCrop(args);
+        return await handleJimpCrop(args, config);
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool jimp_crop_image error:`, mcpError);
@@ -401,7 +401,7 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     },
     async (args) => {
       try {
-        return await handleJimpResize(args);
+        return await handleJimpResize(args, config);
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool jimp_resize_image error:`, mcpError);
@@ -432,7 +432,7 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     },
     async (args) => {
       try {
-        return await handleJimpRotate(args);
+        return await handleJimpRotate(args, config);
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool jimp_rotate_image error:`, mcpError);
@@ -452,21 +452,17 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     "jimp_mask_image",
     {
       title: "Jimp Image Mask Tool",
-      description: "Apply a mask/overlay to an image using Jimp with various blend modes",
+      description: "Apply a grayscale alpha mask to an image using Jimp (black pixels = transparent, white pixels = opaque)",
       inputSchema: {
-        input_image: z.string().describe("Base input image - supports file paths, URLs, or base64 data URIs"),
-        mask_image: z.string().describe("Mask/overlay image - supports file paths, URLs, or base64 data URIs"),
-        x: z.number().int().optional().default(0).describe("X coordinate for mask placement"),
-        y: z.number().int().optional().default(0).describe("Y coordinate for mask placement"),
-        blend_mode: z.enum(["source_over", "multiply", "screen", "overlay", "darken", "lighten"]).optional().default("source_over").describe("Blend mode for compositing"),
-        opacity: z.number().min(0).max(1.0).optional().default(1.0).describe("Opacity of the mask (0.0 = transparent, 1.0 = opaque)"),
+        input_image: z.string().describe("Input image to apply mask to - supports file paths, URLs, or base64 data URIs"),
+        mask_image: z.string().describe("Grayscale mask image (black = transparent, white = opaque) - supports file paths, URLs, or base64 data URIs"),
         output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
         quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
       }
     },
     async (args) => {
       try {
-        return await handleJimpMask(args);
+        return await handleJimpMask(args, config);
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool jimp_mask_image error:`, mcpError);
@@ -497,7 +493,7 @@ export async function registerHandsTool(server: McpServer, config: Config) {
     },
     async (args) => {
       try {
-        return await handleBackgroundRemoval(args);
+        return await handleBackgroundRemoval(args, config);
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool rmbg_remove_background error:`, mcpError);
@@ -778,7 +774,7 @@ async function handleImageEditing(
   };
 }
 // Jimp tool handlers
-async function handleJimpCrop(args: unknown) {
+async function handleJimpCrop(args: unknown, config: Config) {
   const input = JimpCropInputSchema.parse(args) as JimpCropInput;
 
   logger.info(`Cropping image with mode: ${input.mode || "manual"}`);
@@ -792,8 +788,23 @@ async function handleJimpCrop(args: unknown) {
     height: input.height,
     aspectRatio: input.aspect_ratio,
     outputFormat: input.output_format,
-    quality: input.quality
-  });
+    quality: input.quality,
+    saveToFile: true,
+    uploadToR2: config.cloudflare?.accessKey ? true : false,
+    filePrefix: 'jimp-crop'
+  }, config);
+
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.croppedImage.startsWith('data:')) {
+    const matches = result.croppedImage.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
 
   const contextText = `✅ Image cropped successfully
 
@@ -803,22 +814,27 @@ async function handleJimpCrop(args: unknown) {
 - Cropped: ${result.croppedDimensions.width}x${result.croppedDimensions.height}
 - Region: (${result.cropRegion.x}, ${result.cropRegion.y}, ${result.cropRegion.width}, ${result.cropRegion.height})
 - Format: ${result.format}
-- Processing Time: ${result.processingTime}ms`;
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
 
   return {
-    content: [{
-      type: "text" as const,
-      text: contextText
-    }, {
-      type: "image" as const,
-      data: result.croppedImage.replace(/^data:image\/[^;]+;base64,/, ""),
-      mimeType: `image/${result.format}`
-    }],
+    content: formattedResponse as any,
     isError: false
   };
 }
 
-async function handleJimpResize(args: unknown) {
+async function handleJimpResize(args: unknown, config: Config) {
   const input = JimpResizeInputSchema.parse(args) as JimpResizeInput;
 
   logger.info(`Resizing image${input.scale ? ` by scale ${input.scale}` : ` to ${input.width || "?"}x${input.height || "?"}`}`);
@@ -831,8 +847,22 @@ async function handleJimpResize(args: unknown) {
     maintainAspectRatio: input.maintain_aspect_ratio,
     algorithm: input.algorithm,
     outputFormat: input.output_format,
-    quality: input.quality
-  });
+    quality: input.quality,
+    saveToFile: true,
+    uploadToR2: config.cloudflare?.accessKey ? true : false,
+    filePrefix: 'jimp-resize'
+  }, config);
+
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.resizedImage.startsWith('data:')) {
+    const matches = result.resizedImage.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
 
   const contextText = `✅ Image resized successfully
 
@@ -841,22 +871,27 @@ async function handleJimpResize(args: unknown) {
 - Resized: ${result.resizedDimensions.width}x${result.resizedDimensions.height}
 - Algorithm: ${input.algorithm || "bilinear"}
 - Format: ${result.format}
-- Processing Time: ${result.processingTime}ms`;
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
 
   return {
-    content: [{
-      type: "text" as const,
-      text: contextText
-    }, {
-      type: "image" as const,
-      data: result.resizedImage.replace(/^data:image\/[^;]+;base64,/, ""),
-      mimeType: `image/${result.format}`
-    }],
+    content: formattedResponse as any,
     isError: false
   };
 }
 
-async function handleJimpRotate(args: unknown) {
+async function handleJimpRotate(args: unknown, config: Config) {
   const input = JimpRotateInputSchema.parse(args) as JimpRotateInput;
 
   logger.info(`Rotating image by ${input.angle} degrees`);
@@ -866,8 +901,22 @@ async function handleJimpRotate(args: unknown) {
     angle: input.angle,
     backgroundColor: input.background_color,
     outputFormat: input.output_format,
-    quality: input.quality
-  });
+    quality: input.quality,
+    saveToFile: true,
+    uploadToR2: config.cloudflare?.accessKey ? true : false,
+    filePrefix: 'jimp-rotate'
+  }, config);
+
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.rotatedImage.startsWith('data:')) {
+    const matches = result.rotatedImage.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
 
   const contextText = `✅ Image rotated successfully
 
@@ -876,61 +925,79 @@ async function handleJimpRotate(args: unknown) {
 - Original: ${result.originalDimensions.width}x${result.originalDimensions.height}
 - Rotated: ${result.rotatedDimensions.width}x${result.rotatedDimensions.height}
 - Format: ${result.format}
-- Processing Time: ${result.processingTime}ms`;
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
 
   return {
-    content: [{
-      type: "text" as const,
-      text: contextText
-    }, {
-      type: "image" as const,
-      data: result.rotatedImage.replace(/^data:image\/[^;]+;base64,/, ""),
-      mimeType: `image/${result.format}`
-    }],
+    content: formattedResponse as any,
     isError: false
   };
 }
 
-async function handleJimpMask(args: unknown) {
+async function handleJimpMask(args: unknown, config: Config) {
   const input = JimpMaskInputSchema.parse(args) as JimpMaskInput;
 
-  logger.info(`Applying mask to image with blend mode: ${input.blend_mode || "source_over"}`);
+  logger.info(`Applying grayscale alpha mask to image`);
 
   const result = await maskImage({
     inputImage: input.input_image,
     maskImage: input.mask_image,
-    x: input.x,
-    y: input.y,
-    blendMode: input.blend_mode,
-    opacity: input.opacity,
     outputFormat: input.output_format,
-    quality: input.quality
-  });
+    quality: input.quality,
+    saveToFile: true,
+    uploadToR2: config.cloudflare?.accessKey ? true : false,
+    filePrefix: 'jimp-mask'
+  }, config);
 
-  const contextText = `✅ Mask applied successfully
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.maskedImage.startsWith('data:')) {
+    const matches = result.maskedImage.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
+
+  const contextText = `✅ Alpha mask applied successfully
 
 **Mask Details:**
-- Blend Mode: ${input.blend_mode || "source_over"}
-- Position: (${input.x || 0}, ${input.y || 0})
-- Opacity: ${input.opacity || 1.0}
+- Mask Type: Grayscale alpha (black = transparent, white = opaque)
 - Dimensions: ${result.dimensions.width}x${result.dimensions.height}
 - Format: ${result.format}
-- Processing Time: ${result.processingTime}ms`;
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
 
   return {
-    content: [{
-      type: "text" as const,
-      text: contextText
-    }, {
-      type: "image" as const,
-      data: result.maskedImage.replace(/^data:image\/[^;]+;base64,/, ""),
-      mimeType: `image/${result.format}`
-    }],
+    content: formattedResponse as any,
     isError: false
   };
 }
 
-async function handleBackgroundRemoval(args: unknown) {
+async function handleBackgroundRemoval(args: unknown, config: Config) {
   const input = BackgroundRemovalInputSchema.parse(args) as BackgroundRemovalInput;
 
   logger.info(`Removing background with quality: ${input.quality || "balanced"}`);
@@ -940,26 +1007,47 @@ async function handleBackgroundRemoval(args: unknown) {
     quality: input.quality,
     outputFormat: input.output_format,
     backgroundColor: input.background_color,
-    jpegQuality: input.jpeg_quality
-  });
+    jpegQuality: input.jpeg_quality,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'rmbg'
+  }, config);
 
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.imageWithoutBackground.startsWith('data:')) {
+    const matches = result.imageWithoutBackground.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
+
+  // Format response based on transport type
   const contextText = `✅ Background removed successfully
 
 **Background Removal Details:**
 - Quality: ${result.quality}
 - Original Dimensions: ${result.originalDimensions.width}x${result.originalDimensions.height}
 - Format: ${result.format}
-- Processing Time: ${result.processingTime}ms`;
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
 
   return {
-    content: [{
-      type: "text" as const,
-      text: contextText
-    }, {
-      type: "image" as const,
-      data: result.imageWithoutBackground.replace(/^data:image\/[^;]+;base64,/, ""),
-      mimeType: `image/${result.format}`
-    }],
+    content: formattedResponse as any,
     isError: false
   };
 }

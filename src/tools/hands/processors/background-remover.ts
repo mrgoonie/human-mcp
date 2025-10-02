@@ -1,6 +1,9 @@
-import { removeBackground, type Config } from "@imgly/background-removal";
+import { rmbg } from "rmbg";
+import { createBriaaiModel, createModnetModel, createU2netpModel } from "rmbg/models";
 import { logger } from "@/utils/logger.js";
 import { loadImageForProcessing } from "@/utils/image-loader.js";
+import { saveBase64ToFile } from "@/utils/file-storage.js";
+import type { Config } from "@/utils/config.js";
 import { Jimp, JimpMime } from "jimp";
 
 export interface BackgroundRemovalOptions {
@@ -9,6 +12,10 @@ export interface BackgroundRemovalOptions {
   outputFormat?: "png" | "jpeg";
   backgroundColor?: string;
   jpegQuality?: number;
+  saveToFile?: boolean;
+  uploadToR2?: boolean;
+  filePrefix?: string;
+  saveDirectory?: string;
 }
 
 export interface BackgroundRemovalResult {
@@ -17,13 +24,18 @@ export interface BackgroundRemovalResult {
   originalDimensions: { width: number; height: number };
   processingTime: number;
   quality: string;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
 }
 
 /**
  * Remove background from an image using AI
  */
 export async function removeImageBackground(
-  options: BackgroundRemovalOptions
+  options: BackgroundRemovalOptions,
+  config?: Config
 ): Promise<BackgroundRemovalResult> {
   const startTime = Date.now();
 
@@ -43,49 +55,28 @@ export async function removeImageBackground(
     // Convert base64 to buffer for background removal
     const imageBuffer = Buffer.from(processedImage.data, "base64");
 
-    // Configure background removal based on quality setting
+    // Configure model based on quality setting
     const quality = options.quality || "balanced";
-    let config: Config;
+    let model;
 
     switch (quality) {
       case "fast":
-        config = {
-          model: "isnet_quint8", // Faster, less accurate (quantized)
-          output: {
-            format: "image/png",
-            quality: 0.8
-          }
-        };
+        model = createU2netpModel(); // Fastest, lightweight (320px)
         break;
 
       case "high":
-        config = {
-          model: "isnet", // More accurate, slower (full precision)
-          output: {
-            format: "image/png",
-            quality: 1.0
-          }
-        };
+        model = createBriaaiModel(); // Highest quality (1024px)
         break;
 
       case "balanced":
       default:
-        config = {
-          model: "isnet_fp16", // Good balance (half precision)
-          output: {
-            format: "image/png",
-            quality: 0.9
-          }
-        };
+        model = createModnetModel(); // Default, balanced quality/speed (512px)
         break;
     }
 
     // Remove background
     logger.info("Processing image with AI background removal...");
-    const blob = await removeBackground(imageBuffer, config);
-
-    // Convert blob to buffer
-    const resultBuffer = Buffer.from(await blob.arrayBuffer());
+    const resultBuffer = await rmbg(imageBuffer, { model });
 
     // Get original dimensions
     const originalImage = await Jimp.fromBuffer(imageBuffer);
@@ -126,12 +117,54 @@ export async function removeImageBackground(
 
     logger.info(`Background removal completed in ${processingTime}ms`);
 
+    // Save file and upload to R2 if configured
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    let fileSize: number | undefined;
+
+    const shouldSaveFile = options.saveToFile !== false;
+    const shouldUploadToR2 = options.uploadToR2 === true;
+
+    if (shouldSaveFile && config) {
+      try {
+        // Extract base64 from data URI
+        const base64Match = resultBase64.match(/base64,(.+)/);
+        const base64Data = base64Match?.[1] ?? resultBase64.replace(/^data:image\/[^;]+;base64,/, '');
+        const mimeType = outputFormat === "jpeg" ? JimpMime.jpeg : JimpMime.png;
+
+        const savedFile = await saveBase64ToFile(
+          base64Data,
+          mimeType,
+          config,
+          {
+            prefix: options.filePrefix || 'rmbg',
+            directory: options.saveDirectory,
+            uploadToR2: shouldUploadToR2
+          }
+        );
+
+        filePath = savedFile.filePath;
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.url;
+        fileSize = savedFile.size;
+
+        logger.info(`Background-removed image saved to: ${filePath}`);
+      } catch (error) {
+        logger.warn(`Failed to save background-removed image: ${error}. Returning base64 only.`);
+      }
+    }
+
     return {
       imageWithoutBackground: resultBase64,
       format: outputFormat,
       originalDimensions: { width: originalWidth, height: originalHeight },
       processingTime,
-      quality
+      quality,
+      filePath,
+      fileName,
+      fileUrl,
+      fileSize
     };
   } catch (error) {
     const processingTime = Date.now() - startTime;

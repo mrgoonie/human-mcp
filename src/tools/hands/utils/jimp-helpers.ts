@@ -241,21 +241,24 @@ export function calculateAspectRatioDimensions(
 
 /**
  * Parse blend mode from string
- * In Jimp v1, blend mode is passed as a string
+ * In Jimp v1, blend mode values must match the exact BlendMode enum values
+ * See: https://jimp-dev.github.io/jimp/api/jimp/enumerations/blendmode/
  */
 export function getBlendMode(mode?: string): string {
   if (!mode) {
-    return "source-over";
+    return "srcOver";
   }
 
-  const normalizedMode = mode.toLowerCase().replace(/[_]/g, "-");
+  const normalizedMode = mode.toLowerCase().replace(/[_-]/g, "");
 
   switch (normalizedMode) {
-    case "source-over":
+    case "sourceover":
     case "normal":
-      return "source-over";
-    case "destination-over":
-      return "destination-over";
+    case "srcover":
+      return "srcOver";
+    case "destinationover":
+    case "dstover":
+      return "dstOver";
     case "multiply":
       return "multiply";
     case "add":
@@ -269,13 +272,13 @@ export function getBlendMode(mode?: string): string {
     case "lighten":
       return "lighten";
     case "hardlight":
-      return "hardlight";
+      return "hardLight";
     case "difference":
       return "difference";
     case "exclusion":
       return "exclusion";
     default:
-      logger.warn(`Unknown blend mode: ${mode}, using source-over`);
-      return "source-over";
+      logger.warn(`Unknown blend mode: ${mode}, using srcOver`);
+      return "srcOver";
   }
 }
