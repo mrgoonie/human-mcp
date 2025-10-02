@@ -1,4 +1,4 @@
-name: Release
+name: Publish
 
 on:
   push:
@@ -10,37 +10,37 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.CI_GITHUB_TOKEN }}
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-      
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
         timeout-minutes: 5
-      
+
       - name: Run type check
         run: bun run typecheck
         timeout-minutes: 3
-      
+
       - name: Run unit tests
         run: bun test tests/unit/
         timeout-minutes: 5
         continue-on-error: false
-      
+
       - name: Run integration tests
         run: bun test tests/integration/
         timeout-minutes: 10
         continue-on-error: false
-      
+
       - name: Build package
         run: bun run build
         timeout-minutes: 3
@@ -54,32 +54,32 @@ jobs:
       packages: write
       issues: write
       pull-requests: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.CI_GITHUB_TOKEN }}
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-      
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
         timeout-minutes: 5
-      
+
       - name: Build package
         run: bun run build
         timeout-minutes: 3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Release
         run: npx semantic-release
         timeout-minutes: 5
