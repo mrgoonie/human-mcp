@@ -126,19 +126,13 @@ export function validateRotateParams(params: { angle: number }): void {
  */
 export function validateMaskParams(params: {
   maskImage: string;
-  x?: number;
-  y?: number;
   imageWidth: number;
   imageHeight: number;
 }): void {
-  const { maskImage, x = 0, y = 0, imageWidth, imageHeight } = params;
+  const { maskImage } = params;
 
   if (!maskImage) {
     throw new Error("Mask image is required for masking operation");
-  }
-
-  if (x < 0 || y < 0) {
-    throw new Error("Mask coordinates (x, y) must be non-negative");
   }
 
   // Note: We can't validate mask dimensions here since we haven't loaded it yet

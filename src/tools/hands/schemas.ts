@@ -227,12 +227,8 @@ export type JimpRotateInput = z.infer<typeof JimpRotateInputSchema>;
 
 // Jimp Image Mask Schemas
 export const JimpMaskInputSchema = z.object({
-  input_image: z.string().describe("Base input image - supports file paths, URLs, or base64 data URIs"),
-  mask_image: z.string().describe("Mask/overlay image - supports file paths, URLs, or base64 data URIs"),
-  x: z.number().int().optional().default(0).describe("X coordinate for mask placement"),
-  y: z.number().int().optional().default(0).describe("Y coordinate for mask placement"),
-  blend_mode: z.enum(["source_over", "multiply", "screen", "overlay", "darken", "lighten"]).optional().default("source_over").describe("Blend mode for compositing"),
-  opacity: z.number().min(0).max(1.0).optional().default(1.0).describe("Opacity of the mask (0.0 = transparent, 1.0 = opaque)"),
+  input_image: z.string().describe("Input image to apply mask to - supports file paths, URLs, or base64 data URIs"),
+  mask_image: z.string().describe("Grayscale mask image (black = transparent, white = opaque) - supports file paths, URLs, or base64 data URIs"),
   output_format: z.enum(["png", "jpeg", "bmp"]).optional().default("png").describe("Output image format"),
   quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100)")
 });
