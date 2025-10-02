@@ -4,67 +4,49 @@
 
 ![Human MCP](human-mcp.png)
 
-Human MCP v2.2.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
+Human MCP v2.9.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
 
 ## Features
 
-🎯 **Visual Analysis (Eyes) - ✅ Complete**
-- Analyze screenshots for UI bugs and layout issues
-- Process screen recordings to understand error sequences
-- Extract insights from GIFs and animations
-- Compare visual changes between versions
+🎯 **Visual Analysis (Eyes) - ✅ Complete (4 tools)**
+- **eyes_analyze**: Analyze images, videos, and GIFs for UI bugs, errors, and accessibility
+- **eyes_compare**: Compare two images to find visual differences
+- **eyes_read_document**: Extract text and data from PDF, DOCX, XLSX, PPTX, and more
+- **eyes_summarize_document**: Generate summaries and insights from documents
 
-📄 **Document Processing (Eyes Extended) - ✅ Complete v2.0.0**
-- Comprehensive document analysis for PDF, DOCX, XLSX, PPTX, TXT, MD, RTF, ODT, CSV, JSON, XML, HTML
-- Structured data extraction using custom JSON schemas
-- Document summarization with multiple types (brief, detailed, executive, technical)
-- Text extraction with formatting preservation
-- Table and image extraction from documents
-- Auto-format detection and processing
+✋ **Content Generation & Image Editing (Hands) - ✅ Complete (13 tools)**
+- **Image Generation** (1 tool): gemini_gen_image - Generate images from text using Imagen API
+- **Video Generation** (2 tools): gemini_gen_video, gemini_image_to_video - Create videos with Veo 3.0
+- **AI Image Editing** (5 tools): Gemini-powered editing with inpainting, outpainting, style transfer, object manipulation, composition
+- **Jimp Processing** (4 tools): Local image manipulation - crop, resize, rotate, mask
+- **Background Removal** (1 tool): rmbg_remove_background - AI-powered background removal
 
-🔍 **Specialized Analysis Types**
-- **UI Debug**: Layout issues, rendering problems, visual bugs
-- **Error Detection**: Visible errors, broken functionality, system failures
-- **Accessibility**: Color contrast, WCAG compliance, readability
-- **Performance**: Loading states, visual performance indicators
-- **Layout**: Responsive design, positioning, visual hierarchy
-- **Document Analysis**: Content extraction, data mining, document intelligence
+🗣️ **Speech Generation (Mouth) - ✅ Complete (4 tools)**
+- **mouth_speak**: Convert text to speech with 30+ voices and 24 languages
+- **mouth_narrate**: Long-form content narration with chapter breaks
+- **mouth_explain**: Generate spoken code explanations with technical analysis
+- **mouth_customize**: Test and compare different voices and styles
 
-🎨 **Content Generation (Hands) - ✅ Complete v2.0.0**
-- Generate high-quality images from text descriptions using Imagen API
-- Create professional videos from text prompts using Veo 3.0 API
-- Image-to-video generation combining Imagen and Veo 3.0
-- Multiple artistic styles: photorealistic, artistic, cartoon, sketch, digital art (images) and realistic, cinematic, artistic, cartoon, animation (videos)
-- Flexible aspect ratios (1:1, 16:9, 9:16, 4:3, 3:4) and output formats
-- Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
-- Camera movement controls: static, pan, zoom, dolly movements
-- Advanced prompt engineering and negative prompts
+🧠 **Advanced Reasoning (Brain) - ✅ Complete (3 tools)**
+- **mcp__reasoning__sequentialthinking**: Native sequential thinking with thought revision
+- **brain_analyze_simple**: Fast pattern-based analysis (problem solving, root cause, SWOT, etc.)
+- **brain_patterns_info**: List available reasoning patterns and frameworks
+- **brain_reflect_enhanced**: AI-powered meta-cognitive reflection for complex analysis
 
-🗣️ **Speech Generation (Mouth) - ✅ Complete v1.3.0**
-- Convert text to natural-sounding speech with 30+ voice options
-- Long-form content narration with chapter breaks
-- Technical code explanation with spoken analysis
-- Voice customization and style control
-- Multi-language support (24 languages)
-- Professional audio export in WAV format
+## Total: 24 MCP Tools Across 4 Human Capabilities
 
-🧠 **Advanced Reasoning (Brain) - ✅ Complete v2.2.0**
-- Sequential thinking with dynamic problem-solving and thought revision
-- Multi-step analysis with hypothesis generation and testing
-- Deep analytical reasoning with assumption tracking and alternative perspectives
-- Problem solving with constraint handling and iterative refinement
-- Meta-cognitive reflection and analysis improvement
-- Advanced reasoning patterns for complex technical problems
+**👁️ Eyes (4 tools)** - Visual analysis and document processing
+**✋ Hands (13 tools)** - Content generation and image editing
+**🗣️ Mouth (4 tools)** - Speech generation and narration
+**🧠 Brain (3 tools)** - Advanced reasoning and problem solving
 
-🤖 **AI-Powered**
-- Uses Google Gemini 2.5 Flash for fast, accurate analysis
-- Advanced Imagen API for high-quality image generation
-- Cutting-edge Veo 3.0 API for professional video generation
-- Gemini Speech Generation API for natural voice synthesis
-- Advanced reasoning with sequential thinking and meta-cognitive reflection
-- Detailed technical insights for developers
-- Actionable recommendations for fixing issues
-- Structured output with detected elements and coordinates
+### Technology Stack
+- **Google Gemini 2.5 Flash** - Vision, document, and reasoning AI
+- **Gemini Imagen API** - High-quality image generation
+- **Gemini Veo 3.0 API** - Professional video generation
+- **Gemini Speech API** - Natural voice synthesis (30+ voices, 24 languages)
+- **Jimp** - Fast local image processing
+- **rmbg** - AI-powered background removal (U2Net+, ModNet, BRIAI models)
 
 ### Google Gemini Documentation
 - [Gemini API](https://ai.google.dev/gemini-api/docs?hl=en)
@@ -945,291 +927,255 @@ for file in *.png; do
 done
 ```
 
-## Tools
+## MCP Tools Reference
 
-### eyes_analyze
+### 👁️ Eyes Tools (Visual Analysis & Document Processing)
 
-Comprehensive visual analysis for images, videos, and GIFs.
-
+**eyes_analyze** - Analyze images, videos, and GIFs
 ```json
 {
-  "source": "/path/to/screenshot.png",
-  "type": "image", 
-  "analysis_type": "ui_debug",
-  "detail_level": "detailed",
-  "specific_focus": "login form validation"
+  "source": "path/to/image.png or URL",
+  "focus": "What to analyze (optional)",
+  "detail": "quick or detailed (default: detailed)"
 }
 ```
 
-### eyes_compare
-
-Compare two images to identify visual differences.
-
+**eyes_compare** - Compare two images
 ```json
 {
-  "source1": "/path/to/before.png",
-  "source2": "/path/to/after.png",
-  "comparison_type": "structural"
+  "image1": "path/to/first.png",
+  "image2": "path/to/second.png",
+  "focus": "differences, similarities, layout, or content"
 }
 ```
 
-### eyes_read_document
-
-Comprehensive document analysis and content extraction.
-
+**eyes_read_document** - Extract content from documents
 ```json
 {
-  "source": "/path/to/document.pdf",
-  "format": "auto",
-  "options": {
-    "extract_text": true,
-    "extract_tables": true,
-    "detail_level": "detailed"
-  }
+  "document": "path/to/document.pdf",
+  "pages": "1-5 or all (default: all)",
+  "extract": "text, tables, or both (default: both)"
 }
 ```
 
-### eyes_extract_data
-
-Extract structured data from documents using custom schemas.
-
+**eyes_summarize_document** - Summarize documents
 ```json
 {
-  "source": "/path/to/invoice.pdf",
-  "format": "auto",
-  "schema": {
-    "invoice_number": "string",
-    "amount": "number",
-    "date": "string"
-  }
+  "document": "path/to/document.pdf",
+  "length": "brief, medium, or detailed",
+  "focus": "Specific topics (optional)"
 }
 ```
 
-### eyes_summarize
+### 🗣️ Mouth Tools (Speech Generation)
 
-Generate summaries and key insights from documents.
-
+**mouth_speak** - Text to speech
 ```json
 {
-  "source": "/path/to/report.docx",
-  "format": "auto",
-  "options": {
-    "summary_type": "executive",
-    "include_key_points": true,
-    "max_length": 500
-  }
+  "text": "Your text here (max 32k tokens)",
+  "voice": "Zephyr (or 30+ other voices)",
+  "language": "en-US (or 24 languages)",
+  "style_prompt": "Speaking style description (optional)"
 }
 ```
 
-### mouth_speak
-
-Convert text to natural-sounding speech.
-
+**mouth_narrate** - Long-form narration
 ```json
 {
-  "text": "Welcome to our application. Let me guide you through the interface.",
-  "voice": "Zephyr",
-  "language": "en-US",
-  "style_prompt": "Speak in a friendly, welcoming tone"
-}
-```
-
-### mouth_narrate
-
-Generate narration for long-form content with chapter breaks.
-
-```json
-{
-  "content": "Chapter 1: Introduction to React...",
+  "content": "Long content to narrate",
   "voice": "Sage",
-  "narration_style": "educational",
+  "narration_style": "professional, casual, educational, or storytelling",
   "chapter_breaks": true
 }
 ```
 
-### mouth_explain
-
-Generate spoken explanations of code with technical analysis.
-
+**mouth_explain** - Code explanation
 ```json
 {
-  "code": "function factorial(n) { return n <= 1 ? 1 : n * factorial(n-1); }",
+  "code": "function example() {}",
   "programming_language": "javascript",
   "voice": "Apollo",
-  "explanation_level": "intermediate"
+  "explanation_level": "beginner, intermediate, or advanced"
 }
 ```
 
-### mouth_customize
-
-Test different voices and styles for optimal content delivery.
-
+**mouth_customize** - Voice testing
 ```json
 {
-  "text": "Hello, this is a voice test sample.",
+  "text": "Test sample",
   "voice": "Charon",
-  "style_variations": ["professional", "casual", "energetic"],
-  "compare_voices": ["Puck", "Sage", "Apollo"]
+  "style_variations": ["professional", "casual"],
+  "compare_voices": ["Puck", "Sage"]
 }
 ```
 
-### gemini_gen_image
+### ✋ Hands Tools (Content Generation & Image Editing)
 
-Generate high-quality images from text descriptions using Gemini Imagen API.
+#### Image Generation (1 tool)
 
+**gemini_gen_image** - Generate images from text
 ```json
 {
-  "prompt": "A modern minimalist login form with clean typography",
-  "style": "digital_art",
-  "aspect_ratio": "16:9",
-  "negative_prompt": "cluttered, low quality, blurry"
+  "prompt": "A modern minimalist login form",
+  "style": "photorealistic, artistic, cartoon, sketch, or digital_art",
+  "aspect_ratio": "1:1, 16:9, 9:16, 4:3, or 3:4",
+  "negative_prompt": "What to avoid (optional)"
 }
 ```
 
-### gemini_gen_video
+#### Video Generation (2 tools)
 
-Generate professional videos from text descriptions using Gemini Veo 3.0 API.
-
+**gemini_gen_video** - Generate videos from text
 ```json
 {
-  "prompt": "A serene mountain landscape at sunrise with gentle camera movement",
+  "prompt": "Mountain landscape at sunrise",
+  "duration": "4s, 8s, or 12s",
+  "style": "realistic, cinematic, artistic, cartoon, or animation",
+  "camera_movement": "static, pan_left, pan_right, zoom_in, zoom_out, dolly_forward, dolly_backward",
+  "fps": 24
+}
+```
+
+**gemini_image_to_video** - Animate images
+```json
+{
+  "prompt": "Animate with flowing water",
+  "image_input": "base64 or URL",
   "duration": "8s",
-  "style": "cinematic",
-  "aspect_ratio": "16:9",
-  "camera_movement": "pan_right",
-  "fps": 30
-}
-```
-
-### gemini_image_to_video
-
-Generate videos from images and text descriptions using Imagen + Veo 3.0 pipeline.
-
-```json
-{
-  "prompt": "Animate this landscape with flowing water and moving clouds",
-  "image_input": "data:image/jpeg;base64,/9j/4AAQ...",
-  "duration": "12s",
-  "style": "realistic",
   "camera_movement": "zoom_in"
 }
 ```
 
-### mouth_speak
+#### AI Image Editing (5 tools)
 
-Convert text to natural-sounding speech with voice customization.
+**gemini_edit_image** - Comprehensive AI editing (5 operations: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose)
 
+**gemini_inpaint_image** - Add/modify areas with text (no mask required)
 ```json
 {
-  "text": "Welcome to our application. Let me guide you through the interface.",
-  "voice": "Zephyr",
-  "language": "en-US",
-  "style_prompt": "Speak in a friendly, welcoming tone"
+  "input_image": "base64 or path",
+  "prompt": "What to add/change",
+  "mask_prompt": "Where to edit (optional)"
 }
 ```
 
-### mouth_narrate
-
-Generate narration for long-form content with chapter breaks and style control.
-
+**gemini_outpaint_image** - Expand image borders
 ```json
 {
-  "content": "Chapter 1: Introduction to React...",
-  "voice": "Sage",
-  "narration_style": "educational",
-  "chapter_breaks": true,
-  "max_chunk_size": 8000
+  "input_image": "base64 or path",
+  "prompt": "What to add in expanded area",
+  "expand_direction": "all, left, right, top, bottom, horizontal, vertical",
+  "expansion_ratio": 1.5
 }
 ```
 
-### mouth_explain
-
-Generate spoken explanations of code with technical analysis.
-
+**gemini_style_transfer_image** - Apply artistic styles
 ```json
 {
-  "code": "function factorial(n) { return n <= 1 ? 1 : n * factorial(n-1); }",
-  "programming_language": "javascript",
-  "voice": "Apollo",
-  "explanation_level": "intermediate",
-  "include_examples": true
+  "input_image": "base64 or path",
+  "prompt": "Desired style",
+  "style_image": "Reference image (optional)",
+  "style_strength": 0.7
 }
 ```
 
-### mouth_customize
-
-Test different voices and styles to find the best fit for your content.
-
+**gemini_compose_images** - Combine multiple images
 ```json
 {
-  "text": "Hello, this is a voice test sample.",
-  "voice": "Charon",
-  "style_variations": ["professional", "casual", "energetic"],
-  "compare_voices": ["Puck", "Sage", "Apollo"]
+  "input_image": "Primary image",
+  "secondary_images": ["image1", "image2"],
+  "prompt": "How to compose",
+  "composition_layout": "blend, collage, overlay, side_by_side"
 }
 ```
 
-### brain_think
+#### Jimp Processing (4 tools - Local, Fast)
 
-Advanced sequential thinking with dynamic problem-solving and thought revision.
-
+**jimp_crop_image** - Crop images (6 modes)
 ```json
 {
-  "problem": "Complex technical issue requiring multi-step analysis",
-  "initialThoughts": 5,
-  "thinkingStyle": "analytical",
-  "context": {
-    "domain": "software engineering",
-    "constraints": ["limited resources", "tight deadline"]
-  },
-  "options": {
-    "allowRevision": true,
-    "enableBranching": true,
-    "maxThoughts": 10
-  }
+  "input_image": "path or URL",
+  "mode": "manual, center, top_left, aspect_ratio",
+  "width": 800,
+  "height": 600
 }
 ```
 
-### brain_analyze
-
-Deep analytical reasoning with assumption tracking and alternative perspectives.
-
+**jimp_resize_image** - Resize images (5 algorithms)
 ```json
 {
-  "subject": "System architecture design decisions",
-  "analysisDepth": "detailed",
-  "considerAlternatives": true,
-  "trackAssumptions": true,
-  "focusAreas": ["scalability", "security", "maintainability"],
-  "thinkingStyle": "systematic"
+  "input_image": "path or URL",
+  "width": 1920,
+  "algorithm": "bilinear, bicubic, nearestNeighbor",
+  "maintain_aspect_ratio": true
 }
 ```
 
-### brain_solve
-
-Multi-step problem solving with hypothesis testing and constraint handling.
-
+**jimp_rotate_image** - Rotate images
 ```json
 {
-  "problemStatement": "Performance bottleneck in distributed system",
-  "solutionApproach": "systematic",
-  "verifyHypotheses": true,
-  "maxIterations": 10,
-  "constraints": ["budget limitations", "existing infrastructure"],
-  "requirements": ["99.9% uptime", "sub-second response"]
+  "input_image": "path or URL",
+  "angle": 90,
+  "background_color": "#ffffff"
 }
 ```
 
-### brain_reflect
-
-Meta-cognitive reflection and analysis improvement.
-
+**jimp_mask_image** - Apply grayscale masks
 ```json
 {
-  "originalAnalysis": "Previous analysis of system architecture decisions and their implications...",
-  "reflectionFocus": ["assumptions", "logic_gaps", "alternative_approaches"],
-  "improvementGoals": ["reduce bias", "consider edge cases"],
-  "newInformation": "Recent performance metrics show different bottlenecks"
+  "input_image": "path or URL",
+  "mask_image": "path or URL (black=transparent, white=opaque)"
+}
+```
+
+#### Background Removal (1 tool)
+
+**rmbg_remove_background** - AI background removal (3 quality levels: fast, balanced, high)
+```json
+{
+  "input_image": "path or URL",
+  "quality": "fast, balanced, or high",
+  "output_format": "png or jpeg"
+}
+```
+
+### 🧠 Brain Tools (Advanced Reasoning)
+
+**mcp__reasoning__sequentialthinking** - Native sequential thinking with thought revision
+```json
+{
+  "problem": "Complex issue description",
+  "thought": "Current thinking step",
+  "thoughtNumber": 1,
+  "totalThoughts": 5,
+  "nextThoughtNeeded": true,
+  "isRevision": false
+}
+```
+
+**brain_analyze_simple** - Fast pattern-based analysis
+```json
+{
+  "problem": "Issue to analyze",
+  "pattern": "problem_solving, root_cause, pros_cons, swot, or cause_effect",
+  "context": "Additional background (optional)"
+}
+```
+
+**brain_patterns_info** - List reasoning patterns
+```json
+{
+  "pattern": "Specific pattern name (optional)"
+}
+```
+
+**brain_reflect_enhanced** - AI-powered meta-cognitive reflection
+```json
+{
+  "originalAnalysis": "Previous analysis to reflect on",
+  "focusAreas": ["assumptions", "logic_gaps", "alternative_approaches"],
+  "improvementGoal": "What to improve (optional)",
+  "detailLevel": "concise or detailed"
 }
 ```
 
@@ -1473,197 +1419,166 @@ HTTP_ENABLE_RATE_LIMITING=false
 ## Architecture
 
 ```
-Human MCP Server
-├── Eyes Tool (Vision Understanding)
-│   ├── Image Analysis
-│   ├── Video Processing
-│   ├── GIF Frame Extraction
-│   ├── Visual Comparison
-│   └── Document Processing (PDF, DOCX, XLSX, PPTX, etc.)
-├── Hands Tool (Content Generation)
-│   ├── Image Generation (Imagen API)
-│   ├── Video Generation (Veo 3.0 API)
-│   ├── Image-to-Video Pipeline
-│   ├── Style Customization
-│   ├── Aspect Ratio & Duration Control
-│   ├── Camera Movement Control
-│   └── Prompt Engineering
-├── Mouth Tool (Speech Generation)
-│   ├── Text-to-Speech Synthesis
-│   ├── Long-form Narration
-│   ├── Code Explanation
-│   └── Voice Customization
-├── Brain Tool (Advanced Reasoning) ✅ COMPLETE
-│   ├── Sequential Thinking
-│   ├── Deep Analytical Reasoning
-│   ├── Problem Solving
-│   ├── Meta-cognitive Reflection
-│   ├── Hypothesis Testing
-│   ├── Thought Revision
-│   ├── Assumption Tracking
-│   └── Context-aware Reasoning
-├── Debugging Prompts
-└── Documentation Resources
+Human MCP Server v2.9.0
+├── 👁️ Eyes Tools (4) - Visual Analysis & Document Processing
+│   ├── eyes_analyze - Images, videos, GIFs analysis
+│   ├── eyes_compare - Image comparison
+│   ├── eyes_read_document - Document content extraction
+│   └── eyes_summarize_document - Document summarization
+│
+├── ✋ Hands Tools (13) - Content Generation & Image Editing
+│   ├── Image Generation (1)
+│   │   └── gemini_gen_image
+│   ├── Video Generation (2)
+│   │   ├── gemini_gen_video
+│   │   └── gemini_image_to_video
+│   ├── AI Image Editing (5)
+│   │   ├── gemini_edit_image
+│   │   ├── gemini_inpaint_image
+│   │   ├── gemini_outpaint_image
+│   │   ├── gemini_style_transfer_image
+│   │   └── gemini_compose_images
+│   ├── Jimp Processing (4)
+│   │   ├── jimp_crop_image
+│   │   ├── jimp_resize_image
+│   │   ├── jimp_rotate_image
+│   │   └── jimp_mask_image
+│   └── Background Removal (1)
+│       └── rmbg_remove_background
+│
+├── 🗣️ Mouth Tools (4) - Speech Generation
+│   ├── mouth_speak - Text-to-speech
+│   ├── mouth_narrate - Long-form narration
+│   ├── mouth_explain - Code explanation
+│   └── mouth_customize - Voice testing
+│
+└── 🧠 Brain Tools (3) - Advanced Reasoning
+    ├── mcp__reasoning__sequentialthinking - Native sequential thinking
+    ├── brain_analyze_simple - Pattern-based analysis
+    ├── brain_patterns_info - Reasoning frameworks
+    └── brain_reflect_enhanced - AI-powered reflection
+
+Total: 24 MCP Tools
 ```
 
-For detailed architecture information and future development plans, see:
-- **[Project Roadmap](docs/project-roadmap.md)** - Complete development roadmap and future vision
-- **[Architecture Documentation](docs/codebase-structure-architecture-code-standards.md)** - Technical architecture and code standards
+**Documentation:**
+- **[Project Roadmap](docs/project-roadmap.md)** - Development roadmap and future vision
+- **[Project Overview](docs/project-overview-pdr.md)** - Product requirements and specifications
+- **[Architecture & Code Standards](docs/codebase-structure-architecture-code-standards.md)** - Technical architecture
+- **[Codebase Summary](docs/codebase-summary.md)** - Comprehensive codebase overview
 
 ## Development Roadmap & Vision
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: Phase 1-2 Complete ✅ | Phase 4-6 Complete ✅ | v2.2.0
+### Current Status: v2.9.0 - 24 Production-Ready MCP Tools
 
-**Eyes (Visual Analysis + Document Processing)** - Production Ready (v2.0.0)
-- ✅ Advanced image, video, and GIF analysis capabilities
-- ✅ UI debugging, error detection, accessibility auditing
-- ✅ Image comparison with pixel, structural, and semantic analysis
-- ✅ Document processing for PDF, DOCX, XLSX, PPTX, TXT, MD, RTF, ODT, CSV, JSON, XML, HTML
-- ✅ Structured data extraction using custom JSON schemas
-- ✅ Document summarization with multiple types (brief, detailed, executive, technical)
-- ✅ Processing 20+ visual formats + 12+ document formats with 95%+ success rate
-- ✅ Sub-30 second response times for images, sub-60 second for documents
+**👁️ Eyes (4 tools)** - Visual Analysis & Document Processing
+- ✅ Image, video, GIF analysis with UI debugging and accessibility auditing
+- ✅ Image comparison with visual difference detection
+- ✅ Document processing for 12+ formats (PDF, DOCX, XLSX, PPTX, etc.)
+- ✅ Document summarization and content extraction
 
-**Mouth (Speech Generation)** - Production Ready (v1.3.0)
-- ✅ Natural text-to-speech with 30+ voice options
-- ✅ Long-form content narration with chapter breaks
-- ✅ Technical code explanation with spoken analysis
-- ✅ Voice customization and style control
-- ✅ Multi-language support (24 languages)
-- ✅ Professional audio export in WAV format
+**✋ Hands (13 tools)** - Content Generation & Image Editing
+- ✅ Image generation with Gemini Imagen API (5 styles, 5 aspect ratios)
+- ✅ Video generation with Gemini Veo 3.0 API (duration, FPS, camera controls)
+- ✅ AI-powered image editing: inpainting, outpainting, style transfer, composition
+- ✅ Fast local Jimp processing: crop, resize, rotate, mask
+- ✅ AI background removal with 3 quality models
 
-**Hands (Content Generation)** - Production Ready (v2.0.0)
-- ✅ High-quality image generation using Gemini Imagen API
-- ✅ Professional video generation using Gemini Veo 3.0 API
-- ✅ Image-to-video generation pipeline combining Imagen + Veo 3.0
-- ✅ Multiple artistic styles and aspect ratios for both images and videos
-- ✅ Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
-- ✅ Camera movement controls: static, pan, zoom, dolly movements
-- ✅ Advanced prompt engineering with negative prompts
-- ✅ Comprehensive validation and error handling with retry logic
-- ✅ Fast generation times with reliable output
+**🗣️ Mouth (4 tools)** - Speech Generation
+- ✅ Text-to-speech with 30+ voices and 24 languages
+- ✅ Long-form narration with chapter breaks
+- ✅ Code explanation with technical analysis
+- ✅ Voice testing and customization
 
-**Brain (Advanced Reasoning)** - Production Ready (v2.2.0)
-- ✅ Sequential thinking with dynamic problem-solving and thought revision
-- ✅ Deep analytical reasoning with assumption tracking and alternative perspectives
-- ✅ Problem solving with hypothesis testing and constraint handling
-- ✅ Meta-cognitive reflection and analysis improvement
-- ✅ Multiple thinking styles (analytical, systematic, creative, scientific, etc.)
-- ✅ Context-aware reasoning with domain-specific considerations
-- ✅ Confidence scoring and evidence evaluation
-- ✅ Comprehensive reasoning workflows for complex technical problems
+**🧠 Brain (3 tools)** - Advanced Reasoning
+- ✅ Native sequential thinking (fast, no API calls)
+- ✅ Pattern-based analysis (problem solving, root cause, SWOT, etc.)
+- ✅ AI-powered reflection for complex analysis
 
-### Remaining Development Phases
+### Future Development
 
-#### Phase 3: Audio Processing - Ears (Q1 2025)
-**Advanced Audio Intelligence**
+#### Phase 3: Audio Processing - Ears (Planned Q1 2025)
+Only remaining capability to complete the human sensory suite:
 - Speech-to-text transcription with speaker identification
-- Audio content analysis (music, speech, noise classification)
-- Audio quality assessment and debugging capabilities
+- Audio content analysis and classification
+- Audio quality assessment and debugging
 - Support for 20+ audio formats (WAV, MP3, AAC, OGG, FLAC)
-- Real-time audio processing capabilities
 
-#### Phase 4: Speech Generation - Mouth ✅ COMPLETE
-**AI Voice Capabilities** - Production Ready (v1.3.0)
-- ✅ High-quality text-to-speech with 30+ voice options using Gemini Speech API
-- ✅ Code explanation and technical content narration
-- ✅ Multi-language speech generation (24 languages supported)
-- ✅ Long-form content narration with chapter breaks and natural pacing
-- ✅ Professional-quality audio export in WAV format
-- ✅ Voice customization with style prompts and voice comparison
+**Note:** Phases 1, 2, 4, 5, and 6 are complete with 24 production-ready tools
 
-#### Phase 5: Content Generation - Hands ✅ COMPLETE
-**Creative Content Creation** - Production Ready (v2.0.0)
-- ✅ Image generation from text descriptions using Imagen API
-- ✅ Video generation from text prompts using Veo 3.0 API
-- ✅ Image-to-video generation pipeline combining Imagen + Veo 3.0
-- ✅ Multiple artistic styles for images and videos
-- ✅ Flexible aspect ratios: 1:1, 16:9, 9:16, 4:3, 3:4
-- ✅ Video duration controls (4s, 8s, 12s) with FPS options (1-60 fps)
-- ✅ Camera movement controls: static, pan, zoom, dolly movements
-- ✅ Advanced prompt engineering with negative prompts
-- ✅ Comprehensive error handling and validation with retry logic
-- Future: Advanced image editing (inpainting, style transfer, enhancement)
-- Future: Animation creation with motion graphics
+### System Architecture (v2.9.0)
 
-#### Phase 6: Brain - Advanced Reasoning ✅ COMPLETE
-**Advanced Cognitive Intelligence** - Production Ready (v2.2.0)
-- ✅ Sequential thinking with dynamic problem-solving and thought revision
-- ✅ Deep analytical reasoning with assumption tracking and alternative perspectives
-- ✅ Problem solving with hypothesis testing and constraint handling
-- ✅ Meta-cognitive reflection and analysis improvement
-- ✅ Multiple thinking styles (analytical, systematic, creative, scientific, critical, strategic, intuitive, collaborative)
-- ✅ Context-aware reasoning with domain-specific considerations
-- ✅ Confidence scoring and evidence evaluation
-- ✅ Comprehensive reasoning workflows for complex technical problems
-
-### Target Architecture (Current v2.2.0 - Almost Complete)
-
-The evolution from single-capability visual analysis to comprehensive human-like sensory and cognitive intelligence (5 of 6 phases complete):
+Complete human-like capabilities through 24 MCP tools:
 
 ```
-┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
-│   AI Agent      │◄──►│    Human MCP         │◄──►│  Google AI Services     │
-│  (MCP Client)   │    │    Server            │    │ • Gemini Vision API     │
-└─────────────────┘    │                      │    │ • Gemini Audio API      │
-                       │  👁️ Eyes (Vision)   │    │ • Gemini Speech API     │
-                       │  • Images/Video      │    │ • Imagen API (Images)   │
-                       │  • Documents         │    │ • Veo3 API (Video)      │
-                       │                      │    └─────────────────────────┘
-                       │  👂 Ears (Audio)     │
-                       │  • Speech-to-Text    │
-                       │  • Audio Analysis    │
-                       │                      │
-                       │  👄 Mouth (Speech)   │
-                       │  • Text-to-Speech    │
-                       │  • Narration         │
-                       │                      │
-                       │  ✋ Hands (Creation) │
-                       │  • Image Generation ✅│
-                       │  • Video Generation ✅│
-                       │                      │
-                       │  🧠 Brain (Reasoning)│
-                       │  • Sequential Think ✅│
-                       │  • Hypothesis Test  ✅│
-                       │  • Reflection       ✅│
-                       └──────────────────────┘
+┌─────────────────┐    ┌──────────────────────────┐    ┌─────────────────────────┐
+│   AI Agent      │◄──►│    Human MCP Server      │◄──►│  Google AI Services     │
+│  (MCP Client)   │    │        v2.9.0            │    │ • Gemini 2.5 Flash      │
+└─────────────────┘    │                          │    │ • Gemini Imagen API     │
+                       │  👁️ Eyes (4 tools) ✅   │    │ • Gemini Veo 3.0 API    │
+                       │  • Visual Analysis        │    │ • Gemini Speech API     │
+                       │  • Document Processing    │    └─────────────────────────┘
+                       │                          │
+                       │  ✋ Hands (13 tools) ✅  │    ┌─────────────────────────┐
+                       │  • Image Generation       │    │  Processing Libraries   │
+                       │  • Video Generation       │    │ • Jimp (image proc)     │
+                       │  • AI Image Editing       │    │ • rmbg (bg removal)     │
+                       │  • Jimp Processing        │    │ • ffmpeg (video)        │
+                       │  • Background Removal     │    │ • Sharp (GIF)           │
+                       │                          │    └─────────────────────────┘
+                       │  🗣️ Mouth (4 tools) ✅   │
+                       │  • Text-to-Speech         │
+                       │  • Narration              │
+                       │  • Code Explanation       │
+                       │                          │
+                       │  🧠 Brain (3 tools) ✅   │
+                       │  • Sequential Thinking    │
+                       │  • Pattern Analysis       │
+                       │  • AI Reflection          │
+                       │                          │
+                       │  👂 Ears (Planned 2025)  │
+                       └──────────────────────────┘
 ```
 
-### Key Benefits by 2025
+### Key Benefits
 
 **For Developers:**
-- Complete multimodal debugging and analysis workflows
-- Automated accessibility auditing and compliance checking
-- Visual regression testing and quality assurance
-- Document analysis for technical specifications
-- Audio processing for voice interfaces and content
-- Advanced reasoning and hypothesis-driven problem solving
+- Visual debugging with UI bug detection and accessibility auditing
+- Document processing for technical specifications and reports
+- AI-powered image and video generation for prototyping
+- Advanced image editing without complex tools
+- Speech generation for documentation and code explanations
+- Sophisticated problem-solving with sequential reasoning
 
 **For AI Agents:**
-- Human-like understanding of visual, audio, and document content
-- Ability to generate explanatory content in multiple formats
-- Sophisticated analysis capabilities beyond text processing
-- Enhanced debugging and problem-solving workflows
-- Creative content generation and editing capabilities
-- Advanced cognitive processing with sequential thinking and reflection
+- Human-like multimodal understanding (vision, speech, documents)
+- Creative content generation (images, videos, speech)
+- Advanced image editing capabilities (inpainting, style transfer, etc.)
+- Fast local image processing (crop, resize, rotate, mask)
+- Complex reasoning with thought revision and reflection
+- Pattern-based analysis for common problems
 
-### Success Metrics & Timeline
+### Current Achievements (v2.9.0)
 
-- **Phase 2 (Document Understanding)**: ✅ Completed September 2025
-- **Phase 3 (Audio Processing)**: January - March 2025
-- **Phase 4 (Speech Generation)**: ✅ Completed September 2025
-- **Phase 5 (Content Generation)**: ✅ Completed September 2025
-- **Phase 6 (Brain/Reasoning)**: ✅ Completed September 2025
+**Completed Phases:**
+- ✅ Phase 1: Eyes - Visual Analysis (4 tools)
+- ✅ Phase 2: Document Understanding (integrated into Eyes)
+- ✅ Phase 4: Mouth - Speech Generation (4 tools)
+- ✅ Phase 5: Hands - Content Generation & Image Editing (13 tools)
+- ✅ Phase 6: Brain - Advanced Reasoning (3 tools)
 
-**Target Goals:**
-- Support 50+ file formats across all modalities
-- 99%+ success rate with optimized processing times (images <30s, videos <5min)
-- ✅ Advanced reasoning with 95%+ logical consistency (ACHIEVED)
-- 1000+ MCP client integrations and 100K+ monthly API calls
-- ✅ Comprehensive documentation with real-world examples (ACHIEVED)
-- ✅ Professional-grade content generation and reasoning capabilities (ACHIEVED)
+**Remaining:**
+- ⏳ Phase 3: Ears - Audio Processing (planned Q1 2025)
+
+**Goals Achieved:**
+- ✅ 24 production-ready MCP tools
+- ✅ Support for 30+ file formats (images, videos, documents, audio)
+- ✅ Sub-30 second response times for most operations
+- ✅ Professional-grade content generation (images, videos, speech)
+- ✅ Advanced reasoning with native + AI-powered tools
+- ✅ Comprehensive documentation and examples
 
 ### Getting Involved
 
@@ -1698,11 +1613,11 @@ Human MCP is built for the developer community. Whether you're integrating with 
 - **Durations**: 4s, 8s, 12s video lengths
 - **Quality**: Professional-grade output with customizable FPS (1-60)
 
-**Reasoning Capabilities (v2.2.0)**:
-- **Thinking Styles**: Analytical, systematic, creative, scientific, critical, strategic, intuitive, collaborative
-- **Problem Types**: Technical debugging, architecture decisions, hypothesis testing, complex analysis
-- **Output Formats**: Structured reasoning chains, hypothesis validation, reflection analysis, confidence scoring
-- **Complexity**: Multi-step analysis with branching logic, thought revision, and meta-cognitive reflection
+**Reasoning Capabilities (Brain Tools)**:
+- **Native Sequential Thinking**: Fast, API-free thought processes with revision support
+- **Pattern Analysis**: Quick problem-solving using proven frameworks (root cause, SWOT, pros/cons, etc.)
+- **AI Reflection**: Complex meta-cognitive analysis for improving reasoning quality
+- **Output Formats**: Structured thought chains, pattern-based solutions, improvement recommendations
 
 ## Contributing
 
