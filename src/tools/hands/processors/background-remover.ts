@@ -1,4 +1,5 @@
-import { removeBackground, type Config } from "@imgly/background-removal";
+import { rmbg } from "rmbg";
+import { createBriaaiModel, createModnetModel, createU2netpModel } from "rmbg/models";
 import { logger } from "@/utils/logger.js";
 import { loadImageForProcessing } from "@/utils/image-loader.js";
 import { Jimp, JimpMime } from "jimp";
@@ -43,49 +44,28 @@ export async function removeImageBackground(
     // Convert base64 to buffer for background removal
     const imageBuffer = Buffer.from(processedImage.data, "base64");
 
-    // Configure background removal based on quality setting
+    // Configure model based on quality setting
     const quality = options.quality || "balanced";
-    let config: Config;
+    let model;
 
     switch (quality) {
       case "fast":
-        config = {
-          model: "isnet_quint8", // Faster, less accurate (quantized)
-          output: {
-            format: "image/png",
-            quality: 0.8
-          }
-        };
+        model = createU2netpModel(); // Fastest, lightweight (320px)
         break;
 
       case "high":
-        config = {
-          model: "isnet", // More accurate, slower (full precision)
-          output: {
-            format: "image/png",
-            quality: 1.0
-          }
-        };
+        model = createBriaaiModel(); // Highest quality (1024px)
         break;
 
       case "balanced":
       default:
-        config = {
-          model: "isnet_fp16", // Good balance (half precision)
-          output: {
-            format: "image/png",
-            quality: 0.9
-          }
-        };
+        model = createModnetModel(); // Default, balanced quality/speed (512px)
         break;
     }
 
     // Remove background
     logger.info("Processing image with AI background removal...");
-    const blob = await removeBackground(imageBuffer, config);
-
-    // Convert blob to buffer
-    const resultBuffer = Buffer.from(await blob.arrayBuffer());
+    const resultBuffer = await rmbg(imageBuffer, { model });
 
     // Get original dimensions
     const originalImage = await Jimp.fromBuffer(imageBuffer);
