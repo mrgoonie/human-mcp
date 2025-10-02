@@ -1,3 +1,11 @@
+## [2.10.1](https://github.com/mrgoonie/human-mcp/compare/v2.10.0...v2.10.1) (2025-10-02)
+
+
+### Bug Fixes
+
+* **hands:** correct mask, bg removal ([718d877](https://github.com/mrgoonie/human-mcp/commit/718d877ff358e5aea898606665ed01f7677c56e9))
+* **jimp:** enhance image masking tool with proper grayscale alpha masking ([3e04b15](https://github.com/mrgoonie/human-mcp/commit/3e04b15c0ccd565847fae56222a8b71b1f21fe6f))
+
 # [2.10.0](https://github.com/mrgoonie/human-mcp/compare/v2.9.0...v2.10.0) (2025-10-01)
 
 
