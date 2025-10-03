@@ -1,3 +1,16 @@
+# [2.11.0](https://github.com/mrgoonie/human-mcp/compare/v2.10.1...v2.11.0) (2025-10-03)
+
+
+### Bug Fixes
+
+* **build:** externalize native dependencies for ONNX Runtime deployment ([6f33bc9](https://github.com/mrgoonie/human-mcp/commit/6f33bc9060a9c362cd823955f3202e56f82fcf27))
+* **docker:** migrate from Alpine to Debian for glibc compatibility ([db8d552](https://github.com/mrgoonie/human-mcp/commit/db8d552a84948a3f9de8f73c5d502ee19658f003))
+
+
+### Features
+
+* add comprehensive UI/UX design system and agent capabilities ([55d4116](https://github.com/mrgoonie/human-mcp/commit/55d411630da440a10c0264c220d2e222c9d729b1))
+
 ## [2.10.1](https://github.com/mrgoonie/human-mcp/compare/v2.10.0...v2.10.1) (2025-10-02)
 
 
