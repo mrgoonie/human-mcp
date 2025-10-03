@@ -122,19 +122,39 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - **Features**: Imagen + Veo 3.0 pipeline, animation control, style preservation
 - **Use Cases**: Static image animation, presentation enhancement, creative content
 
-**FR-3.4: Image Editing Tool (`gemini_edit_image`) ✅ NEW**
+**FR-3.4: AI-Powered Image Editing Tools ✅ NEW**
 - **Status**: ✅ Production Ready (v2.1.0)
-- **Requirement**: Comprehensive AI-powered image editing with multiple operation types
-- **Operations**: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose
-- **Features**: Mask-based editing, style transfer, object manipulation, multi-image composition
-- **Advanced**: Quality levels, guidance scale, negative prompts, seed support
-- **Output**: Edited images with metadata and processing information
+- **General Editing Tool (`gemini_edit_image`)**: Comprehensive AI-powered image editing with multiple operation types
+  - **Operations**: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose
+  - **Features**: Text-based editing (no masks required), natural language descriptions, multi-image support
+  - **Advanced**: Quality levels (draft/standard/high), guidance scale, negative prompts, seed support
+  - **Output**: Edited images with metadata and processing information
 
-**FR-3.5: Specialized Image Editing Tools ✅ NEW**
-- **Inpainting Tool (`gemini_inpaint_image`)**: Fill or modify specific areas using masks or text descriptions
-- **Outpainting Tool (`gemini_outpaint_image`)**: Expand image borders with directional control and expansion ratios
-- **Style Transfer Tool (`gemini_style_transfer_image`)**: Apply artistic styles from reference images or descriptions
-- **Image Composition Tool (`gemini_compose_images`)**: Combine multiple images with blend modes and layouts
+**FR-3.5: Specialized Gemini Editing Tools ✅ NEW**
+- **Inpainting Tool (`gemini_inpaint_image`)**: Add or modify specific areas using natural language descriptions (no mask required)
+- **Outpainting Tool (`gemini_outpaint_image`)**: Expand image borders with directional control (all/left/right/top/bottom/horizontal/vertical) and expansion ratios (0.1-3.0)
+- **Style Transfer Tool (`gemini_style_transfer_image`)**: Apply artistic styles from reference images or text descriptions with adjustable strength
+- **Image Composition Tool (`gemini_compose_images`)**: Combine multiple images with layout options (blend/collage/overlay/side_by_side) and blend modes
+
+**FR-3.6: Jimp Image Processing Tools ✅ NEW**
+- **Status**: ✅ Production Ready (v2.1.0)
+- **Crop Tool (`jimp_crop_image`)**: Precise image cropping with multiple modes
+  - **Modes**: manual, center, top_left, top_right, bottom_left, bottom_right, aspect_ratio
+  - **Features**: Coordinate-based cropping, aspect ratio preservation, region selection
+- **Resize Tool (`jimp_resize_image`)**: Image resizing with advanced algorithms
+  - **Algorithms**: nearestNeighbor, bilinear, bicubic, hermite, bezier
+  - **Features**: Scale factor support, dimension-based resizing, aspect ratio maintenance
+- **Rotate Tool (`jimp_rotate_image`)**: Image rotation with angle precision
+  - **Features**: Any angle rotation, clockwise/counter-clockwise, background color customization
+- **Mask Tool (`jimp_mask_image`)**: Grayscale alpha masking
+  - **Features**: Grayscale mask application (black=transparent, white=opaque), automatic mask resizing
+
+**FR-3.7: Background Removal Tool ✅ NEW**
+- **Status**: ✅ Production Ready (v2.1.0)
+- **Tool (`rmbg_remove_background`)**: AI-powered background removal
+  - **Quality Levels**: fast (U2Net+), balanced (ModNet), high (BRIAI)
+  - **Output Formats**: PNG (with transparency), JPEG (with custom background color)
+  - **Features**: Multiple AI models, quality/speed tradeoff, transparent or colored backgrounds
 
 #### 1.4 Ears Tools (Audio Processing) - Planned Q1 2025
 
@@ -391,12 +411,22 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - **Voice Customization**: Style prompts and voice comparison tools
 
 #### 8.4 Phase 5: Hands - Content Generation ✅ COMPLETED (v2.1.0)
-- **Image Generation**: AI-powered image creation using Gemini Imagen API
-- **Video Generation**: Professional video content using Gemini Veo 3.0 API
-- **Image-to-Video**: Animation pipeline combining Imagen and Veo 3.0
-- **Image Editing**: Comprehensive editing with inpainting, outpainting, style transfer, object manipulation, and composition
-- **Specialized Tools**: Dedicated tools for specific editing operations with optimized workflows
-- **Style Control**: Multiple artistic styles and technical parameters
+- **Image Generation**: AI-powered image creation using Gemini Imagen API with multiple styles and aspect ratios
+- **Video Generation**: Professional video content using Gemini Veo 3.0 API with camera controls and FPS options
+- **Image-to-Video**: Animation pipeline combining Imagen and Veo 3.0 for static image animation
+- **AI Image Editing**: Comprehensive Gemini-powered editing with 5 operations
+  - Inpainting: Text-based area modification without masks
+  - Outpainting: Directional image expansion with natural blending
+  - Style Transfer: Artistic style application from references or descriptions
+  - Object Manipulation: Move, resize, remove, replace, or duplicate objects
+  - Multi-Image Composition: Combine images with smart layouts and blending
+- **Jimp Processing Tools**: Fast, local image manipulation
+  - Crop: 6 cropping modes with aspect ratio support
+  - Resize: 5 algorithms with scale and dimension options
+  - Rotate: Any angle rotation with background customization
+  - Mask: Grayscale alpha masking for transparency control
+- **Background Removal**: AI-powered background removal with 3 quality levels (U2Net+, ModNet, BRIAI)
+- **File Management**: Automatic file saving, R2 cloud storage integration, base64 and URL outputs
 
 #### 8.5 Phase 6: Brain - Advanced Reasoning ✅ COMPLETED (v2.2.0)
 - **Sequential Thinking**: Dynamic problem-solving with thought revision

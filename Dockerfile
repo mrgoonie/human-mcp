@@ -1,12 +1,13 @@
 # Human MCP Server - Production Dockerfile
-FROM oven/bun:1-alpine AS base
+FROM oven/bun:1-debian AS base
 
-# Install system dependencies needed for video processing
-RUN apk add --no-cache \
+# Install system dependencies needed for video processing and ONNX Runtime
+RUN apt-get update && apt-get install -y \
     ffmpeg \
     ca-certificates \
     dumb-init \
-    wget
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -23,8 +24,8 @@ COPY . .
 RUN bun run build
 
 # Create a non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S mcp -u 1001
+RUN groupadd -g 1001 nodejs && \
+    useradd -r -u 1001 -g nodejs mcp
 
 # Change ownership of the app directory
 RUN chown -R mcp:nodejs /app

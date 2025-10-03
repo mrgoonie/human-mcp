@@ -47,7 +47,7 @@ The final phase completes all human sensory capabilities:
    - **Eyes Tools**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
    - **Brain Tools**: Advanced reasoning (`brain_think`, `brain_analyze`, `brain_solve`, `brain_reflect`)
    - **Mouth Tools**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
-   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`) + Image editing (`gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`)
+   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`) + AI image editing (`gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`) + Jimp processing (`jimp_crop_image`, `jimp_resize_image`, `jimp_rotate_image`, `jimp_mask_image`) + Background removal (`rmbg_remove_background`)
    - **Ears Tools**: Audio processing (planned Phase 3)
 3. **Processing Layer**: Media, document, and reasoning processors with factory patterns
 4. **Transport Layer**: STDIO and HTTP transports with SSE fallback
@@ -95,13 +95,18 @@ human-mcp/
 │   │   │   └── utils/        # Tool-specific utilities
 │   │   │       ├── gemini-client.ts # Google Gemini API integration
 │   │   │       └── formatters.ts    # Output formatting utilities
-│   │   ├── hands/            # Content generation tools
-│   │   │   ├── index.ts      # Hands tool registration
-│   │   │   ├── schemas.ts    # Content generation schemas
-│   │   │   └── processors/   # Generation processors
-│   │   │       ├── image-generator.ts # Image generation using Imagen API
-│   │   │       ├── video-generator.ts # Video generation using Veo 3.0 API
-│   │   │       └── image-editor.ts    # Image editing processor
+│   │   ├── hands/            # Content generation and image editing tools
+│   │   │   ├── index.ts      # Hands tool registration (13 tools total)
+│   │   │   ├── schemas.ts    # Content generation and editing schemas
+│   │   │   ├── processors/   # Generation and processing processors
+│   │   │   │   ├── image-generator.ts  # Imagen API image generation
+│   │   │   │   ├── video-generator.ts  # Veo 3.0 API video generation
+│   │   │   │   ├── image-editor.ts     # Gemini-powered image editing (5 operations)
+│   │   │   │   ├── jimp-processor.ts   # Jimp-based image manipulation (crop, resize, rotate, mask)
+│   │   │   │   └── background-remover.ts # AI background removal (rmbg package)
+│   │   │   └── utils/        # Image editing utilities
+│   │   │       ├── jimp-helpers.ts     # Jimp helper functions and converters
+│   │   │       └── validation.ts       # Image editing parameter validation
 │   │   └── mouth/            # Speech generation tools
 │   │       ├── index.ts      # Mouth tool registration
 │   │       ├── schemas.ts    # Speech generation schemas
@@ -203,15 +208,27 @@ server.registerTool("mouth_narrate", { /* ... */ }, async (args) => { /* ... */ 
 server.registerTool("mouth_explain", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("mouth_customize", { /* ... */ }, async (args) => { /* ... */ });
 
-// Hands Tools - Content Generation + Image Editing
+// Hands Tools - Content Generation + AI Image Editing + Jimp Processing + Background Removal
+// Content Generation (3 tools)
 server.registerTool("gemini_gen_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_gen_video", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_image_to_video", { /* ... */ }, async (args) => { /* ... */ });
+
+// AI Image Editing - Gemini-powered (5 tools)
 server.registerTool("gemini_edit_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_inpaint_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_outpaint_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_style_transfer_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("gemini_compose_images", { /* ... */ }, async (args) => { /* ... */ });
+
+// Jimp Image Processing - Local manipulation (4 tools)
+server.registerTool("jimp_crop_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_resize_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_rotate_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_mask_image", { /* ... */ }, async (args) => { /* ... */ });
+
+// Background Removal - AI-powered (1 tool)
+server.registerTool("rmbg_remove_background", { /* ... */ }, async (args) => { /* ... */ });
 ```
 
 ### 3. Strategy Pattern for Media Processing
@@ -272,12 +289,20 @@ const result = await processor.process(source, options);
 
 ### 5. Image Editing Pipeline Architecture
 
-**Pattern**: Operation-Based Editing with Multi-Image Support
-- **Operation Types**: Five distinct editing operations (inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose)
-- **Flexible Input**: Support for base64 data URIs, file paths, and URLs
-- **Context Building**: Dynamic request content based on operation type
-- **Multi-Image Processing**: Support for mask images, style reference images, and secondary composition images
-- **Quality Control**: Three quality levels (draft, standard, high) with guidance scale and strength parameters
+#### 5.1 AI-Powered Image Editing (Gemini)
+
+**Pattern**: Text-Based Conversational Editing Without Masks
+- **Core Principle**: Gemini 2.5 Flash uses natural language descriptions instead of traditional masks
+- **Operation Types**: Five distinct editing operations
+  - **Inpainting**: Describe what to add/modify and where (no mask required)
+  - **Outpainting**: Directional expansion with content generation
+  - **Style Transfer**: Apply artistic styles from text or reference images
+  - **Object Manipulation**: Move, resize, remove, replace, or duplicate objects
+  - **Multi-Image Composition**: Combine up to 3 images with smart layouts
+- **Input Processing**: Support for base64 data URIs, file paths, and URLs
+- **Prompt Engineering**: Operation-specific prompt templates for optimal results
+- **Multi-Image Support**: Primary image + optional style/mask/secondary images
+- **Quality Control**: Three levels (draft/standard/high) with guidance scale (1.0-20.0) and strength (0.1-1.0)
 
 ```typescript
 // Image Editing Pipeline Pattern
@@ -385,12 +410,104 @@ async function buildRequestContent(
 }
 ```
 
-**Use Cases**:
+**Gemini Editing Use Cases**:
 - **UI Debugging**: Edit screenshots to fix visual issues or test design variations
 - **Design Iteration**: Quickly modify UI elements without manual editing tools
 - **Content Enhancement**: Expand images, apply styles, or compose multiple screenshots
 - **Accessibility Testing**: Modify UI elements to test different visual states
 - **Documentation**: Create annotated screenshots with highlighted areas
+
+#### 5.2 Jimp Image Processing
+
+**Pattern**: Local, Fast, Deterministic Image Manipulation
+- **Core Libraries**: Jimp v1 API for JavaScript/TypeScript image processing
+- **Operations**: Four core image manipulation tools
+  - **Crop**: Six modes (manual, center, top_left, top_right, bottom_left, bottom_right, aspect_ratio)
+  - **Resize**: Five algorithms (nearestNeighbor, bilinear, bicubic, hermite, bezier)
+  - **Rotate**: Any angle rotation with background color customization
+  - **Mask**: Grayscale alpha masking (black=transparent, white=opaque)
+- **Input Handling**: File paths, URLs, and base64 data URIs
+- **Format Support**: PNG, JPEG, BMP output formats
+- **Validation**: Comprehensive parameter validation for each operation
+
+```typescript
+// Jimp Processing Pattern
+export async function cropImage(options: CropOptions, config?: Config): Promise<CropResult> {
+  // Load image from any source
+  const { image, originalFormat } = await loadJimpImage(options.inputImage);
+
+  // Calculate crop region based on mode
+  const cropRegion = calculateCropRegion(
+    mode,
+    originalWidth,
+    originalHeight,
+    options.width,
+    options.height,
+    options.aspectRatio
+  );
+
+  // Validate parameters
+  validateCropParams({ x, y, width, height, imageWidth, imageHeight });
+
+  // Perform operation using Jimp v1 API
+  image.crop({ x: cropRegion.x, y: cropRegion.y, w: cropRegion.width, h: cropRegion.height });
+
+  // Convert to base64 and optionally save to file/R2
+  const croppedImage = await jimpToBase64(image, outputFormat, quality);
+
+  return { croppedImage, format, dimensions, processingTime, filePath, fileUrl };
+}
+```
+
+**Jimp Processing Use Cases**:
+- **Precise Cropping**: Extract specific regions from screenshots or images
+- **Image Resizing**: Scale images for different display sizes or reduce file size
+- **Rotation**: Adjust image orientation or create rotated thumbnails
+- **Transparency Masking**: Apply custom transparency patterns using grayscale masks
+- **Batch Processing**: Fast, local processing without API calls
+
+#### 5.3 Background Removal
+
+**Pattern**: AI-Powered Segmentation with Multiple Models
+- **Core Library**: rmbg package with three AI model options
+  - **U2Net+ (fast)**: Lightweight model at 320px, quickest processing
+  - **ModNet (balanced)**: Default model at 512px, balanced quality/speed
+  - **BRIAI (high)**: Highest quality at 1024px, slower but most accurate
+- **Output Options**: PNG with transparency or JPEG with custom background color
+- **Quality Control**: Selectable quality level based on use case requirements
+
+```typescript
+// Background Removal Pattern
+export async function removeImageBackground(
+  options: BackgroundRemovalOptions,
+  config?: Config
+): Promise<BackgroundRemovalResult> {
+  // Load and process input image
+  const processedImage = await loadImageForProcessing(options.inputImage, { maxWidth: 2048 });
+
+  // Select AI model based on quality setting
+  const model = quality === "fast" ? createU2netpModel()
+    : quality === "high" ? createBriaaiModel()
+    : createModnetModel();
+
+  // Remove background using AI
+  const resultBuffer = await rmbg(imageBuffer, { model });
+
+  // Handle output format (PNG with transparency or JPEG with background)
+  if (outputFormat === "jpeg" && backgroundColor) {
+    const background = new Jimp({ width, height, color: backgroundColor });
+    background.composite(resultImage, 0, 0);
+  }
+
+  return { imageWithoutBackground, format, dimensions, processingTime, filePath };
+}
+```
+
+**Background Removal Use Cases**:
+- **Product Photography**: Remove backgrounds from product images for e-commerce
+- **UI Element Extraction**: Isolate UI components from screenshots
+- **Transparent Assets**: Create transparent PNGs from regular images
+- **Composite Creation**: Prepare images for multi-layer compositions
 
 ### 6. Configuration-driven Architecture
 

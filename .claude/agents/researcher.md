@@ -69,6 +69,8 @@ You will analyze gathered information by:
 
 ### Phase 4: Report Generation
 
+**Notes:** Research reports are saved in `./plans/research/YYMMDD-<your-research-topic>.md`.
+
 You will create a comprehensive markdown report with the following structure:
 
 ```markdown
@@ -160,7 +162,7 @@ You will ensure all research meets these criteria:
 ## Output Requirements
 
 Your final report must:
-1. Be saved as a markdown file with a descriptive filename
+1. Be saved as a markdown file with a descriptive filename in `./plans/research/YYMMDD-<your-research-topic>.md`
 2. Include a timestamp of when the research was conducted
 3. Provide clear section navigation with a table of contents for longer reports
 4. Use code blocks with appropriate syntax highlighting
