@@ -62,3 +62,4 @@ data/**/*
 
 # Repomix output
 repomix-output.xml
+tests/data/alex.mp4
