@@ -1,3 +1,10 @@
+## [2.12.1](https://github.com/mrgoonie/human-mcp/compare/v2.12.0...v2.12.1) (2025-10-08)
+
+
+### Bug Fixes
+
+* **npm:** externalize Playwright dependencies and add postinstall browser install ([a00b137](https://github.com/mrgoonie/human-mcp/commit/a00b13713168c206b33ae8d81febda6cc4c3e316))
+
 # [2.12.0](https://github.com/mrgoonie/human-mcp/compare/v2.11.0...v2.12.0) (2025-10-08)
 
 
