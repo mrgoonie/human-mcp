@@ -1,3 +1,11 @@
+# [2.12.0](https://github.com/mrgoonie/human-mcp/compare/v2.11.0...v2.12.0) (2025-10-08)
+
+
+### Features
+
+* add design description command for analyzing screenshots and generating implementation plans ([4cf58a9](https://github.com/mrgoonie/human-mcp/commit/4cf58a9942853f2377afaafd3d7734e0d863e168))
+* **hands:** add Playwright screenshot capture tools ([e6298b9](https://github.com/mrgoonie/human-mcp/commit/e6298b9192c2f7357e8a5fa52cbccc214012877f))
+
 # [2.11.0](https://github.com/mrgoonie/human-mcp/compare/v2.10.1...v2.11.0) (2025-10-03)
 
 
