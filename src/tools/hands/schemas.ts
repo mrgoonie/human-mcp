@@ -245,3 +245,53 @@ export const BackgroundRemovalInputSchema = z.object({
 });
 
 export type BackgroundRemovalInput = z.infer<typeof BackgroundRemovalInputSchema>;
+
+// Playwright Screenshot Schemas
+
+// Full Page Screenshot Schema
+export const PlaywrightFullPageScreenshotInputSchema = z.object({
+  url: z.string().url().describe("URL of the webpage to capture"),
+  format: z.enum(["png", "jpeg"]).optional().default("png").describe("Screenshot format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100), only applicable for jpeg format"),
+  timeout: z.number().int().min(1000).max(120000).optional().default(30000).describe("Navigation timeout in milliseconds"),
+  wait_until: z.enum(["load", "domcontentloaded", "networkidle"]).optional().default("networkidle").describe("When to consider navigation successful"),
+  viewport: z.object({
+    width: z.number().int().min(320).max(3840).default(1920),
+    height: z.number().int().min(240).max(2160).default(1080)
+  }).optional().describe("Viewport dimensions")
+});
+
+export type PlaywrightFullPageScreenshotInput = z.infer<typeof PlaywrightFullPageScreenshotInputSchema>;
+
+// Viewport Screenshot Schema
+export const PlaywrightViewportScreenshotInputSchema = z.object({
+  url: z.string().url().describe("URL of the webpage to capture"),
+  format: z.enum(["png", "jpeg"]).optional().default("png").describe("Screenshot format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100), only applicable for jpeg format"),
+  timeout: z.number().int().min(1000).max(120000).optional().default(30000).describe("Navigation timeout in milliseconds"),
+  wait_until: z.enum(["load", "domcontentloaded", "networkidle"]).optional().default("networkidle").describe("When to consider navigation successful"),
+  viewport: z.object({
+    width: z.number().int().min(320).max(3840).default(1920),
+    height: z.number().int().min(240).max(2160).default(1080)
+  }).optional().describe("Viewport dimensions")
+});
+
+export type PlaywrightViewportScreenshotInput = z.infer<typeof PlaywrightViewportScreenshotInputSchema>;
+
+// Element Screenshot Schema
+export const PlaywrightElementScreenshotInputSchema = z.object({
+  url: z.string().url().describe("URL of the webpage to capture"),
+  selector: z.string().min(1).describe("CSS selector, text content, or role of the element to capture"),
+  selector_type: z.enum(["css", "text", "role"]).optional().default("css").describe("Type of selector (css, text, or role)"),
+  format: z.enum(["png", "jpeg"]).optional().default("png").describe("Screenshot format"),
+  quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100), only applicable for jpeg format"),
+  timeout: z.number().int().min(1000).max(120000).optional().default(30000).describe("Navigation and element wait timeout in milliseconds"),
+  wait_until: z.enum(["load", "domcontentloaded", "networkidle"]).optional().default("networkidle").describe("When to consider navigation successful"),
+  viewport: z.object({
+    width: z.number().int().min(320).max(3840).default(1920),
+    height: z.number().int().min(240).max(2160).default(1080)
+  }).optional().describe("Viewport dimensions"),
+  wait_for_selector: z.boolean().optional().default(true).describe("Wait for the selector to be visible before capturing")
+});
+
+export type PlaywrightElementScreenshotInput = z.infer<typeof PlaywrightElementScreenshotInputSchema>;

@@ -6,7 +6,8 @@ Think hard to plan & start designing follow exactly this screenshot:
 <screenshot>$ARGUMENTS</screenshot>
 
 ## Workflow:
-1. Use `eyes` analyze tool to describe super details of the screenshot.
+1. Use `eyes` analyze tool to describe super details of the screenshot (design style, trends, fonts, colors, border, spacing, elements' positions, size, shape, texture, material, light, shadow, reflection, refraction, blur, glow, image, background transparency, transition, etc.)
+   - **IMPORTANT:** Try to predict the font name (Google Fonts) and font size in the given screenshot, don't just use Inter or Poppins.
 2. Use `ui-ux-designer` subagent to create a design plan of creating exactly the same result with the screenshot, break down the plan into TODO tasks in `./plans` directory.
 3. Then implement the plan step by step.
 4. If user doesn't specify, create the design in pure HTML/CSS/JS.

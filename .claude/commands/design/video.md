@@ -6,7 +6,8 @@ Think hard to plan & start designing follow exactly this video:
 <video>$ARGUMENTS</video>
 
 ## Workflow:
-1. Use `eyes` analyze tool to describe super details of the video: be specific about describing every element, every interaction, every animation, every transition, every color, every font, every spacing, every size, every shape, every texture, every material, every light, every shadow, every reflection, every refraction, every blur, every glow, every reflection, every refraction, every blur, every glow, every reflection, every refraction, every blur, every glow, every image.
+1. Use `eyes` analyze tool to describe super details of the video: be specific about describing every element, every interaction, every animation, every transition, every color, every font, every border, every spacing, every size, every shape, every texture, every material, every light, every shadow, every reflection, every refraction, every blur, every glow, every image, background transparency, etc.
+   - **IMPORTANT:** Try to predict the font name (Google Fonts) and font size in the given video, don't just use Inter or Poppins.
 2. Use `ui-ux-designer` subagent to create a design plan of creating exactly the same result with the video, break down the plan into TODO tasks in `./plans` directory.
 3. Then implement the plan step by step.
 4. If user doesn't specify, create the design in pure HTML/CSS/JS.

@@ -4,7 +4,7 @@
 
 ![Human MCP](human-mcp.png)
 
-Human MCP v2.9.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
+Human MCP v2.10.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, browser automation, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
 
 ## Features
 
@@ -14,12 +14,13 @@ Human MCP v2.9.0 is a comprehensive Model Context Protocol server that provides 
 - **eyes_read_document**: Extract text and data from PDF, DOCX, XLSX, PPTX, and more
 - **eyes_summarize_document**: Generate summaries and insights from documents
 
-✋ **Content Generation & Image Editing (Hands) - ✅ Complete (13 tools)**
+✋ **Content Generation & Image Editing (Hands) - ✅ Complete (16 tools)**
 - **Image Generation** (1 tool): gemini_gen_image - Generate images from text using Imagen API
 - **Video Generation** (2 tools): gemini_gen_video, gemini_image_to_video - Create videos with Veo 3.0
 - **AI Image Editing** (5 tools): Gemini-powered editing with inpainting, outpainting, style transfer, object manipulation, composition
 - **Jimp Processing** (4 tools): Local image manipulation - crop, resize, rotate, mask
 - **Background Removal** (1 tool): rmbg_remove_background - AI-powered background removal
+- **Browser Automation** (3 tools): playwright_screenshot_fullpage, playwright_screenshot_viewport, playwright_screenshot_element - Automated web screenshots
 
 🗣️ **Speech Generation (Mouth) - ✅ Complete (4 tools)**
 - **mouth_speak**: Convert text to speech with 30+ voices and 24 languages
@@ -33,10 +34,10 @@ Human MCP v2.9.0 is a comprehensive Model Context Protocol server that provides 
 - **brain_patterns_info**: List available reasoning patterns and frameworks
 - **brain_reflect_enhanced**: AI-powered meta-cognitive reflection for complex analysis
 
-## Total: 24 MCP Tools Across 4 Human Capabilities
+## Total: 27 MCP Tools Across 4 Human Capabilities
 
 **👁️ Eyes (4 tools)** - Visual analysis and document processing
-**✋ Hands (13 tools)** - Content generation and image editing
+**✋ Hands (16 tools)** - Content generation, image editing, and browser automation
 **🗣️ Mouth (4 tools)** - Speech generation and narration
 **🧠 Brain (3 tools)** - Advanced reasoning and problem solving
 
@@ -45,6 +46,7 @@ Human MCP v2.9.0 is a comprehensive Model Context Protocol server that provides 
 - **Gemini Imagen API** - High-quality image generation
 - **Gemini Veo 3.0 API** - Professional video generation
 - **Gemini Speech API** - Natural voice synthesis (30+ voices, 24 languages)
+- **Playwright** - Browser automation for web screenshots
 - **Jimp** - Fast local image processing
 - **rmbg** - AI-powered background removal (U2Net+, ModNet, BRIAI models)
 
@@ -1139,6 +1141,44 @@ done
 }
 ```
 
+#### Browser Automation (3 tools)
+
+**playwright_screenshot_fullpage** - Capture full page including scrollable content
+```json
+{
+  "url": "https://example.com",
+  "format": "png or jpeg",
+  "quality": 80,
+  "timeout": 30000,
+  "wait_until": "load, domcontentloaded, or networkidle",
+  "viewport": { "width": 1920, "height": 1080 }
+}
+```
+
+**playwright_screenshot_viewport** - Capture visible viewport area only
+```json
+{
+  "url": "https://example.com",
+  "format": "png or jpeg",
+  "quality": 80,
+  "timeout": 30000,
+  "wait_until": "networkidle",
+  "viewport": { "width": 1920, "height": 1080 }
+}
+```
+
+**playwright_screenshot_element** - Capture specific element on page
+```json
+{
+  "url": "https://example.com",
+  "selector": ".main-content or 'Click me' or 'button'",
+  "selector_type": "css, text, or role",
+  "format": "png or jpeg",
+  "timeout": 30000,
+  "wait_for_selector": true
+}
+```
+
 ### 🧠 Brain Tools (Advanced Reasoning)
 
 **mcp__reasoning__sequentialthinking** - Native sequential thinking with thought revision
@@ -1336,6 +1376,40 @@ done
 }
 ```
 
+### Automated Web Screenshots
+```bash
+# Capture full page screenshot for documentation
+{
+  "url": "https://example.com/dashboard",
+  "format": "png",
+  "wait_until": "networkidle",
+  "viewport": { "width": 1920, "height": 1080 }
+}
+```
+
+### Element-Specific Screenshots
+```bash
+# Capture specific UI component for bug reporting
+{
+  "url": "https://example.com/app",
+  "selector": ".error-message",
+  "selector_type": "css",
+  "wait_for_selector": true,
+  "format": "png"
+}
+```
+
+### Responsive Testing Screenshots
+```bash
+# Capture mobile viewport for responsive design testing
+{
+  "url": "https://example.com",
+  "format": "png",
+  "viewport": { "width": 375, "height": 812 },
+  "wait_until": "networkidle"
+}
+```
+
 ## Prompts
 
 Human MCP includes pre-built prompts for common debugging scenarios:
@@ -1419,14 +1493,14 @@ HTTP_ENABLE_RATE_LIMITING=false
 ## Architecture
 
 ```
-Human MCP Server v2.9.0
+Human MCP Server v2.10.0
 ├── 👁️ Eyes Tools (4) - Visual Analysis & Document Processing
 │   ├── eyes_analyze - Images, videos, GIFs analysis
 │   ├── eyes_compare - Image comparison
 │   ├── eyes_read_document - Document content extraction
 │   └── eyes_summarize_document - Document summarization
 │
-├── ✋ Hands Tools (13) - Content Generation & Image Editing
+├── ✋ Hands Tools (16) - Content Generation, Image Editing & Browser Automation
 │   ├── Image Generation (1)
 │   │   └── gemini_gen_image
 │   ├── Video Generation (2)
@@ -1443,8 +1517,12 @@ Human MCP Server v2.9.0
 │   │   ├── jimp_resize_image
 │   │   ├── jimp_rotate_image
 │   │   └── jimp_mask_image
-│   └── Background Removal (1)
-│       └── rmbg_remove_background
+│   ├── Background Removal (1)
+│   │   └── rmbg_remove_background
+│   └── Browser Automation (3)
+│       ├── playwright_screenshot_fullpage
+│       ├── playwright_screenshot_viewport
+│       └── playwright_screenshot_element
 │
 ├── 🗣️ Mouth Tools (4) - Speech Generation
 │   ├── mouth_speak - Text-to-speech
@@ -1458,7 +1536,7 @@ Human MCP Server v2.9.0
     ├── brain_patterns_info - Reasoning frameworks
     └── brain_reflect_enhanced - AI-powered reflection
 
-Total: 24 MCP Tools
+Total: 27 MCP Tools
 ```
 
 **Documentation:**
@@ -1471,7 +1549,7 @@ Total: 24 MCP Tools
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: v2.9.0 - 24 Production-Ready MCP Tools
+### Current Status: v2.10.0 - 27 Production-Ready MCP Tools
 
 **👁️ Eyes (4 tools)** - Visual Analysis & Document Processing
 - ✅ Image, video, GIF analysis with UI debugging and accessibility auditing
@@ -1479,12 +1557,13 @@ Total: 24 MCP Tools
 - ✅ Document processing for 12+ formats (PDF, DOCX, XLSX, PPTX, etc.)
 - ✅ Document summarization and content extraction
 
-**✋ Hands (13 tools)** - Content Generation & Image Editing
+**✋ Hands (16 tools)** - Content Generation, Image Editing & Browser Automation
 - ✅ Image generation with Gemini Imagen API (5 styles, 5 aspect ratios)
 - ✅ Video generation with Gemini Veo 3.0 API (duration, FPS, camera controls)
 - ✅ AI-powered image editing: inpainting, outpainting, style transfer, composition
 - ✅ Fast local Jimp processing: crop, resize, rotate, mask
 - ✅ AI background removal with 3 quality models
+- ✅ Browser automation: full page, viewport, and element screenshots with Playwright
 
 **🗣️ Mouth (4 tools)** - Speech Generation
 - ✅ Text-to-speech with 30+ voices and 24 languages
@@ -1506,27 +1585,28 @@ Only remaining capability to complete the human sensory suite:
 - Audio quality assessment and debugging
 - Support for 20+ audio formats (WAV, MP3, AAC, OGG, FLAC)
 
-**Note:** Phases 1, 2, 4, 5, and 6 are complete with 24 production-ready tools
+**Note:** Phases 1, 2, 4, 5, and 6 are complete with 27 production-ready tools
 
-### System Architecture (v2.9.0)
+### System Architecture (v2.10.0)
 
-Complete human-like capabilities through 24 MCP tools:
+Complete human-like capabilities through 27 MCP tools:
 
 ```
 ┌─────────────────┐    ┌──────────────────────────┐    ┌─────────────────────────┐
 │   AI Agent      │◄──►│    Human MCP Server      │◄──►│  Google AI Services     │
-│  (MCP Client)   │    │        v2.9.0            │    │ • Gemini 2.5 Flash      │
+│  (MCP Client)   │    │        v2.10.0           │    │ • Gemini 2.5 Flash      │
 └─────────────────┘    │                          │    │ • Gemini Imagen API     │
                        │  👁️ Eyes (4 tools) ✅   │    │ • Gemini Veo 3.0 API    │
                        │  • Visual Analysis        │    │ • Gemini Speech API     │
                        │  • Document Processing    │    └─────────────────────────┘
                        │                          │
-                       │  ✋ Hands (13 tools) ✅  │    ┌─────────────────────────┐
+                       │  ✋ Hands (16 tools) ✅  │    ┌─────────────────────────┐
                        │  • Image Generation       │    │  Processing Libraries   │
-                       │  • Video Generation       │    │ • Jimp (image proc)     │
-                       │  • AI Image Editing       │    │ • rmbg (bg removal)     │
-                       │  • Jimp Processing        │    │ • ffmpeg (video)        │
-                       │  • Background Removal     │    │ • Sharp (GIF)           │
+                       │  • Video Generation       │    │ • Playwright (browser)  │
+                       │  • AI Image Editing       │    │ • Jimp (image proc)     │
+                       │  • Jimp Processing        │    │ • rmbg (bg removal)     │
+                       │  • Background Removal     │    │ • ffmpeg (video)        │
+                       │  • Browser Automation     │    │ • Sharp (GIF)           │
                        │                          │    └─────────────────────────┘
                        │  🗣️ Mouth (4 tools) ✅   │
                        │  • Text-to-Speech         │
@@ -1546,6 +1626,7 @@ Complete human-like capabilities through 24 MCP tools:
 
 **For Developers:**
 - Visual debugging with UI bug detection and accessibility auditing
+- Automated web screenshots for testing and documentation
 - Document processing for technical specifications and reports
 - AI-powered image and video generation for prototyping
 - Advanced image editing without complex tools
@@ -1554,27 +1635,29 @@ Complete human-like capabilities through 24 MCP tools:
 
 **For AI Agents:**
 - Human-like multimodal understanding (vision, speech, documents)
+- Automated web interaction and screenshot capture
 - Creative content generation (images, videos, speech)
 - Advanced image editing capabilities (inpainting, style transfer, etc.)
 - Fast local image processing (crop, resize, rotate, mask)
 - Complex reasoning with thought revision and reflection
 - Pattern-based analysis for common problems
 
-### Current Achievements (v2.9.0)
+### Current Achievements (v2.10.0)
 
 **Completed Phases:**
 - ✅ Phase 1: Eyes - Visual Analysis (4 tools)
 - ✅ Phase 2: Document Understanding (integrated into Eyes)
 - ✅ Phase 4: Mouth - Speech Generation (4 tools)
-- ✅ Phase 5: Hands - Content Generation & Image Editing (13 tools)
+- ✅ Phase 5: Hands - Content Generation, Image Editing & Browser Automation (16 tools)
 - ✅ Phase 6: Brain - Advanced Reasoning (3 tools)
 
 **Remaining:**
 - ⏳ Phase 3: Ears - Audio Processing (planned Q1 2025)
 
 **Goals Achieved:**
-- ✅ 24 production-ready MCP tools
+- ✅ 27 production-ready MCP tools
 - ✅ Support for 30+ file formats (images, videos, documents, audio)
+- ✅ Browser automation for automated web screenshots
 - ✅ Sub-30 second response times for most operations
 - ✅ Professional-grade content generation (images, videos, speech)
 - ✅ Advanced reasoning with native + AI-powered tools
