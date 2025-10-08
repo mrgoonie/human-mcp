@@ -107,9 +107,10 @@ This launches a web interface for testing tool functionality interactively.
 - Use `bun` instead of `npm` or `yarn` or `pnpm` for package management
 - Use `context7` mcp tools for exploring latest docs of plugins/packages
 - Use `eyes` mcp tools for describing details of screenshots, images, videos, documents, etc.
-- Use `hands` mcp tools for: 
+- Use `hands` mcp tools for:
   - Generating images, videos, documents, etc.
   - Editing images: cropping, rotating, resizing, removing background, etc.
+  - Capturing web screenshots: full page, viewport, or specific elements using Playwright
 - Use `brain` mcp tools for sequential thinking, analyzing code, debugging, etc.
 - Follow [these principles](https://www.anthropic.com/engineering/writing-tools-for-agents) to write effective tools for AI agents.
 

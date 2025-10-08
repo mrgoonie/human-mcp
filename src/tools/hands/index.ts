@@ -10,6 +10,9 @@ import {
   JimpRotateInputSchema,
   JimpMaskInputSchema,
   BackgroundRemovalInputSchema,
+  PlaywrightFullPageScreenshotInputSchema,
+  PlaywrightViewportScreenshotInputSchema,
+  PlaywrightElementScreenshotInputSchema,
   type ImageGenerationInput,
   type VideoGenerationInput,
   type ImageEditingInput,
@@ -17,13 +20,21 @@ import {
   type JimpResizeInput,
   type JimpRotateInput,
   type JimpMaskInput,
-  type BackgroundRemovalInput
+  type BackgroundRemovalInput,
+  type PlaywrightFullPageScreenshotInput,
+  type PlaywrightViewportScreenshotInput,
+  type PlaywrightElementScreenshotInput
 } from "./schemas.js";
 import { generateImage } from "./processors/image-generator.js";
 import { generateVideo, generateImageToVideo, pollVideoGeneration } from "./processors/video-generator.js";
 import { editImage } from "./processors/image-editor.js";
 import { cropImage, resizeImage, rotateImage, maskImage } from "./processors/jimp-processor.js";
 import { removeImageBackground } from "./processors/background-remover.js";
+import {
+  captureFullPageScreenshot,
+  captureViewportScreenshot,
+  captureElementScreenshot
+} from "./processors/playwright-screenshot.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
@@ -497,6 +508,117 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       } catch (error) {
         const mcpError = handleError(error);
         logger.error(`Tool rmbg_remove_background error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register playwright_screenshot_fullpage tool
+  server.registerTool(
+    "playwright_screenshot_fullpage",
+    {
+      title: "Playwright Full Page Screenshot Tool",
+      description: "Capture full page screenshot including scrollable content using Playwright",
+      inputSchema: {
+        url: z.string().url().describe("URL of the webpage to capture"),
+        format: z.enum(["png", "jpeg"]).optional().default("png").describe("Screenshot format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100), only applicable for jpeg format"),
+        timeout: z.number().int().min(1000).max(120000).optional().default(30000).describe("Navigation timeout in milliseconds"),
+        wait_until: z.enum(["load", "domcontentloaded", "networkidle"]).optional().default("networkidle").describe("When to consider navigation successful"),
+        viewport: z.object({
+          width: z.number().int().min(320).max(3840).default(1920),
+          height: z.number().int().min(240).max(2160).default(1080)
+        }).optional().describe("Viewport dimensions")
+      }
+    },
+    async (args) => {
+      try {
+        return await handlePlaywrightFullPageScreenshot(args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool playwright_screenshot_fullpage error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register playwright_screenshot_viewport tool
+  server.registerTool(
+    "playwright_screenshot_viewport",
+    {
+      title: "Playwright Viewport Screenshot Tool",
+      description: "Capture viewport screenshot (visible area only) using Playwright",
+      inputSchema: {
+        url: z.string().url().describe("URL of the webpage to capture"),
+        format: z.enum(["png", "jpeg"]).optional().default("png").describe("Screenshot format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100), only applicable for jpeg format"),
+        timeout: z.number().int().min(1000).max(120000).optional().default(30000).describe("Navigation timeout in milliseconds"),
+        wait_until: z.enum(["load", "domcontentloaded", "networkidle"]).optional().default("networkidle").describe("When to consider navigation successful"),
+        viewport: z.object({
+          width: z.number().int().min(320).max(3840).default(1920),
+          height: z.number().int().min(240).max(2160).default(1080)
+        }).optional().describe("Viewport dimensions")
+      }
+    },
+    async (args) => {
+      try {
+        return await handlePlaywrightViewportScreenshot(args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool playwright_screenshot_viewport error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register playwright_screenshot_element tool
+  server.registerTool(
+    "playwright_screenshot_element",
+    {
+      title: "Playwright Element Screenshot Tool",
+      description: "Capture screenshot of specific element using Playwright",
+      inputSchema: {
+        url: z.string().url().describe("URL of the webpage to capture"),
+        selector: z.string().min(1).describe("CSS selector, text content, or role of the element to capture"),
+        selector_type: z.enum(["css", "text", "role"]).optional().default("css").describe("Type of selector (css, text, or role)"),
+        format: z.enum(["png", "jpeg"]).optional().default("png").describe("Screenshot format"),
+        quality: z.number().int().min(0).max(100).optional().describe("JPEG quality (0-100), only applicable for jpeg format"),
+        timeout: z.number().int().min(1000).max(120000).optional().default(30000).describe("Navigation and element wait timeout in milliseconds"),
+        wait_until: z.enum(["load", "domcontentloaded", "networkidle"]).optional().default("networkidle").describe("When to consider navigation successful"),
+        viewport: z.object({
+          width: z.number().int().min(320).max(3840).default(1920),
+          height: z.number().int().min(240).max(2160).default(1080)
+        }).optional().describe("Viewport dimensions"),
+        wait_for_selector: z.boolean().optional().default(true).describe("Wait for the selector to be visible before capturing")
+      }
+    },
+    async (args) => {
+      try {
+        return await handlePlaywrightElementScreenshot(args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool playwright_screenshot_element error:`, mcpError);
 
         return {
           content: [{
@@ -1031,6 +1153,177 @@ async function handleBackgroundRemoval(args: unknown, config: Config) {
 **Background Removal Details:**
 - Quality: ${result.quality}
 - Original Dimensions: ${result.originalDimensions.width}x${result.originalDimensions.height}
+- Format: ${result.format}
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
+  return {
+    content: formattedResponse as any,
+    isError: false
+  };
+}
+
+async function handlePlaywrightFullPageScreenshot(args: unknown, config: Config) {
+  const input = PlaywrightFullPageScreenshotInputSchema.parse(args) as PlaywrightFullPageScreenshotInput;
+
+  logger.info(`Capturing full page screenshot of: ${input.url}`);
+
+  const result = await captureFullPageScreenshot({
+    url: input.url,
+    format: input.format,
+    quality: input.quality,
+    timeout: input.timeout,
+    waitUntil: input.wait_until,
+    viewport: input.viewport,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'playwright-fullpage'
+  }, config);
+
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.screenshot.startsWith('data:')) {
+    const matches = result.screenshot.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
+
+  // Format response based on transport type
+  const contextText = `✅ Full page screenshot captured successfully
+
+**Screenshot Details:**
+- URL: ${result.url}
+- Format: ${result.format}
+- Viewport: ${result.viewport.width}x${result.viewport.height}${result.fullPageDimensions ? `\n- Full Page Dimensions: ${result.fullPageDimensions.width}x${result.fullPageDimensions.height}` : ''}
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
+  return {
+    content: formattedResponse as any,
+    isError: false
+  };
+}
+
+async function handlePlaywrightViewportScreenshot(args: unknown, config: Config) {
+  const input = PlaywrightViewportScreenshotInputSchema.parse(args) as PlaywrightViewportScreenshotInput;
+
+  logger.info(`Capturing viewport screenshot of: ${input.url}`);
+
+  const result = await captureViewportScreenshot({
+    url: input.url,
+    format: input.format,
+    quality: input.quality,
+    timeout: input.timeout,
+    waitUntil: input.wait_until,
+    viewport: input.viewport,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'playwright-viewport'
+  }, config);
+
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.screenshot.startsWith('data:')) {
+    const matches = result.screenshot.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
+
+  // Format response based on transport type
+  const contextText = `✅ Viewport screenshot captured successfully
+
+**Screenshot Details:**
+- URL: ${result.url}
+- Format: ${result.format}
+- Viewport: ${result.viewport.width}x${result.viewport.height}
+- Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      base64: base64Data,
+      mimeType: mimeType,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
+  return {
+    content: formattedResponse as any,
+    isError: false
+  };
+}
+
+async function handlePlaywrightElementScreenshot(args: unknown, config: Config) {
+  const input = PlaywrightElementScreenshotInputSchema.parse(args) as PlaywrightElementScreenshotInput;
+
+  logger.info(`Capturing element screenshot of: ${input.url}, selector: ${input.selector}`);
+
+  const result = await captureElementScreenshot({
+    url: input.url,
+    selector: input.selector,
+    selectorType: input.selector_type,
+    format: input.format,
+    quality: input.quality,
+    timeout: input.timeout,
+    waitUntil: input.wait_until,
+    viewport: input.viewport,
+    waitForSelector: input.wait_for_selector,
+    saveToFile: true, // Always save to file to reduce token usage
+    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
+    filePrefix: 'playwright-element'
+  }, config);
+
+  // Extract base64 data from data URI if present
+  let base64Data: string | undefined;
+  let mimeType: string | undefined;
+
+  if (result.screenshot.startsWith('data:')) {
+    const matches = result.screenshot.match(/data:([^;]+);base64,(.+)/);
+    if (matches && matches[1] && matches[2]) {
+      mimeType = matches[1];
+      base64Data = matches[2];
+    }
+  }
+
+  // Format response based on transport type
+  const contextText = `✅ Element screenshot captured successfully
+
+**Screenshot Details:**
+- URL: ${result.url}
+- Selector: ${result.selector} (${result.selectorType})${result.elementDimensions ? `\n- Element Dimensions: ${result.elementDimensions.width}x${result.elementDimensions.height}\n- Element Position: (${result.elementDimensions.x}, ${result.elementDimensions.y})` : ''}
 - Format: ${result.format}
 - Processing Time: ${result.processingTime}ms${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
 
