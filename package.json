@@ -10,8 +10,9 @@
   },
   "scripts": {
     "dev": "bun run --watch src/index.ts 2>&1 | tee -a ./logs.txt",
-    "build": "bun build src/index.ts --target=node --outdir=dist --external=onnxruntime-node --external=sharp --sourcemap 2>&1 | tee -a ./logs.txt",
+    "build": "bun build src/index.ts --target=node --outdir=dist --external=onnxruntime-node --external=sharp --external=playwright --external=playwright-core --external=@playwright/test --sourcemap 2>&1 | tee -a ./logs.txt",
     "start": "bun run dist/index.js 2>&1 | tee -a ./logs.txt",
+    "postinstall": "node scripts/postinstall.js",
     "test": "TEST_TYPE=all bun test 2>&1 | tee -a ./logs.txt",
     "test:unit": "TEST_TYPE=unit bun test tests/unit/ 2>&1 | tee -a ./logs.txt",
     "test:integration": "TEST_TYPE=integration bun test tests/integration/ 2>&1 | tee -a ./logs.txt",
@@ -74,6 +75,7 @@
   "files": [
     "dist",
     "bin",
+    "scripts",
     "node_modules/onnxruntime-node/bin",
     "node_modules/sharp/build",
     "README.md",
