@@ -2,136 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Role & Responsibilities
 
-Human MCP is a Model Context Protocol server that provides AI coding agents with visual analysis capabilities for debugging UI issues, processing screenshots, videos, and GIFs using Google Gemini AI.
+Your role is to analyze user requirements, delegate tasks to appropriate sub-agents, and ensure cohesive delivery of features that meet specifications and architectural standards.
 
-## Development Commands
+## Workflows
 
-### Core Commands
-- `bun run dev` - Start development server with hot reload
-- `bun run build` - Build for production (outputs to dist/)
-- `bun run start` - Run production build
-- `bun test` - Run test suite
-- `bun run typecheck` - Run TypeScript type checking
-- `bun run inspector` - Launch MCP inspector for testing tools
+- Primary workflow: `./.claude/workflows/primary-workflow.md`
+- Development rules: `./.claude/workflows/development-rules.md`
+- Orchestration protocols: `./.claude/workflows/orchestration-protocol.md`
+- Documentation management: `./.claude/workflows/documentation-management.md`
 
-### Testing with MCP Inspector
-The inspector tool is crucial for testing MCP tools during development:
-```bash
-bun run inspector
+**IMPORTANT:** You must follow strictly the development rules in `./.claude/workflows/development-rules.md` file.
+**IMPORTANT:** Before you plan or proceed any implementation, always read the `./README.md` file first to get context.
+
+## Documentation Management
+
+We keep all important docs in `./docs` folder and keep updating them, structure like below:
+
 ```
-
-## Architecture
-
-### Core Structure
+./docs
+├── project-overview-pdr.md
+├── code-standards.md
+├── codebase-summary.md
+├── design-guidelines.md
+├── deployment-guide.md
+├── system-architecture.md
+└── project-roadmap.md
 ```
-src/
-├── index.ts          # Entry point, starts stdio server
-├── server.ts         # MCP server setup and initialization  
-├── tools/eyes/       # Vision analysis tools (main functionality)
-├── prompts/          # Pre-built debugging prompts
-├── resources/        # Documentation resources
-└── utils/           # Configuration, logging, error handling
-```
-
-### Docs
-- [Project Overview / PDR](project-overview-pdr.md)
-- [Project Roadmap](project-roadmap.md)
-- [Codebase Summary](codebase-summary.md)
-- [Codebase Structure & Code Standards](codebase-structure-architecture-code-standards.md)
-
-### Key Components
-
-**Configuration (utils/config.ts)**
-- Environment-based configuration using Zod validation
-- Required: `GOOGLE_GEMINI_API_KEY`
-- Optional settings for timeouts, caching, rate limits
-
-## MCP Tools
-
-**Important**: Tool names must comply with MCP validation pattern `^[a-zA-Z0-9_-]{1,64}$`. Only alphanumeric characters, underscores, and hyphens are allowed. No dots, spaces, or other special characters.
-
-## Important Development Notes
-
-### Google Gemini Documentation
-- [Gemini API](https://ai.google.dev/gemini-api/docs?hl=en)
-- [Gemini Models](https://ai.google.dev/gemini-api/docs/models)
-- [Video Understanding](https://ai.google.dev/gemini-api/docs/video-understanding?hl=en)
-- [Image Understanding](https://ai.google.dev/gemini-api/docs/image-understanding)
-- [Document Understanding](https://ai.google.dev/gemini-api/docs/document-processing)
-- [Audio Understanding](https://ai.google.dev/gemini-api/docs/audio)
-- [Speech Generation](https://ai.google.dev/gemini-api/docs/speech-generation)
-- [Image Generation](https://ai.google.dev/gemini-api/docs/image-generation)
-- [Video Generation](https://ai.google.dev/gemini-api/docs/video)
-
-### Error Handling
-- All tool operations use centralized error handling via `utils/errors.ts`
-- Errors are logged and returned as structured MCP responses
-- Network timeouts are configurable via environment variables
-
-### Media Processing
-- Images: PNG, JPEG, WebP, GIF (static)
-- Videos: MP4, WebM, MOV, AVI (uses ffmpeg via fluent-ffmpeg)  
-- GIFs: Frame extraction using Sharp library
-- All processors handle file paths, URLs, and base64 data
-
-### TypeScript Configuration
-- Uses ESNext modules with bundler resolution
-- Path mapping: `@/*` maps to `src/*`
-- Strict type checking enabled
-- No emit mode (Bun handles compilation)
-
-### Google Gemini Integration
-- Uses Google Generative AI SDK
-- Model selection based on detail level
-- Configurable via `GOOGLE_GEMINI_MODEL` environment variable
-- Default: `gemini-2.5-flash`
-
-## Testing
-
-Run tests with `bun test`. The project uses Bun's built-in test runner.
-
-For manual testing of MCP tools, use the inspector:
-```bash
-bun run inspector
-```
-
-This launches a web interface for testing tool functionality interactively.
-
----
-
-## Development Rules
-
-### General
-- Use `bun` instead of `npm` or `yarn` or `pnpm` for package management
-- Use `context7` mcp tools for exploring latest docs of plugins/packages
-- Use `eyes` mcp tools for describing details of screenshots, images, videos, documents, etc.
-- Use `hands` mcp tools for:
-  - Generating images, videos, documents, etc.
-  - Editing images: cropping, rotating, resizing, removing background, etc.
-  - Capturing web screenshots: full page, viewport, or specific elements using Playwright
-- Use `brain` mcp tools for sequential thinking, analyzing code, debugging, etc.
-- Follow [these principles](https://www.anthropic.com/engineering/writing-tools-for-agents) to write effective tools for AI agents.
-
-### Code Quality Guidelines
-- Read and follow strictly codebase structure and code standards in `./docs`
-- Don't be too harsh on code linting, but make sure there are no syntax errors and code are compilable
-- Prioritize functionality and readability over strict style enforcement and code formatting
-- Use reasonable code quality standards that enhance developer productivity
-- Use try catch error handling & cover security standards
-- Use `code-reviewer` agent to review code after every implementation
-- Always use `debugger` agent to analyze `./logs.txt` to find possible root causes and provide a report with solutions.
-- Use `bun run typecheck` to check type errors and fix them all.
-- Make sure the code is compilable and runs successfully without any errors.
-
-### Pre-commit/Push Rules
-- Run linting before commit
-- Run tests before push (DO NOT ignore failed tests just to pass the build or github actions)
-- Keep commits focused on the actual code changes
-- **DO NOT** commit and push any confidential information (such as dotenv files, API keys, database credentials, etc.) to git repository!
-- NEVER automatically add AI attribution signatures like:
-  "🤖 Generated with [Claude Code]"
-  "Co-Authored-By: Claude noreply@anthropic.com"
-  Any AI tool attribution or signature
-- Create clean, professional commit messages without AI references. Use conventional commit format.

@@ -57,7 +57,7 @@ You operate by the holy trinity of software engineering: **YAGNI** (You Aren't G
 ## Collaboration Tools
 - Consult the `planner` agent to research industry best practices and find proven solutions
 - Engage the `docs-manager` agent to understand existing project implementation and constraints
-- Use `Search Google` tool from `searchapi` MCP server to find efficient approaches and learn from others' experiences
+- Use `WebSearch` tool to find efficient approaches and learn from others' experiences
 - Use `context7` MCP tools to read latest documentation of external plugins/packages
 - Leverage `eyes_analyze` from Human MCP to analyze visual materials and mockups
 - Query `psql` command to understand current database structure and existing data
