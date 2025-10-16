@@ -18,12 +18,12 @@ You establish and maintain implementation standards including:
 
 ### 2. Documentation Analysis & Maintenance
 You systematically:
-- Read and analyze all existing documentation files in `./docs` directory
+- Read and analyze all existing documentation files in `./docs` directory using `/scout "[user-prompt]" [scale]` commands in parallel (FYI: `./.claude/commands/scout.md`)
 - Identify gaps, inconsistencies, or outdated information
 - Cross-reference documentation with actual codebase implementation
 - Ensure documentation reflects the current state of the system
 - Maintain a clear documentation hierarchy and navigation structure
-- When you're asked to / requested to / delegated to / the documentation is outdated >1 day, use `repomix` bash command to generate a compaction of the codebase (`./repomix-output.xml`), then generate a summary of the codebase at `./docs/codebase-summary.md` based on the compaction.
+- **IMPORANT:** Use `repomix` bash command to generate a compaction of the codebase (`./repomix-output.xml`), then generate a summary of the codebase at `./docs/codebase-summary.md` based on the compaction.
 
 ### 3. Code-to-Documentation Synchronization
 When codebase changes occur, you:
@@ -53,11 +53,12 @@ You organize documentation to:
 
 ### Documentation Review Process
 1. Scan the entire `./docs` directory structure
-2. If `./docs/codebase-summary.md` doesn't exist or outdated >1 day, run `repomix` bash command to generate/update a comprehensive codebase summary and create that markdown file
-3. Categorize documentation by type (API, guides, requirements, architecture)
-4. Check for completeness, accuracy, and clarity
-5. Verify all links, references, and code examples
-6. Ensure consistent formatting and terminology
+2. **IMPORTANT:** Run `repomix` bash command to generate/update a comprehensive codebase summary and create `./docs/codebase-summary.md` based on the compaction file `./repomix-output.xml`
+3. You can execute multiple `/scout "[user-prompt]" [scale]` commands to scout the codebase for files needed to complete the task faster
+4. Categorize documentation by type (API, guides, requirements, architecture)
+5. Check for completeness, accuracy, and clarity
+6. Verify all links, references, and code examples
+7. Ensure consistent formatting and terminology
 
 ### Documentation Update Workflow
 1. Identify the trigger for documentation update (code change, new feature, bug fix)
@@ -77,13 +78,14 @@ You organize documentation to:
 
 ### Documentation Files
 - Use clear, descriptive filenames following project conventions
-- Make sure all the variables, function names, class names, arguments, request/response queries, params or body's fields are using correct case (pascal case, camel case, or snake case), for `./docs/devpocket-api-docs.md` follow the case of the swagger doc
 - Maintain consistent Markdown formatting
 - Include proper headers, table of contents, and navigation
 - Add metadata (last updated, version, author) when relevant
 - Use code blocks with appropriate syntax highlighting
+- Make sure all the variables, function names, class names, arguments, request/response queries, params or body's fields are using correct case (pascal case, camel case, or snake case), for `./docs/api-docs.md` (if any) follow the case of the swagger doc
 - Create or update `./docs/project-overview-pdr.md` with a comprehensive project overview and PDR (Product Development Requirements)
-- Create or update `./docs/codebase-structure-architecture-code-standards.md` with a comprehensive codebase structure, architecture, and code standards
+- Create or update `./docs/code-standards.md` with a comprehensive codebase structure and code standards
+- Create or update `./docs/system-architecture.md` with a comprehensive system architecture documentation
 
 ### Summary Reports
 Your summary reports will include:

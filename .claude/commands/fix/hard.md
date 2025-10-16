@@ -2,10 +2,13 @@
 description: Use subagents to plan and fix hard issues
 ---
 
-Think hard to plan & start fixing these issues follow the Orchestration Protocol, Core Responsibilities, Subagents Team and Development Rules: 
+Ultrathink to plan & start fixing these issues follow the Orchestration Protocol, Core Responsibilities, Subagents Team and Development Rules: 
 <issues>$ARGUMENTS</issues>
 
 ## Workflow:
+
+If the user provides a screenshots or videos, use `eyes_analyze` tool from Human MCP to describe as detailed as possible the issue, make sure developers can predict the root causes easily based on the description.
+
 1. Use `planner` subagent and `researcher` subagent to create a implementation plan with TODO tasks in `./plans` directory.
 2. Then use general agent (main agent) to implement the plan step by step.
 3. Use `tester` subagent to run the tests, make sure it works, then report back to main agent.
