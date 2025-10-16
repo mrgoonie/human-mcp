@@ -1,3 +1,10 @@
+# [2.13.0](https://github.com/mrgoonie/human-mcp/compare/v2.12.1...v2.13.0) (2025-10-16)
+
+
+### Features
+
+* improve UI/UX designer agent with enhanced tools and workflow clarity ([cd57703](https://github.com/mrgoonie/human-mcp/commit/cd57703442b96c189f259e9ebe438d22cdf3f8ca))
+
 ## [2.12.1](https://github.com/mrgoonie/human-mcp/compare/v2.12.0...v2.12.1) (2025-10-08)
 
 
