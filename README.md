@@ -1702,6 +1702,12 @@ Human MCP is built for the developer community. Whether you're integrating with 
 - **AI Reflection**: Complex meta-cognitive analysis for improving reasoning quality
 - **Output Formats**: Structured thought chains, pattern-based solutions, improvement recommendations
 
+---
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mrgoonie/human-mcp&type=date&legend=top-left)](https://www.star-history.com/#mrgoonie/human-mcp&type=date&legend=top-left)
+
 ## Contributing
 
 1. Fork the repository
@@ -1729,7 +1735,5 @@ Comprehensive documentation is available in the `/docs` directory:
 - 💡 [Examples](humanmcp://examples/debugging) - Usage examples and debugging workflows
 - 🐛 [Issues](https://github.com/human-mcp/human-mcp/issues) - Report bugs and request features
 - 💬 [Discussions](https://github.com/human-mcp/human-mcp/discussions) - Community discussions
-
----
 
 **Human MCP** - Making visual debugging as natural as asking a human to look at your screen.
