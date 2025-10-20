@@ -126,6 +126,104 @@ curl -H "Content-Type: application/json" \
      -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY"
 ```
 
+### Choosing Your Gemini Provider
+
+Human MCP supports two ways to access Google's Gemini models:
+
+#### Option 1: Google AI Studio (Default - Recommended for Getting Started)
+
+**Best for:** Quick start, development, prototyping
+
+**Setup:**
+1. Get your API key from [Google AI Studio](https://aistudio.google.com/)
+2. Set environment variable: `export GOOGLE_GEMINI_API_KEY=your_api_key`
+
+**Pros:**
+- Simple setup (just one API key)
+- No GCP account required
+- Free tier available
+- Perfect for development and testing
+
+#### Option 2: Vertex AI (Recommended for Production)
+
+**Best for:** Production deployments, enterprise use, GCP integration
+
+**Setup:**
+1. Create a GCP project and enable Vertex AI API
+2. Set up authentication:
+   ```bash
+   # Option A: Application Default Credentials (for local dev)
+   gcloud auth application-default login
+
+   # Option B: Service Account (for production)
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+   ```
+3. Set environment variables:
+   ```bash
+   export USE_VERTEX=1
+   export VERTEX_PROJECT_ID=your-gcp-project-id
+   export VERTEX_LOCATION=us-central1  # optional, defaults to us-central1
+   ```
+
+**Pros:**
+- Enterprise-grade quotas and SLAs
+- Better integration with GCP services
+- Advanced IAM and security controls
+- Usage tracking via Cloud Console
+- Better for production workloads
+
+**Configuration Example (Claude Desktop):**
+
+```json
+{
+  "mcpServers": {
+    "human-mcp-vertex": {
+      "command": "npx",
+      "args": ["@goonnguyen/human-mcp"],
+      "env": {
+        "USE_VERTEX": "1",
+        "VERTEX_PROJECT_ID": "your-gcp-project-id",
+        "VERTEX_LOCATION": "us-central1"
+      }
+    }
+  }
+}
+```
+
+**Note:** With Vertex AI, you don't need `GOOGLE_GEMINI_API_KEY` - authentication is handled by GCP credentials.
+
+#### Vertex AI Authentication Methods
+
+**1. Application Default Credentials (ADC)** - Best for local development
+```bash
+gcloud auth application-default login
+```
+
+**2. Service Account** - Best for production
+```bash
+# Download service account JSON from GCP Console
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+```
+
+**3. Workload Identity** - Best for GKE deployments
+- Automatically configured when running on GKE
+- No credentials file needed
+- Recommended for Kubernetes deployments
+
+**Troubleshooting Vertex AI:**
+
+If you encounter authentication errors:
+1. Verify your GCP project ID: `gcloud config get-value project`
+2. Check ADC status: `gcloud auth application-default print-access-token`
+3. Ensure Vertex AI API is enabled: Visit [Vertex AI Console](https://console.cloud.google.com/vertex-ai)
+4. Verify IAM permissions: Your account needs `Vertex AI User` role
+
+**Cost Considerations:**
+
+Both Google AI Studio and Vertex AI use the same Gemini models and pricing, but:
+- Google AI Studio: Generous free tier for testing
+- Vertex AI: Production-grade quotas, better for high-volume usage
+
 #### Alternative Methods for API Key
 
 **Using Google Cloud Console:**

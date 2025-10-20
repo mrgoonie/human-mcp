@@ -25,6 +25,7 @@
     "@aws-sdk/client-s3": "^3.888.0",
     "@aws-sdk/s3-request-presigner": "^3.888.0",
     "@google/generative-ai": "^0.21.0",
+    "@google-cloud/vertexai": "^1.7.0",
     "@modelcontextprotocol/sdk": "^1.4.0",
     "@playwright/test": "^1.56.0",
     "@types/wav": "^1.0.4",
