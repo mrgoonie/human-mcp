@@ -1,3 +1,11 @@
+# [2.14.0](https://github.com/mrgoonie/human-mcp/compare/v2.13.0...v2.14.0) (2025-10-20)
+
+
+### Features
+
+* **gemini:** add Vertex AI authentication support for speech generation ([433666d](https://github.com/mrgoonie/human-mcp/commit/433666ded9cea897bf146f30e1922ad007037520))
+* **gemini:** add Vertex AI provider support with environment configuration ([9ad68dc](https://github.com/mrgoonie/human-mcp/commit/9ad68dc387a1b9b30a4a0075181448368439ad9a))
+
 # [2.13.0](https://github.com/mrgoonie/human-mcp/compare/v2.12.1...v2.13.0) (2025-10-16)
 
 
