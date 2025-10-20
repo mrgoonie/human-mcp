@@ -1436,6 +1436,7 @@ Extract as much metadata as possible from the document properties and content.`;
 
   /**
    * Generate speech from text using Gemini Speech Generation API
+   * Supports both Google AI Studio (API key) and Vertex AI (ADC) authentication
    */
   async generateSpeech(
     text: string,
@@ -1454,16 +1455,13 @@ Extract as much metadata as possible from the document properties and content.`;
         stylePrompt
       } = options;
 
-      logger.debug(`Generating speech with voice: ${voice}, model: ${model}, language: ${language}`);
+      logger.debug(`Generating speech with voice: ${voice}, model: ${model}, language: ${language} (provider: ${this.provider.getProviderName()})`);
 
       // Build prompt with style if provided
       let prompt = text;
       if (stylePrompt) {
         prompt = `${stylePrompt}: ${text}`;
       }
-
-      // Use direct fetch to the TTS API since the SDK doesn't support TTS yet
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
       const requestBody = {
         contents: [{
@@ -1481,18 +1479,65 @@ Extract as much metadata as possible from the document properties and content.`;
         }
       };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': this.config.gemini.apiKey || ''
-        },
-        body: JSON.stringify(requestBody)
-      });
+      let response: Response;
+
+      // Use provider-specific authentication
+      if (this.config.gemini.useVertexAI) {
+        // Vertex AI mode - use Vertex AI endpoint with ADC
+        const location = this.config.gemini.vertexLocation;
+        const projectId = this.config.gemini.vertexProjectId;
+        const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:generateContent`;
+
+        // Get access token from Application Default Credentials
+        const { GoogleAuth } = await import('google-auth-library');
+        const auth = new GoogleAuth({
+          scopes: ['https://www.googleapis.com/auth/cloud-platform']
+        });
+        const client = await auth.getClient();
+        const accessToken = await client.getAccessToken();
+
+        if (!accessToken.token) {
+          throw new APIError(
+            "Failed to obtain access token from Application Default Credentials. " +
+            "Please run 'gcloud auth application-default login' or set GOOGLE_APPLICATION_CREDENTIALS."
+          );
+        }
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken.token}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+      } else {
+        // Google AI Studio mode - use API key authentication
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+        if (!this.config.gemini.apiKey) {
+          throw new APIError(
+            "Google Gemini API key is required for speech generation in Google AI Studio mode. " +
+            "Set GOOGLE_GEMINI_API_KEY environment variable."
+          );
+        }
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': this.config.gemini.apiKey
+          },
+          body: JSON.stringify(requestBody)
+        });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new APIError(`HTTP ${response.status}: ${errorText}`);
+        throw new APIError(
+          `Speech generation failed (${response.status}): ${errorText}. ` +
+          `Provider: ${this.provider.getProviderName()}`
+        );
       }
 
       const result = await response.json() as any;
