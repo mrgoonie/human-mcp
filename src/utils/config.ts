@@ -2,9 +2,13 @@ import { z } from "zod";
 
 const ConfigSchema = z.object({
   gemini: z.object({
-    apiKey: z.string().min(1, "Google Gemini API key is required"),
+    apiKey: z.string().optional(), // Optional since Vertex AI doesn't need it
     model: z.string().default("gemini-2.5-flash"),
     imageModel: z.string().default("gemini-2.5-flash-image-preview"),
+    // Vertex AI configuration
+    useVertexAI: z.boolean().default(false),
+    vertexProjectId: z.string().optional(),
+    vertexLocation: z.string().default("us-central1"),
   }),
   transport: z.object({
     type: z.enum(["stdio", "http", "both"]).default("stdio"),
@@ -80,19 +84,27 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export function loadConfig(): Config {
-  const corsOrigins = process.env.HTTP_CORS_ORIGINS ? 
-    process.env.HTTP_CORS_ORIGINS.split(',').map(origin => origin.trim()) : 
+  const corsOrigins = process.env.HTTP_CORS_ORIGINS ?
+    process.env.HTTP_CORS_ORIGINS.split(',').map(origin => origin.trim()) :
     undefined;
-  
-  const allowedHosts = process.env.HTTP_ALLOWED_HOSTS ? 
-    process.env.HTTP_ALLOWED_HOSTS.split(',').map(host => host.trim()) : 
+
+  const allowedHosts = process.env.HTTP_ALLOWED_HOSTS ?
+    process.env.HTTP_ALLOWED_HOSTS.split(',').map(host => host.trim()) :
     ["127.0.0.1", "localhost"];
+
+  // Check if using Vertex AI
+  const useVertexAI = process.env.USE_VERTEX === "1" || process.env.USE_VERTEX === "true";
 
   return ConfigSchema.parse({
     gemini: {
+      // API key is optional when using Vertex AI
       apiKey: process.env.GOOGLE_GEMINI_API_KEY || "",
       model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.5-flash",
       imageModel: process.env.GOOGLE_GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image-preview",
+      // Vertex AI config
+      useVertexAI,
+      vertexProjectId: process.env.VERTEX_PROJECT_ID,
+      vertexLocation: process.env.VERTEX_LOCATION || "us-central1",
     },
     transport: {
       type: (process.env.TRANSPORT_TYPE as any) || "stdio",

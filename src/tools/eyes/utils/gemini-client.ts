@@ -2,6 +2,9 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import type { Config } from "@/utils/config";
 import { logger } from "@/utils/logger";
 import { APIError } from "@/utils/errors";
+import type { IGeminiProvider } from "./gemini-provider.js";
+import { GoogleAIStudioProvider } from "./providers/google-ai-studio-provider.js";
+import { VertexAIProvider } from "./providers/vertex-ai-provider.js";
 
 // Document processing types
 interface ProcessOptions {
@@ -103,14 +106,38 @@ interface Heading {
 }
 
 export class GeminiClient {
-  private genAI: GoogleGenerativeAI;
+  private provider: IGeminiProvider;
   private documentCache: Map<string, { data: any; timestamp: number }> = new Map();
 
   constructor(private config: Config) {
-    if (!config.gemini.apiKey) {
-      throw new APIError("Google Gemini API key is required");
+    // Initialize the appropriate provider based on configuration
+    if (config.gemini.useVertexAI) {
+      // Vertex AI mode
+      if (!config.gemini.vertexProjectId) {
+        throw new APIError(
+          "Vertex AI mode enabled (USE_VERTEX=1) but VERTEX_PROJECT_ID is not set. " +
+          "Please set VERTEX_PROJECT_ID environment variable."
+        );
+      }
+
+      this.provider = new VertexAIProvider(
+        config.gemini.vertexProjectId,
+        config.gemini.vertexLocation
+      );
+
+      logger.info(`Using Vertex AI (project: ${config.gemini.vertexProjectId}, location: ${config.gemini.vertexLocation})`);
+    } else {
+      // Google AI Studio mode (default)
+      if (!config.gemini.apiKey) {
+        throw new APIError(
+          "Google Gemini API key is required. Set GOOGLE_GEMINI_API_KEY environment variable. " +
+          "Alternatively, enable Vertex AI by setting USE_VERTEX=1 and VERTEX_PROJECT_ID."
+        );
+      }
+
+      this.provider = new GoogleAIStudioProvider(config.gemini.apiKey);
+      logger.info("Using Google AI Studio");
     }
-    this.genAI = new GoogleGenerativeAI(config.gemini.apiKey);
 
     // Cache is simplified - no periodic cleanup needed
   }
@@ -120,7 +147,7 @@ export class GeminiClient {
       ? this.config.gemini.model
       : "gemini-2.5-flash";
 
-    return this.genAI.getGenerativeModel({
+    return this.provider.getGenerativeModel({
       model: modelName,
       generationConfig: {
         temperature: 0.1,
@@ -135,7 +162,7 @@ export class GeminiClient {
     // Use config.gemini.imageModel instead of hardcoded value
     const imageModelName = modelName || this.config.gemini.imageModel || "gemini-2.5-flash-image-preview";
 
-    return this.genAI.getGenerativeModel({
+    return this.provider.getGenerativeModel({
       model: imageModelName,
       generationConfig: {
         temperature: 0.7,
@@ -214,7 +241,7 @@ export class GeminiClient {
    * Get document-specific model for processing
    */
   getDocumentModel(): GenerativeModel {
-    return this.genAI.getGenerativeModel({
+    return this.provider.getGenerativeModel({
       model: this.config.documentProcessing.geminiModel,
       generationConfig: {
         temperature: 0.1,
@@ -1396,7 +1423,7 @@ Extract as much metadata as possible from the document properties and content.`;
   getSpeechModel(modelName?: string): GenerativeModel {
     const speechModelName = modelName || "gemini-2.5-flash-preview-tts";
 
-    return this.genAI.getGenerativeModel({
+    return this.provider.getGenerativeModel({
       model: speechModelName,
       generationConfig: {
         temperature: 0.7,
@@ -1409,6 +1436,7 @@ Extract as much metadata as possible from the document properties and content.`;
 
   /**
    * Generate speech from text using Gemini Speech Generation API
+   * Supports both Google AI Studio (API key) and Vertex AI (ADC) authentication
    */
   async generateSpeech(
     text: string,
@@ -1427,16 +1455,13 @@ Extract as much metadata as possible from the document properties and content.`;
         stylePrompt
       } = options;
 
-      logger.debug(`Generating speech with voice: ${voice}, model: ${model}, language: ${language}`);
+      logger.debug(`Generating speech with voice: ${voice}, model: ${model}, language: ${language} (provider: ${this.provider.getProviderName()})`);
 
       // Build prompt with style if provided
       let prompt = text;
       if (stylePrompt) {
         prompt = `${stylePrompt}: ${text}`;
       }
-
-      // Use direct fetch to the TTS API since the SDK doesn't support TTS yet
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
       const requestBody = {
         contents: [{
@@ -1454,18 +1479,65 @@ Extract as much metadata as possible from the document properties and content.`;
         }
       };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': this.config.gemini.apiKey
-        },
-        body: JSON.stringify(requestBody)
-      });
+      let response: Response;
+
+      // Use provider-specific authentication
+      if (this.config.gemini.useVertexAI) {
+        // Vertex AI mode - use Vertex AI endpoint with ADC
+        const location = this.config.gemini.vertexLocation;
+        const projectId = this.config.gemini.vertexProjectId;
+        const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:generateContent`;
+
+        // Get access token from Application Default Credentials
+        const { GoogleAuth } = await import('google-auth-library');
+        const auth = new GoogleAuth({
+          scopes: ['https://www.googleapis.com/auth/cloud-platform']
+        });
+        const client = await auth.getClient();
+        const accessToken = await client.getAccessToken();
+
+        if (!accessToken.token) {
+          throw new APIError(
+            "Failed to obtain access token from Application Default Credentials. " +
+            "Please run 'gcloud auth application-default login' or set GOOGLE_APPLICATION_CREDENTIALS."
+          );
+        }
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken.token}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+      } else {
+        // Google AI Studio mode - use API key authentication
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+        if (!this.config.gemini.apiKey) {
+          throw new APIError(
+            "Google Gemini API key is required for speech generation in Google AI Studio mode. " +
+            "Set GOOGLE_GEMINI_API_KEY environment variable."
+          );
+        }
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': this.config.gemini.apiKey
+          },
+          body: JSON.stringify(requestBody)
+        });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new APIError(`HTTP ${response.status}: ${errorText}`);
+        throw new APIError(
+          `Speech generation failed (${response.status}): ${errorText}. ` +
+          `Provider: ${this.provider.getProviderName()}`
+        );
       }
 
       const result = await response.json() as any;
@@ -1615,7 +1687,7 @@ Extract as much metadata as possible from the document properties and content.`;
   getVideoGenerationModel(modelName?: string): GenerativeModel {
     const videoModelName = modelName || "veo-3.0-generate-001";
 
-    return this.genAI.getGenerativeModel({
+    return this.provider.getGenerativeModel({
       model: videoModelName,
       generationConfig: {
         temperature: 0.7,
@@ -1624,6 +1696,16 @@ Extract as much metadata as possible from the document properties and content.`;
         maxOutputTokens: 8192,
       }
     });
+  }
+
+  /**
+   * Get provider information for logging and debugging
+   */
+  getProviderInfo(): { type: string; name: string } {
+    return {
+      type: this.provider.getProviderType(),
+      name: this.provider.getProviderName()
+    };
   }
 
   /**
