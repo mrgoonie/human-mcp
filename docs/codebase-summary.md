@@ -25305,9 +25305,10 @@ Test your API key works correctly:
 
 ```bash
 # Test with curl (optional verification)
+export GOOGLE_GEMINI_API_KEY="your_api_key_here"
 curl -H "Content-Type: application/json" \
      -d '{"contents":[{"parts":[{"text":"Hello"}]}]}' \
-     -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY"
+     -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$GOOGLE_GEMINI_API_KEY"
 ```
 
 #### Alternative Methods for API Key
