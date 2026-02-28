@@ -1,3 +1,18 @@
+# [2.15.0](https://github.com/mrgoonie/human-mcp/compare/v2.14.0...v2.15.0) (2026-02-28)
+
+
+### Bug Fixes
+
+* **ci:** remove hard dependency on CI_GITHUB_TOKEN secret ([355a7ab](https://github.com/mrgoonie/human-mcp/commit/355a7ab9a1a0b4f5eda6ecc525cb147bab30f356))
+* **ci:** restore CI_GITHUB_TOKEN for release job to bypass branch protection ([305137a](https://github.com/mrgoonie/human-mcp/commit/305137a8e3e9e5e5a517942406d68af858759d52))
+* **ci:** use default github.token for release job checkout and semantic-release ([9afc4e9](https://github.com/mrgoonie/human-mcp/commit/9afc4e91fdfb6c94ebc318749e5d404719b235a8))
+
+
+### Features
+
+* **providers:** add ElevenLabs integration for speech, SFX, and music generation ([bed1e6e](https://github.com/mrgoonie/human-mcp/commit/bed1e6e5ba59ee07ab6e2d7ea396c6266ead56fe))
+* **providers:** add Minimax, ZhipuAI providers and fix test infrastructure ([acc16f6](https://github.com/mrgoonie/human-mcp/commit/acc16f681acc25387198670f38db533556e3f008))
+
 # [2.14.0](https://github.com/mrgoonie/human-mcp/compare/v2.13.0...v2.14.0) (2025-10-20)
 
 
