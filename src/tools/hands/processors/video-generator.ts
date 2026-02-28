@@ -3,6 +3,10 @@ import type { VideoGenerationOptions, VideoGenerationResult } from "../schemas.j
 import { logger } from "@/utils/logger.js";
 import { saveBase64ToFile } from "@/utils/file-storage.js";
 import type { Config } from "@/utils/config.js";
+import { generateMinimaxVideo } from "../providers/minimax-video-provider.js";
+import { MinimaxClient } from "@/utils/minimax-client.js";
+import { generateZhipuAIVideo } from "../providers/zhipuai-video-provider.js";
+import { ZhipuAIClient } from "@/utils/zhipuai-client.js";
 
 export async function generateVideo(
   geminiClient: GeminiClient,
@@ -10,6 +14,45 @@ export async function generateVideo(
   config?: Config
 ): Promise<VideoGenerationResult> {
   const startTime = Date.now();
+
+  // Provider routing: check for Minimax provider
+  const provider = (options as any).provider || config?.providers?.video || "gemini";
+
+  if (provider === "minimax") {
+    if (!config || !MinimaxClient.isConfigured(config)) {
+      throw new Error("MINIMAX_API_KEY required when provider is 'minimax'");
+    }
+
+    const durationNum = parseDurationForMinimax(options.duration);
+
+    return generateMinimaxVideo({
+      prompt: options.prompt,
+      model: (options as any).minimax_model || "MiniMax-Hailuo-2.3",
+      duration: durationNum,
+      resolution: (options as any).resolution || "1080P",
+      firstFrameImage: options.imageInput,
+      promptOptimizer: (options as any).prompt_optimizer ?? true,
+      config,
+    });
+  }
+
+  if (provider === "zhipuai") {
+    if (!config || !ZhipuAIClient.isConfigured(config)) {
+      throw new Error("ZHIPUAI_API_KEY required when provider is 'zhipuai'");
+    }
+
+    const durationNum = parseInt(options.duration?.replace("s", "") || "5", 10);
+
+    return generateZhipuAIVideo({
+      prompt: options.prompt,
+      duration: durationNum,
+      aspectRatio: options.aspectRatio,
+      imageInput: options.imageInput,
+      fps: options.fps,
+      uploadToR2: options.uploadToR2,
+      config,
+    });
+  }
 
   try {
     logger.info(`Generating video with prompt: "${options.prompt}" using model: ${options.model}`);
@@ -198,6 +241,13 @@ export async function pollVideoGeneration(
   }
 
   throw new Error(`Video generation timed out after ${maxWaitTime / 1000} seconds`);
+}
+
+/** Convert Gemini-style duration string (e.g. "4s") to Minimax-compatible number (6 or 10) */
+function parseDurationForMinimax(duration: string): number {
+  const seconds = parseInt(duration.replace("s", ""));
+  if (seconds <= 6) return 6;
+  return 10;
 }
 
 function estimateVideoSize(duration: string, aspectRatio: string): string {

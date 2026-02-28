@@ -36,7 +36,19 @@ export const SpeechInputSchema = z.object({
   model: z.enum(SpeechModels).optional().default("gemini-2.5-flash-preview-tts").describe("Speech generation model"),
   language: z.enum(SupportedLanguages).optional().default("en-US").describe("Language for speech generation"),
   output_format: z.enum(AudioFormats).optional().default("base64").describe("Output format for generated audio"),
-  style_prompt: z.string().optional().describe("Natural language prompt to control speaking style")
+  style_prompt: z.string().optional().describe("Natural language prompt to control speaking style"),
+  provider: z.enum(["gemini", "minimax", "elevenlabs"]).optional().describe("Speech provider (default: gemini, options: minimax, elevenlabs)"),
+  minimax_voice: z.string().optional().describe("Minimax voice ID (e.g., 'English_Graceful_Lady')"),
+  minimax_model: z.enum(["speech-2.6-hd", "speech-2.6-turbo"]).optional().describe("Minimax speech model"),
+  minimax_language: z.string().optional().describe("Minimax language boost (e.g., 'English', 'auto')"),
+  emotion: z.enum(["happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral"]).optional().describe("Emotion for Minimax speech"),
+  speed: z.number().min(0.5).max(2.0).optional().describe("Speech speed (0.5-2.0, Minimax/ElevenLabs)"),
+  elevenlabs_voice: z.string().optional().describe("ElevenLabs voice name (rachel, adam, brian, etc.) or voice ID string"),
+  elevenlabs_model: z.enum(["eleven_v3", "eleven_multilingual_v2", "eleven_flash_v2_5", "eleven_turbo_v2_5"]).optional().describe("ElevenLabs TTS model"),
+  elevenlabs_language: z.string().optional().describe("ElevenLabs language code (ISO 639-1, e.g., 'en', 'es', 'fr')"),
+  stability: z.number().min(0).max(1).optional().describe("ElevenLabs voice stability (0-1, default 0.5)"),
+  similarity_boost: z.number().min(0).max(1).optional().describe("ElevenLabs voice similarity boost (0-1, default 0.75)"),
+  elevenlabs_style: z.number().min(0).max(1).optional().describe("ElevenLabs style exaggeration (0-1, default 0.0)"),
 });
 
 // Narration input schema for long-form content

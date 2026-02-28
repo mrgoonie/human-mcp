@@ -2,20 +2,26 @@
 
 ## Project Overview
 
-**Human MCP v2.2.0** is a comprehensive Model Context Protocol (MCP) server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, and advanced reasoning using Google Gemini AI. It bridges the gap between AI agents and human perception, enabling sophisticated multimodal analysis, debugging workflows, content understanding, and complex problem-solving across multiple domains.
+**Human MCP v2.16.0** is a comprehensive Model Context Protocol (MCP) server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, and advanced reasoning using multiple AI providers (Google Gemini, Minimax, ZhipuAI, ElevenLabs). It bridges the gap between AI agents and human perception, enabling sophisticated multimodal analysis, debugging workflows, content understanding, and complex problem-solving across multiple domains.
 
 ### Vision Statement
 **"Bringing Human Capabilities to Coding Agents"**
 
 To transform AI coding agents with comprehensive human-like sensory capabilities, enabling sophisticated multimodal analysis, debugging workflows, content understanding, and advanced problem-solving. Human MCP bridges the gap between artificial intelligence and human perception through advanced visual analysis, document understanding, audio processing, speech generation, content creation, and cognitive reasoning capabilities.
 
-### Current Status (v2.2.0)
-- **Phase 1 (Eyes - Visual Analysis)**: ✅ 100% Complete (v1.2.1) - Production Ready
+### Current Status (v2.16.0)
+- **Phase 1 (Eyes - Visual Analysis)**: ✅ 100% Complete (v1.2.1) - Production Ready with Gemini + ZhipuAI GLM-4.6V
 - **Phase 2 (Document Understanding)**: ✅ 100% Complete (v2.0.0) - Production Ready
 - **Phase 3 (Ears - Audio Processing)**: ❌ 0% Complete - Planned Q1 2025
-- **Phase 4 (Mouth - Speech Generation)**: ✅ 100% Complete (v1.3.0) - Production Ready
-- **Phase 5 (Hands - Content Generation)**: ✅ 100% Complete (v2.1.0) - Production Ready with Image Editing
-- **Phase 6 (Brain - Advanced Reasoning)**: ✅ 100% Complete (v2.2.0) - Production Ready
+- **Phase 4 (Mouth - Speech Generation)**: ✅ 100% Complete (v2.16.0) - Production Ready with Gemini + Minimax + ElevenLabs
+- **Phase 5 (Hands - Content Generation)**: ✅ 100% Complete (v2.16.0) - Production Ready with Multi-Provider Support
+- **Phase 6 (Brain - Advanced Reasoning)**: ✅ 100% Complete (v2.14.0) - Production Ready
+
+### Provider Integration Status
+- **Google Gemini**: Eyes (Vision), Hands (Image/Video Gen), Mouth (Speech), Brain (Reasoning) ✅
+- **Minimax**: Hands (Hailuo 2.3 Video, Music 2.5), Mouth (Speech 2.6 HD/Turbo) ✅
+- **ZhipuAI (Z.AI)**: Eyes (GLM-4.6V Vision), Hands (CogView-4 Image, CogVideoX-3 Video) ✅
+- **ElevenLabs**: Hands (Music, SFX), Mouth (Premium TTS, 70+ Languages) ✅
 
 For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 
@@ -39,6 +45,7 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 **FR-1.1: Visual Analysis Tool (`eyes_analyze`)**
 - **Status**: ✅ Production Ready (v1.2.1)
 - **Requirement**: Process images, videos, and GIFs with AI-powered visual analysis
+- **Providers**: Gemini Vision API (default), ZhipuAI GLM-4.6V (optional, images only)
 - **Input Types**: File paths, URLs, base64 data URIs
 - **Media Support**: PNG, JPEG, WebP, GIF (images), MP4, WebM, MOV, AVI (videos), animated GIFs
 - **Analysis Types**: general, ui_debug, error_detection, accessibility, performance, layout
@@ -77,10 +84,14 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 #### 1.2 Mouth Tools (Speech Generation) ✅ COMPLETE
 
 **FR-2.1: Text-to-Speech Tool (`mouth_speak`)**
-- **Status**: ✅ Production Ready (v1.3.0)
+- **Status**: ✅ Production Ready (v2.16.0)
 - **Requirement**: Convert text to natural-sounding speech
-- **Features**: 30+ voice options, style prompts, multi-language support (24 languages)
-- **Output**: High-quality WAV audio files with base64 encoding
+- **Providers**:
+  - Gemini Speech API (default, 30+ voices, 24 languages)
+  - Minimax Speech 2.6 HD/Turbo (300+ voices, high quality)
+  - ElevenLabs TTS (40+ premium voices, 70+ languages, best quality)
+- **Features**: Voice selection, style prompts, multi-language support, provider routing
+- **Output**: High-quality WAV/MP3 audio files with base64 encoding and file storage
 
 **FR-2.2: Long-form Narration Tool (`mouth_narrate`)**
 - **Status**: ✅ Production Ready (v1.3.0)
@@ -103,26 +114,55 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 #### 1.3 Hands Tools (Content Generation) ✅ COMPLETE
 
 **FR-3.1: Image Generation Tool (`gemini_gen_image`)**
-- **Status**: ✅ Production Ready (v2.0.0)
+- **Status**: ✅ Production Ready (v2.16.0)
 - **Requirement**: Generate high-quality images from text descriptions
-- **Features**: Multiple artistic styles, aspect ratios (1:1, 16:9, 9:16, 4:3, 3:4)
-- **Advanced**: Negative prompts, seed support, style control
-- **Output**: High-quality images in base64 format
+- **Providers**:
+  - Gemini Imagen 3.1 Pro / 3 Flash (default, 1:1 to 9:1 aspect ratios)
+  - Gemini Nano Banana 2 (fast, experimental)
+  - ZhipuAI CogView-4 / GLM-Image (alternate provider)
+- **Features**: Multiple artistic styles, extended aspect ratios, negative prompts
+- **Advanced**: Seed support, style control, quality levels
+- **Output**: High-quality images in base64 format with automatic file storage
 
 **FR-3.2: Video Generation Tool (`gemini_gen_video`)**
-- **Status**: ✅ Production Ready (v2.0.0)
+- **Status**: ✅ Production Ready (v2.16.0)
 - **Requirement**: Generate professional videos from text prompts
-- **Features**: Veo 3.0 API, duration control (4s, 8s, 12s), FPS options (1-60)
-- **Advanced**: Camera movements, style control, aspect ratios
-- **Output**: Professional-quality videos in base64 format
+- **Providers**:
+  - Gemini Veo 3.0 (default, highest quality)
+  - Minimax Hailuo 2.3 (alternate provider)
+  - ZhipuAI CogVideoX-3 (alternate provider)
+- **Features**: Duration control (4-12s), FPS options (1-60), resolution settings
+- **Advanced**: Camera movements, style control, aspect ratios, prompt optimizer
+- **Output**: Professional-quality videos in base64 format with file storage
 
 **FR-3.3: Image-to-Video Tool (`gemini_image_to_video`)**
-- **Status**: ✅ Production Ready (v2.0.0)
+- **Status**: ✅ Production Ready (v2.16.0)
 - **Requirement**: Convert images to animated videos with text guidance
-- **Features**: Imagen + Veo 3.0 pipeline, animation control, style preservation
+- **Providers**:
+  - Gemini Veo 3.0 (default)
+  - Minimax Hailuo 2.3 (alternate provider)
+  - ZhipuAI CogVideoX-3 (alternate provider)
+- **Features**: Multi-provider animation pipeline, animation control, style preservation
 - **Use Cases**: Static image animation, presentation enhancement, creative content
 
-**FR-3.4: AI-Powered Image Editing Tools ✅ NEW**
+**FR-3.4: Music Generation Tools ✅ NEW**
+- **Status**: ✅ Production Ready (v2.16.0)
+- **Tools**: `minimax_gen_music` (Minimax Music 2.5), `elevenlabs_gen_music` (ElevenLabs Music API)
+- **Requirements**: Generate music from text prompts and lyrics
+- **Providers**:
+  - Minimax Music 2.5 (lyrics support, vocals, up to 4 minutes)
+  - ElevenLabs Music API (text-to-music, up to 10 minutes, high quality)
+- **Features**: Music style control, lyrics support, duration control, prompt influence
+- **Output**: High-quality MP3 audio with metadata and file storage
+
+**FR-3.5: Sound Effects Generation Tool (`elevenlabs_gen_sfx`) ✅ NEW**
+- **Status**: ✅ Production Ready (v2.16.0)
+- **Requirement**: Generate sound effects from text descriptions
+- **Provider**: ElevenLabs Sound Generation API
+- **Features**: Text-to-sound-effects, duration control (0.5s-30s), looping support, prompt influence
+- **Output**: High-quality MP3 audio with metadata and automatic file storage
+
+**FR-3.6: AI-Powered Image Editing Tools ✅**
 - **Status**: ✅ Production Ready (v2.1.0)
 - **General Editing Tool (`gemini_edit_image`)**: Comprehensive AI-powered image editing with multiple operation types
   - **Operations**: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose
@@ -130,13 +170,13 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
   - **Advanced**: Quality levels (draft/standard/high), guidance scale, negative prompts, seed support
   - **Output**: Edited images with metadata and processing information
 
-**FR-3.5: Specialized Gemini Editing Tools ✅ NEW**
+**FR-3.7: Specialized Gemini Editing Tools ✅**
 - **Inpainting Tool (`gemini_inpaint_image`)**: Add or modify specific areas using natural language descriptions (no mask required)
 - **Outpainting Tool (`gemini_outpaint_image`)**: Expand image borders with directional control (all/left/right/top/bottom/horizontal/vertical) and expansion ratios (0.1-3.0)
 - **Style Transfer Tool (`gemini_style_transfer_image`)**: Apply artistic styles from reference images or text descriptions with adjustable strength
 - **Image Composition Tool (`gemini_compose_images`)**: Combine multiple images with layout options (blend/collage/overlay/side_by_side) and blend modes
 
-**FR-3.6: Jimp Image Processing Tools ✅ NEW**
+**FR-3.8: Jimp Image Processing Tools ✅**
 - **Status**: ✅ Production Ready (v2.1.0)
 - **Crop Tool (`jimp_crop_image`)**: Precise image cropping with multiple modes
   - **Modes**: manual, center, top_left, top_right, bottom_left, bottom_right, aspect_ratio
@@ -149,7 +189,7 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - **Mask Tool (`jimp_mask_image`)**: Grayscale alpha masking
   - **Features**: Grayscale mask application (black=transparent, white=opaque), automatic mask resizing
 
-**FR-3.7: Background Removal Tool ✅ NEW**
+**FR-3.9: Background Removal Tool ✅**
 - **Status**: ✅ Production Ready (v2.1.0)
 - **Tool (`rmbg_remove_background`)**: AI-powered background removal
   - **Quality Levels**: fast (U2Net+), balanced (ModNet), high (BRIAI)
@@ -180,26 +220,26 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 #### 1.5 Brain Tools (Advanced Reasoning) ✅ COMPLETE
 
 **FR-5.1: Sequential Thinking Tool (`brain_think`) ✅ NEW**
-- **Status**: ✅ Production Ready (v2.2.0)
+- **Status**: ✅ Production Ready (v2.14.0)
 - **Requirement**: Advanced sequential thinking with dynamic problem-solving and thought revision
 - **Features**: Multiple thinking styles (analytical, systematic, creative, scientific, etc.), context awareness, thought revision, branching logic
 - **Input**: Problem statement, thinking style, context, processing options
 - **Output**: Structured thought process with confidence scoring and recommendations
 
 **FR-5.2: Deep Analytical Reasoning Tool (`brain_analyze`) ✅ NEW**
-- **Status**: ✅ Production Ready (v2.2.0)
+- **Status**: ✅ Production Ready (v2.14.0)
 - **Requirement**: Comprehensive analysis with branching exploration and assumption tracking
 - **Features**: Analysis depth control, alternative perspective exploration, assumption tracking, evidence evaluation
 - **Use Cases**: Complex problem analysis, research evaluation, strategic planning
 
 **FR-5.3: Problem Solving Tool (`brain_solve`) ✅ NEW**
-- **Status**: ✅ Production Ready (v2.2.0)
+- **Status**: ✅ Production Ready (v2.14.0)
 - **Requirement**: Multi-step problem solving with hypothesis testing and solution evaluation
 - **Features**: Systematic solution approaches, hypothesis verification, constraint handling, iterative refinement
 - **Output**: Structured solutions with implementation steps and success criteria
 
 **FR-5.4: Thought Reflection Tool (`brain_reflect`) ✅ NEW**
-- **Status**: ✅ Production Ready (v2.2.0)
+- **Status**: ✅ Production Ready (v2.14.0)
 - **Requirement**: Reflect on and improve previous analysis through meta-cognitive examination
 - **Features**: Assumption analysis, logic gap detection, bias identification, alternative approach exploration
 - **Use Cases**: Analysis improvement, decision validation, critical thinking enhancement
@@ -274,8 +314,11 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - Proper tool registration and schema validation
 - Compatible with MCP-enabled AI agents and clients
 
-**NFR-3.2: External Dependencies ✅ EXPANDED**
-- ✅ Google Gemini API integration (Vision, Document, Speech, Imagen, Veo3, Advanced Reasoning)
+**NFR-3.2: External Dependencies ✅ MULTI-PROVIDER ARCHITECTURE**
+- ✅ Google Gemini API integration (Vision, Document, Speech, Imagen 3.1/3 Flash/Nano Banana 2, Veo 3.0, Advanced Reasoning)
+- ✅ Minimax API integration (Speech 2.6 HD/Turbo, Music 2.5, Hailuo 2.3 Video)
+- ✅ ZhipuAI (Z.AI) integration (GLM-4.6V Vision, CogView-4/GLM-Image, CogVideoX-3 Video)
+- ✅ ElevenLabs API integration (Premium TTS 70+ languages, Music Generation 10min, Sound Effects 30s)
 - ✅ ffmpeg for video and audio processing capabilities
 - ✅ Sharp library for image manipulation and GIF processing
 - ✅ Document processing libraries (mammoth, xlsx, pptx-automizer, marked)
@@ -303,10 +346,19 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 #### 3.2 Configuration Management
 
 **TR-2.1: Environment Configuration**
-- Required: `GOOGLE_GEMINI_API_KEY`
+- Required: `GOOGLE_GEMINI_API_KEY` (primary provider)
+- Optional Provider API Keys:
+  - `MINIMAX_API_KEY` (for Minimax Speech 2.6, Music 2.5, Hailuo 2.3)
+  - `ZHIPUAI_API_KEY` (for GLM-4.6V, CogView-4, CogVideoX-3)
+  - `ELEVENLABS_API_KEY` (for ElevenLabs TTS, Music, SFX)
+- Optional Provider Selection:
+  - `SPEECH_PROVIDER` (gemini|minimax|elevenlabs)
+  - `VIDEO_PROVIDER` (gemini|minimax|zhipuai)
+  - `VISION_PROVIDER` (gemini|zhipuai)
+  - `IMAGE_PROVIDER` (gemini|zhipuai)
 - Optional: Model selection, timeout settings, caching options
 - Zod-based configuration validation
-- Environment variable override support
+- Environment variable override support with provider routing
 
 **TR-2.2: Runtime Configuration**
 - Default Gemini model: gemini-2.5-flash
@@ -390,7 +442,7 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 
 ### 8. Future Roadmap
 
-**Current Status**: 5 of 6 Phases Complete - Advanced Multi-Modal AI Server (v2.2.0)
+**Current Status**: 5 of 6 Phases Complete - Advanced Multi-Modal Multi-Provider AI Server (v2.16.0)
 
 #### 8.1 Phase 1: Eyes - Visual Analysis ✅ COMPLETED (v1.2.1)
 - **Image Analysis**: PNG, JPEG, WebP, GIF processing with AI-powered analysis
@@ -428,7 +480,7 @@ For detailed development roadmap, see **[Project Roadmap](project-roadmap.md)**.
 - **Background Removal**: AI-powered background removal with 3 quality levels (U2Net+, ModNet, BRIAI)
 - **File Management**: Automatic file saving, R2 cloud storage integration, base64 and URL outputs
 
-#### 8.5 Phase 6: Brain - Advanced Reasoning ✅ COMPLETED (v2.2.0)
+#### 8.5 Phase 6: Brain - Advanced Reasoning ✅ COMPLETED (v2.14.0)
 - **Sequential Thinking**: Dynamic problem-solving with thought revision
 - **Analytical Reasoning**: Deep analysis with assumption tracking
 - **Problem Solving**: Multi-step solutions with hypothesis testing
@@ -462,4 +514,8 @@ For complete roadmap details, timeline, and technical specifications, see **[Pro
 
 ## Conclusion
 
-Human MCP represents a significant advancement in AI-assisted visual debugging and analysis. By providing sophisticated computer vision capabilities through the Model Context Protocol, it enables AI agents to perform human-like visual analysis tasks, significantly improving debugging workflows and development productivity. The project's modular architecture, comprehensive error handling, and extensive configuration options make it suitable for both individual developers and enterprise deployments.
+Human MCP v2.16.0 represents a significant advancement in AI-assisted multimodal analysis, content generation, and reasoning. By providing sophisticated capabilities through the Model Context Protocol with multi-provider support (Google Gemini, Minimax, ZhipuAI, ElevenLabs), it enables AI agents to perform human-like analysis, content creation, and problem-solving tasks across 29 production-ready MCP tools. The project's modular architecture, multi-provider integration, comprehensive error handling, and extensive configuration options make it suitable for both individual developers and enterprise deployments.
+
+**Total MCP Tools**: 29 (Eyes: 5, Mouth: 4, Hands: 17, Brain: 3)
+**AI Providers**: 4 (Gemini, Minimax, ZhipuAI, ElevenLabs)
+**Supported Capabilities**: Vision analysis, document processing, speech generation, image/video/music/SFX generation, image editing, background removal, advanced reasoning

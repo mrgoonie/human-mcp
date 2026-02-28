@@ -50,6 +50,24 @@ const ConfigSchema = z.object({
   logging: z.object({
     level: z.enum(["debug", "info", "warn", "error"]).default("info"),
   }),
+  minimax: z.object({
+    apiKey: z.string().optional(),
+    apiHost: z.string().default("https://api.minimax.io"),
+  }).optional(),
+  zhipuai: z.object({
+    apiKey: z.string().optional(),
+    apiHost: z.string().default("https://api.z.ai/api/paas/v4"),
+  }).optional(),
+  elevenlabs: z.object({
+    apiKey: z.string().optional(),
+    apiHost: z.string().default("https://api.elevenlabs.io"),
+  }).optional(),
+  providers: z.object({
+    speech: z.enum(["gemini", "minimax", "elevenlabs"]).default("gemini"),
+    video: z.enum(["gemini", "minimax", "zhipuai"]).default("gemini"),
+    vision: z.enum(["gemini", "zhipuai"]).default("gemini"),
+    image: z.enum(["gemini", "zhipuai"]).default("gemini"),
+  }).default({ speech: "gemini", video: "gemini", vision: "gemini", image: "gemini" }),
   cloudflare: z.object({
     projectName: z.string().optional().default("human-mcp"),
     bucketName: z.string().optional(),
@@ -146,6 +164,24 @@ export function loadConfig(): Config {
     logging: {
       level: (process.env.LOG_LEVEL as any) || "info",
     },
+    minimax: {
+      apiKey: process.env.MINIMAX_API_KEY,
+      apiHost: process.env.MINIMAX_API_HOST || "https://api.minimax.io",
+    },
+    zhipuai: {
+      apiKey: process.env.ZHIPUAI_API_KEY,
+      apiHost: process.env.ZHIPUAI_API_HOST || "https://api.z.ai/api/paas/v4",
+    },
+    elevenlabs: {
+      apiKey: process.env.ELEVENLABS_API_KEY,
+      apiHost: process.env.ELEVENLABS_API_HOST || "https://api.elevenlabs.io",
+    },
+    providers: {
+      speech: (process.env.SPEECH_PROVIDER as any) || "gemini",
+      video: (process.env.VIDEO_PROVIDER as any) || "gemini",
+      vision: (process.env.VISION_PROVIDER as any) || "gemini",
+      image: (process.env.IMAGE_PROVIDER as any) || "gemini",
+    },
     cloudflare: {
       projectName: process.env.CLOUDFLARE_CDN_PROJECT_NAME || "human-mcp",
       bucketName: process.env.CLOUDFLARE_CDN_BUCKET_NAME,
@@ -164,7 +200,7 @@ export function loadConfig(): Config {
       retryAttempts: parseInt(process.env.DOCUMENT_RETRY_ATTEMPTS || "3"),
       cacheEnabled: process.env.DOCUMENT_CACHE_ENABLED !== "false",
       ocrEnabled: process.env.DOCUMENT_OCR_ENABLED === "true",
-      geminiModel: process.env.DOCUMENT_GEMINI_MODEL || "gemini-2.0-flash-exp",
+      geminiModel: process.env.DOCUMENT_GEMINI_MODEL || "gemini-2.5-flash",
     },
   });
 }

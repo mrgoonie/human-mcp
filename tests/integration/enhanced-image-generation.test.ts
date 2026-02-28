@@ -251,13 +251,18 @@ describe('Enhanced Image Generation Integration Tests', () => {
     });
 
     it('should handle fallback gracefully when file saving fails', async () => {
+      // Use NUL device path on Windows / /dev/null on Unix — both are non-directory paths
+      const invalidDir = process.platform === 'win32'
+        ? 'Z:\\__non_existent_drive__\\path'
+        : '/proc/1/root/invalid/path';
       const options: ImageGenerationOptions = {
         prompt: 'Fallback test image',
         model: 'gemini-2.5-flash-image-preview',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000,
-        saveDirectory: '/invalid/read-only/path/that/does/not/exist'
+        saveDirectory: invalidDir,
+        saveToFile: true,
       };
 
       // Should not throw error, but fallback to base64 only

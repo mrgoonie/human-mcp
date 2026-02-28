@@ -4,7 +4,7 @@
 
 ![Human MCP](human-mcp.png)
 
-Human MCP v2.10.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, browser automation, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
+Human MCP v2.14.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, browser automation, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
 
 ## "Human MCP" is a part of [ClaudeKit](https://claudekit.cc)
 ![ClaudeKit.cc](claudekit.png)
@@ -17,9 +17,11 @@ Human MCP v2.10.0 is a comprehensive Model Context Protocol server that provides
 - **eyes_read_document**: Extract text and data from PDF, DOCX, XLSX, PPTX, and more
 - **eyes_summarize_document**: Generate summaries and insights from documents
 
-✋ **Content Generation & Image Editing (Hands) - ✅ Complete (16 tools)**
+✋ **Content Generation & Image Editing (Hands) - ✅ Complete (18 tools)**
 - **Image Generation** (1 tool): gemini_gen_image - Generate images from text using Imagen API
 - **Video Generation** (2 tools): gemini_gen_video, gemini_image_to_video - Create videos with Veo 3.0
+- **Music Generation** (2 tools): minimax_gen_music, elevenlabs_gen_music - Generate music with vocals
+- **Sound Effects** (1 tool): elevenlabs_gen_sfx - Generate sound effects from text descriptions
 - **AI Image Editing** (5 tools): Gemini-powered editing with inpainting, outpainting, style transfer, object manipulation, composition
 - **Jimp Processing** (4 tools): Local image manipulation - crop, resize, rotate, mask
 - **Background Removal** (1 tool): rmbg_remove_background - AI-powered background removal
@@ -37,10 +39,10 @@ Human MCP v2.10.0 is a comprehensive Model Context Protocol server that provides
 - **brain_patterns_info**: List available reasoning patterns and frameworks
 - **brain_reflect_enhanced**: AI-powered meta-cognitive reflection for complex analysis
 
-## Total: 27 MCP Tools Across 4 Human Capabilities
+## Total: 29 MCP Tools Across 4 Human Capabilities
 
 **👁️ Eyes (4 tools)** - Visual analysis and document processing
-**✋ Hands (16 tools)** - Content generation, image editing, and browser automation
+**✋ Hands (18 tools)** - Content generation, image editing, music/SFX, and browser automation
 **🗣️ Mouth (4 tools)** - Speech generation and narration
 **🧠 Brain (3 tools)** - Advanced reasoning and problem solving
 
@@ -49,6 +51,9 @@ Human MCP v2.10.0 is a comprehensive Model Context Protocol server that provides
 - **Gemini Imagen API** - High-quality image generation
 - **Gemini Veo 3.0 API** - Professional video generation
 - **Gemini Speech API** - Natural voice synthesis (30+ voices, 24 languages)
+- **Minimax API** - Alternative speech (Speech 2.6), music (Music 2.5), video (Hailuo 2.3)
+- **ZhipuAI (Z.AI) API** - Alternative vision (GLM-4.6V), image (GLM-Image), video (CogVideoX-3)
+- **ElevenLabs API** - Text-to-speech (70+ languages), music generation, sound effects
 - **Playwright** - Browser automation for web screenshots
 - **Jimp** - Fast local image processing
 - **rmbg** - AI-powered background removal (U2Net+, ModNet, BRIAI models)
@@ -957,6 +962,37 @@ done
 }
 ```
 
+#### Music Generation (2 tools)
+
+**minimax_gen_music** - Generate music with vocals (Minimax Music 2.5)
+```json
+{
+  "prompt": "Upbeat pop song about summer",
+  "lyrics": "Optional lyrics text",
+  "duration": 240
+}
+```
+
+**elevenlabs_gen_music** - Generate music (ElevenLabs Music API)
+```json
+{
+  "text": "Calm ambient music for meditation",
+  "duration_seconds": 120,
+  "prompt_influence": 0.7
+}
+```
+
+#### Sound Effects Generation (1 tool)
+
+**elevenlabs_gen_sfx** - Generate sound effects from text (ElevenLabs Sound Generation API)
+```json
+{
+  "text": "Door creaking open slowly",
+  "duration_seconds": 5.0,
+  "prompt_influence": 0.5
+}
+```
+
 #### AI Image Editing (5 tools)
 
 **gemini_edit_image** - Comprehensive AI editing (5 operations: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose)
@@ -1381,6 +1417,11 @@ When enabled, Human MCP provides isolated SSE fallback endpoints:
 # Required
 GOOGLE_GEMINI_API_KEY=your_api_key
 
+# Optional Provider API Keys
+MINIMAX_API_KEY=your_minimax_api_key
+ZHIPUAI_API_KEY=your_zhipuai_api_key
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+
 # Optional Core Configuration
 GOOGLE_GEMINI_MODEL=gemini-2.5-flash
 GOOGLE_GEMINI_IMAGE_MODEL=gemini-2.5-flash-image-preview
@@ -1402,19 +1443,24 @@ HTTP_ENABLE_RATE_LIMITING=false
 ## Architecture
 
 ```
-Human MCP Server v2.10.0
+Human MCP Server v2.14.0
 ├── 👁️ Eyes Tools (4) - Visual Analysis & Document Processing
 │   ├── eyes_analyze - Images, videos, GIFs analysis
 │   ├── eyes_compare - Image comparison
 │   ├── eyes_read_document - Document content extraction
 │   └── eyes_summarize_document - Document summarization
 │
-├── ✋ Hands Tools (16) - Content Generation, Image Editing & Browser Automation
+├── ✋ Hands Tools (18) - Content Generation, Image Editing, Music/SFX & Browser Automation
 │   ├── Image Generation (1)
 │   │   └── gemini_gen_image
 │   ├── Video Generation (2)
 │   │   ├── gemini_gen_video
 │   │   └── gemini_image_to_video
+│   ├── Music Generation (2)
+│   │   ├── minimax_gen_music
+│   │   └── elevenlabs_gen_music
+│   ├── Sound Effects (1)
+│   │   └── elevenlabs_gen_sfx
 │   ├── AI Image Editing (5)
 │   │   ├── gemini_edit_image
 │   │   ├── gemini_inpaint_image
@@ -1434,7 +1480,7 @@ Human MCP Server v2.10.0
 │       └── playwright_screenshot_element
 │
 ├── 🗣️ Mouth Tools (4) - Speech Generation
-│   ├── mouth_speak - Text-to-speech
+│   ├── mouth_speak - Text-to-speech (Gemini/Minimax/ElevenLabs)
 │   ├── mouth_narrate - Long-form narration
 │   ├── mouth_explain - Code explanation
 │   └── mouth_customize - Voice testing
@@ -1445,7 +1491,7 @@ Human MCP Server v2.10.0
     ├── brain_patterns_info - Reasoning frameworks
     └── brain_reflect_enhanced - AI-powered reflection
 
-Total: 27 MCP Tools
+Total: 29 MCP Tools
 ```
 
 **Documentation:**
@@ -1458,7 +1504,7 @@ Total: 27 MCP Tools
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: v2.10.0 - 27 Production-Ready MCP Tools
+### Current Status: v2.14.0 - 29 Production-Ready MCP Tools
 
 **👁️ Eyes (4 tools)** - Visual Analysis & Document Processing
 - ✅ Image, video, GIF analysis with UI debugging and accessibility auditing
@@ -1466,9 +1512,11 @@ Total: 27 MCP Tools
 - ✅ Document processing for 12+ formats (PDF, DOCX, XLSX, PPTX, etc.)
 - ✅ Document summarization and content extraction
 
-**✋ Hands (16 tools)** - Content Generation, Image Editing & Browser Automation
+**✋ Hands (18 tools)** - Content Generation, Image Editing, Music/SFX & Browser Automation
 - ✅ Image generation with Gemini Imagen API (5 styles, 5 aspect ratios)
 - ✅ Video generation with Gemini Veo 3.0 API (duration, FPS, camera controls)
+- ✅ Music generation with Minimax Music 2.5 and ElevenLabs Music API
+- ✅ Sound effects generation with ElevenLabs Sound Generation API
 - ✅ AI-powered image editing: inpainting, outpainting, style transfer, composition
 - ✅ Fast local Jimp processing: crop, resize, rotate, mask
 - ✅ AI background removal with 3 quality models
@@ -1496,14 +1544,14 @@ Only remaining capability to complete the human sensory suite:
 
 **Note:** Phases 1, 2, 4, 5, and 6 are complete with 27 production-ready tools
 
-### System Architecture (v2.10.0)
+### System Architecture (v2.14.0)
 
 Complete human-like capabilities through 27 MCP tools:
 
 ```
 ┌─────────────────┐    ┌──────────────────────────┐    ┌─────────────────────────┐
 │   AI Agent      │◄──►│    Human MCP Server      │◄──►│  Google AI Services     │
-│  (MCP Client)   │    │        v2.10.0           │    │ • Gemini 2.5 Flash      │
+│  (MCP Client)   │    │        v2.14.0           │    │ • Gemini 2.5 Flash      │
 └─────────────────┘    │                          │    │ • Gemini Imagen API     │
                        │  👁️ Eyes (4 tools) ✅   │    │ • Gemini Veo 3.0 API    │
                        │  • Visual Analysis        │    │ • Gemini Speech API     │
@@ -1551,7 +1599,7 @@ Complete human-like capabilities through 27 MCP tools:
 - Complex reasoning with thought revision and reflection
 - Pattern-based analysis for common problems
 
-### Current Achievements (v2.10.0)
+### Current Achievements (v2.14.0)
 
 **Completed Phases:**
 - ✅ Phase 1: Eyes - Visual Analysis (4 tools)
@@ -1564,11 +1612,11 @@ Complete human-like capabilities through 27 MCP tools:
 - ⏳ Phase 3: Ears - Audio Processing (planned Q1 2025)
 
 **Goals Achieved:**
-- ✅ 27 production-ready MCP tools
+- ✅ 29 production-ready MCP tools
 - ✅ Support for 30+ file formats (images, videos, documents, audio)
 - ✅ Browser automation for automated web screenshots
 - ✅ Sub-30 second response times for most operations
-- ✅ Professional-grade content generation (images, videos, speech)
+- ✅ Professional-grade content generation (images, videos, speech, music, sound effects)
 - ✅ Advanced reasoning with native + AI-powered tools
 - ✅ Comprehensive documentation and examples
 

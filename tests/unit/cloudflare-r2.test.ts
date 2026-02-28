@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, mock } from 'bun:test';
-import { CloudflareR2Client, getCloudflareR2 } from '@/utils/cloudflare-r2';
+import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
+import { CloudflareR2Client, getCloudflareR2, _resetCloudflareR2 } from '@/utils/cloudflare-r2';
 import type { MockS3Command, MockCloudflareR2Client } from '../types/test-types.js';
 
 // Mock the S3Client and PutObjectCommand
@@ -8,14 +8,34 @@ mock.module('@aws-sdk/client-s3', () => ({
   PutObjectCommand: mock((params: MockS3Command) => ({ ...params }))
 }));
 
+const testEnvVars: Record<string, string> = {
+  CLOUDFLARE_CDN_ACCESS_KEY: 'test-access-key',
+  CLOUDFLARE_CDN_SECRET_KEY: 'test-secret-key',
+  CLOUDFLARE_CDN_ENDPOINT_URL: 'https://test-account.r2.cloudflarestorage.com',
+  CLOUDFLARE_CDN_BUCKET_NAME: 'test-bucket',
+  CLOUDFLARE_CDN_BASE_URL: 'https://cdn.test.com',
+};
+
 describe('Cloudflare R2 Integration', () => {
+  const savedEnvVars: Record<string, string | undefined> = {};
+
   beforeAll(() => {
-    // Set up test environment variables
-    process.env.CLOUDFLARE_CDN_ACCESS_KEY = 'test-access-key';
-    process.env.CLOUDFLARE_CDN_SECRET_KEY = 'test-secret-key';
-    process.env.CLOUDFLARE_CDN_ENDPOINT_URL = 'https://test-account.r2.cloudflarestorage.com';
-    process.env.CLOUDFLARE_CDN_BUCKET_NAME = 'test-bucket';
-    process.env.CLOUDFLARE_CDN_BASE_URL = 'https://cdn.test.com';
+    for (const key of Object.keys(testEnvVars)) {
+      savedEnvVars[key] = process.env[key];
+    }
+    Object.assign(process.env, testEnvVars);
+    _resetCloudflareR2();
+  });
+
+  afterAll(() => {
+    for (const [key, value] of Object.entries(savedEnvVars)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+    _resetCloudflareR2();
   });
 
   it('should create CloudflareR2Client with correct configuration', () => {
@@ -23,12 +43,13 @@ describe('Cloudflare R2 Integration', () => {
   });
 
   it('should throw error when required environment variables are missing', () => {
-    const originalAccessKey = process.env.CLOUDFLARE_CDN_ACCESS_KEY;
+    const saved = process.env.CLOUDFLARE_CDN_ACCESS_KEY;
     delete process.env.CLOUDFLARE_CDN_ACCESS_KEY;
-
-    expect(() => new CloudflareR2Client()).toThrow('Missing required Cloudflare R2 environment variables');
-    
-    process.env.CLOUDFLARE_CDN_ACCESS_KEY = originalAccessKey;
+    try {
+      expect(() => new CloudflareR2Client()).toThrow('Missing required Cloudflare R2 environment variables');
+    } finally {
+      process.env.CLOUDFLARE_CDN_ACCESS_KEY = saved;
+    }
   });
 
   it('should check if Cloudflare R2 is configured', () => {
@@ -37,22 +58,19 @@ describe('Cloudflare R2 Integration', () => {
   });
 
   it('should return null when getCloudflareR2() called without configuration', () => {
-    // Temporarily remove configuration
-    const originalEnvs = {
-      CLOUDFLARE_CDN_ACCESS_KEY: process.env.CLOUDFLARE_CDN_ACCESS_KEY,
-      CLOUDFLARE_CDN_SECRET_KEY: process.env.CLOUDFLARE_CDN_SECRET_KEY,
-      CLOUDFLARE_CDN_ENDPOINT_URL: process.env.CLOUDFLARE_CDN_ENDPOINT_URL,
-      CLOUDFLARE_CDN_BUCKET_NAME: process.env.CLOUDFLARE_CDN_BUCKET_NAME,
-      CLOUDFLARE_CDN_BASE_URL: process.env.CLOUDFLARE_CDN_BASE_URL,
-    };
-
-    Object.keys(originalEnvs).forEach(key => delete process.env[key]);
-
-    const client = getCloudflareR2();
-    expect(client).toBeNull();
-
-    // Restore environment variables
-    Object.assign(process.env, originalEnvs);
+    _resetCloudflareR2();
+    const saved: Record<string, string | undefined> = {};
+    for (const key of Object.keys(testEnvVars)) {
+      saved[key] = process.env[key];
+      delete process.env[key];
+    }
+    try {
+      const client = getCloudflareR2();
+      expect(client).toBeNull();
+    } finally {
+      Object.assign(process.env, saved);
+      _resetCloudflareR2();
+    }
   });
 
   it('should generate proper file keys with UUID', async () => {
