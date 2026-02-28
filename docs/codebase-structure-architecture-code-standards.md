@@ -6,31 +6,36 @@
 
 Human MCP follows a modular, event-driven architecture built around the Model Context Protocol (MCP). The system is designed as a server that exposes multimodal analysis capabilities through standardized MCP tools.
 
-#### Current Architecture (v2.14.0 - Multi-Modal + Advanced Reasoning Complete)
+#### Current Architecture (v2.16.0 - Multi-Provider Multi-Modal Complete)
 ```
-┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
-│   MCP Client    │◄──►│    Human MCP         │◄──►│  Google AI Services     │
-│   (AI Agent)    │    │    Server            │    │ ┌─────────────────────┐ │
-└─────────────────┘    │                      │    │ │ Gemini Vision API   │ │
-                       │  ┌─────────────────┐ │    │ │ Gemini Document API │ │
-                       │  │ Eyes (Vision) ✅│ │    │ │ Gemini Speech API   │ │
-                       │  │ • Images/Video  │ │    │ │ Imagen API (Gen)    │ │
-                       │  │ • Documents ✅  │ │    │ │ Veo3 Video API      │ │
-                       │  └─────────────────┘ │    │ └─────────────────────┘ │
-                       │  ┌─────────────────┐ │    └─────────────────────────┘
-                       │  │ Mouth (Speech)✅│ │               │
-                       │  │ • TTS Complete  │ │               │
-                       │  │ • Narration ✅  │ │               ▼
-                       │  └─────────────────┘ │    ┌─────────────────────────┐
-                       │  ┌─────────────────┐ │    │  System Dependencies   │
-                       │  │ Hands (Create)✅│ │    │ ┌─────────────────────┐ │
-                       │  │ • Image Gen ✅  │ │    │ │ ffmpeg (A/V proc)   │ │
-                       │  │ • Video Gen ✅  │ │    │ │ Sharp (Images)      │ │
-                       │  └─────────────────┘ │    │ │ mammoth (Word)      │ │
-                       └──────────────────────┘    │ │ xlsx (Excel)        │ │
-                                                   │ │ pptx (PowerPoint)   │ │
-                                                   │ └─────────────────────┘ │
-                                                   └─────────────────────────┘
+┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────────────────┐
+│   MCP Client    │◄──►│    Human MCP         │◄──►│  AI Provider Services (4 Providers) │
+│   (AI Agent)    │    │    Server (v2.16.0)  │    │ ┌─────────────────────────────────┐ │
+└─────────────────┘    │                      │    │ │ Google Gemini (Primary)         │ │
+                       │  ┌─────────────────┐ │    │ │ • Gemini 3.1 Pro/Flash Vision  │ │
+                       │  │ Eyes (Vision) ✅│ │    │ │ • Imagen 3.1/3 Flash/Nano      │ │
+                       │  │ • Multi-Provider│ │    │ │ • Veo 3.0 Video                │ │
+                       │  │ • Documents ✅  │ │    │ │ • Gemini Speech                │ │
+                       │  └─────────────────┘ │    │ └─────────────────────────────────┘ │
+                       │  ┌─────────────────┐ │    │ ┌─────────────────────────────────┐ │
+                       │  │ Mouth (Speech)✅│ │    │ │ Minimax (Speech/Video/Music)    │ │
+                       │  │ • 3 Providers   │ │    │ │ • Speech 2.6 HD/Turbo (300+)   │ │
+                       │  └─────────────────┘ │    │ │ • Hailuo 2.3 Video             │ │
+                       │  ┌─────────────────┐ │    │ │ • Music 2.5 (lyrics, vocals)   │ │
+                       │  │ Hands (Create)✅│ │    │ └─────────────────────────────────┘ │
+                       │  │ • Multi-Provider│ │    │ ┌─────────────────────────────────┐ │
+                       │  │ • 17 Tools      │ │    │ │ ZhipuAI (Vision/Image/Video)    │ │
+                       │  └─────────────────┘ │    │ │ • GLM-4.6V Vision              │ │
+                       │  ┌─────────────────┐ │    │ │ • CogView-4 Image Gen          │ │
+                       │  │ Brain (Think)✅ │ │    │ │ • CogVideoX-3 Video Gen        │ │
+                       │  │ • 3 Tools       │ │    │ └─────────────────────────────────┘ │
+                       │  └─────────────────┘ │    │ ┌─────────────────────────────────┐ │
+                       └──────────────────────┘    │ │ ElevenLabs (Premium Audio)      │ │
+                                                   │ │ • TTS (40+ voices, 70+ langs)  │ │
+                                                   │ │ • Music API (10min tracks)     │ │
+                                                   │ │ • Sound Effects (30s, looping) │ │
+                                                   │ └─────────────────────────────────┘ │
+                                                   └─────────────────────────────────────┘
 ```
 
 #### Next Architecture Target (v3.0.0 - Q1 2025)
@@ -43,16 +48,28 @@ The final phase completes all human sensory capabilities:
 ### Core Components
 
 1. **MCP Server Layer**: Protocol implementation and tool registration
-2. **Tool Layer**: Multi-modal capabilities across 5 complete phases
-   - **Eyes Tools**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
-   - **Brain Tools**: Advanced reasoning (`brain_think`, `brain_analyze`, `brain_solve`, `brain_reflect`)
-   - **Mouth Tools**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
-   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`) + AI image editing (`gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`) + Jimp processing (`jimp_crop_image`, `jimp_resize_image`, `jimp_rotate_image`, `jimp_mask_image`) + Background removal (`rmbg_remove_background`) + Playwright screenshot capture (`playwright_capture_screenshot`, `playwright_capture_fullpage`, `playwright_capture_element`)
+2. **Tool Layer**: Multi-modal capabilities across 5 complete phases (29 tools)
+   - **Eyes Tools (5)**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
+     - Providers: Gemini Vision (default), ZhipuAI GLM-4.6V (alternate)
+   - **Brain Tools (3)**: Advanced reasoning (`brain_think`, `brain_analyze`, `brain_reflect`)
+   - **Mouth Tools (4)**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
+     - Providers: Gemini Speech (default), Minimax Speech 2.6 (alternate), ElevenLabs TTS (premium)
+   - **Hands Tools (17)**: Content generation and editing
+     - Image Gen (1): `gemini_gen_image` (Gemini Imagen 3.1/3 Flash/Nano, ZhipuAI CogView-4)
+     - Video Gen (2): `gemini_gen_video`, `gemini_image_to_video` (Gemini Veo 3.0, Minimax Hailuo 2.3, ZhipuAI CogVideoX-3)
+     - Music Gen (2): `minimax_gen_music`, `elevenlabs_gen_music`
+     - SFX Gen (1): `elevenlabs_gen_sfx`
+     - AI Image Editing (5): `gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`
+     - Jimp Processing (4): `jimp_crop_image`, `jimp_resize_image`, `jimp_rotate_image`, `jimp_mask_image`
+     - Background Removal (1): `rmbg_remove_background`
+     - Playwright Screenshot (3): `playwright_capture_screenshot`, `playwright_capture_fullpage`, `playwright_capture_element`
    - **Ears Tools**: Audio processing (planned Phase 3)
-3. **Processing Layer**: Media, document, reasoning, and Playwright screenshot processors with factory patterns
+3. **Processing Layer**: Media, document, reasoning, and multi-provider processors with factory patterns
 4. **Transport Layer**: STDIO and HTTP transports with SSE fallback
-5. **Integration Layer**: Google AI services integration (Vision, Document, Speech, Imagen, Veo3, Advanced Reasoning via Google AI Studio and Vertex AI)
-6. **Utility Layer**: Configuration, logging, error handling, validation, and security
+5. **Integration Layer**: Multi-provider AI services integration
+   - **Primary**: Google Gemini (Vision, Document, Speech, Imagen 3.1/3/Nano, Veo 3.0, Reasoning)
+   - **Alternates**: Minimax (Speech 2.6, Music 2.5, Hailuo 2.3), ZhipuAI (GLM-4.6V, CogView-4, CogVideoX-3), ElevenLabs (TTS, Music, SFX)
+6. **Utility Layer**: Configuration, logging, error handling, validation, security, and provider routing
 
 ## Directory Structure
 
@@ -125,19 +142,19 @@ human-mcp/
 │   ├── transports/           # Transport layer implementations
 │   │   ├── stdio/            # Standard I/O transport
 │   │   └── http/             # HTTP transport with SSE fallback
-│   ├── providers/            # Third-party AI provider integrations
+│   ├── providers/            # Multi-provider AI integrations (v2.16.0 - 4 providers)
 │   │   ├── minimax/          # Minimax provider implementations
-│   │   │   ├── speech-provider.ts # Minimax Speech 2.6 HD/Turbo TTS
-│   │   │   ├── music-provider.ts  # Minimax Music 2.5 generation
+│   │   │   ├── speech-provider.ts # Minimax Speech 2.6 HD/Turbo TTS (300+ voices)
+│   │   │   ├── music-provider.ts  # Minimax Music 2.5 generation (lyrics, vocals, 4min)
 │   │   │   └── video-provider.ts  # Minimax Hailuo 2.3 video generation
 │   │   ├── zhipuai/          # ZhipuAI (Z.AI) provider implementations
-│   │   │   ├── vision-provider.ts # GLM-4.6V vision analysis
-│   │   │   ├── image-provider.ts  # GLM-Image / CogView-4 image generation
+│   │   │   ├── vision-provider.ts # GLM-4.6V vision analysis (images only)
+│   │   │   ├── image-provider.ts  # CogView-4 / GLM-Image generation
 │   │   │   └── video-provider.ts  # CogVideoX-3 video generation
 │   │   └── elevenlabs/       # ElevenLabs provider implementations
-│   │       ├── speech-provider.ts # ElevenLabs TTS
-│   │       ├── music-provider.ts  # ElevenLabs Music API
-│   │       └── sfx-provider.ts    # ElevenLabs Sound Effects API
+│   │       ├── speech-provider.ts # ElevenLabs TTS (40+ voices, 70+ languages)
+│   │       ├── music-provider.ts  # ElevenLabs Music API (10min tracks)
+│   │       └── sfx-provider.ts    # ElevenLabs Sound Effects API (30s, looping)
 │   ├── prompts/              # Pre-built debugging prompts
 │   │   ├── index.ts          # Prompt registration
 │   │   └── debugging-prompts.ts      # Debugging workflow templates
@@ -146,14 +163,15 @@ human-mcp/
 │   │   └── documentation.ts  # Tool documentation and examples
 │   ├── types/                # TypeScript type definitions
 │   │   └── index.ts          # Shared type definitions
-│   └── utils/                # Core utilities
-│       ├── config.ts         # Environment-based configuration
+│   └── utils/                # Core utilities and multi-provider clients
+│       ├── config.ts         # Environment-based configuration with provider routing
 │       ├── logger.ts         # Structured logging
 │       ├── errors.ts         # Error handling and formatting
-│       ├── minimax-client.ts # Shared Minimax HTTP client
-│       ├── zhipuai-client.ts # Shared ZhipuAI (Z.AI) HTTP client
-│       ├── elevenlabs-client.ts # Shared ElevenLabs HTTP client
-│       └── file-storage.ts   # File storage with audio MIME support
+│       ├── gemini-client.ts  # Google Gemini API client (Vision, Imagen, Veo 3.0, Speech, Reasoning)
+│       ├── minimax-client.ts # Minimax HTTP client (Speech 2.6, Music 2.5, Hailuo 2.3)
+│       ├── zhipuai-client.ts # ZhipuAI HTTP client (GLM-4.6V, CogView-4, CogVideoX-3)
+│       ├── elevenlabs-client.ts # ElevenLabs HTTP client (TTS, Music, SFX)
+│       └── file-storage.ts   # File storage with audio/video/image MIME support and R2 upload
 ├── tests/                    # Test suites
 │   ├── setup.ts             # Test environment setup
 │   ├── unit/                # Unit tests
@@ -180,20 +198,20 @@ human-mcp/
 - **Resource Exposure**: Documentation and examples exposed as MCP resources
 
 ```typescript
-// MCP Server Setup Pattern (v2.14.0)
+// MCP Server Setup Pattern (v2.16.0 - Multi-Provider)
 export async function createServer() {
-  const config = loadConfig();
+  const config = loadConfig();  // Loads provider routing configuration
   const server = new McpServer({
     name: "human-mcp",
-    version: "2.14.0",
+    version: "2.16.0",
   });
 
-  // Register all human capability tools
-  await registerEyesTool(server, config);      // Visual analysis + document processing
-  await registerBrainTools(server, config);   // Advanced reasoning
-  await registerMouthTool(server, config);    // Speech generation
-  await registerHandsTool(server, config);    // Content generation + screenshot capture (16 tools)
-  // await registerEarsTool(server, config);  // Audio processing (Phase 3)
+  // Register all human capability tools (29 total across 4 providers)
+  await registerEyesTool(server, config);      // Visual analysis + document processing (5 tools)
+  await registerBrainTools(server, config);   // Advanced reasoning (3 tools)
+  await registerMouthTool(server, config);    // Speech generation (4 tools, 3 providers)
+  await registerHandsTool(server, config);    // Content generation + editing (17 tools, 4 providers)
+  // await registerEarsTool(server, config);  // Audio processing (Phase 3 - planned)
 
   await registerPrompts(server);
   await registerResources(server);
@@ -210,60 +228,72 @@ export async function createServer() {
 - **Configuration Injection**: Environment-based configuration passed to tools
 
 ```typescript
-// Tool Registration Pattern (Multi-Modal + Advanced Reasoning v2.14.0)
-// Eyes Tools - Visual Analysis + Document Processing (5 tools)
-server.registerTool("eyes_analyze", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("eyes_compare", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("eyes_read_document", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("eyes_extract_data", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("eyes_summarize", { /* ... */ }, async (args) => { /* ... */ });
+// Tool Registration Pattern (Multi-Provider Multi-Modal v2.16.0 - 29 tools)
 
-// Brain Tools - Advanced Reasoning (4 tools)
-server.registerTool("brain_think", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("brain_analyze", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("brain_solve", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("brain_reflect", { /* ... */ }, async (args) => { /* ... */ });
+// Eyes Tools - Visual Analysis + Document Processing (5 tools, 2 providers)
+server.registerTool("eyes_analyze", {
+  /* provider: gemini|zhipuai (vision only) */
+}, async (args) => { /* Multi-provider routing */ });
+server.registerTool("eyes_compare", { /* Gemini only */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_read_document", { /* Gemini only */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_extract_data", { /* Gemini only */ }, async (args) => { /* ... */ });
+server.registerTool("eyes_summarize", { /* Gemini only */ }, async (args) => { /* ... */ });
 
-// Mouth Tools - Speech Generation (4 tools with provider support)
-server.registerTool("mouth_speak", { /* provider: gemini|minimax|elevenlabs */ }, async (args) => { /* ... */ });
-// Note: ZhipuAI has no TTS API, so speech only supports gemini|minimax|elevenlabs
-server.registerTool("mouth_narrate", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("mouth_explain", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("mouth_customize", { /* ... */ }, async (args) => { /* ... */ });
+// Brain Tools - Advanced Reasoning (3 tools, Gemini only)
+server.registerTool("brain_think", { /* Gemini only */ }, async (args) => { /* ... */ });
+server.registerTool("brain_analyze", { /* Gemini only */ }, async (args) => { /* ... */ });
+server.registerTool("brain_reflect", { /* Gemini only */ }, async (args) => { /* ... */ });
 
-// Hands Tools - Content Generation + AI Image Editing + Jimp Processing + Background Removal + Screenshot Capture (18 tools)
-// Content Generation (3 tools with provider support)
-server.registerTool("gemini_gen_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_gen_video", { /* provider: gemini|minimax|zhipuai */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_image_to_video", { /* provider: gemini|minimax|zhipuai */ }, async (args) => { /* ... */ });
+// Mouth Tools - Speech Generation (4 tools, 3 providers)
+server.registerTool("mouth_speak", {
+  /* provider: gemini|minimax|elevenlabs */
+}, async (args) => { /* Multi-provider routing with 300+ voices */ });
+server.registerTool("mouth_narrate", { /* Multi-provider */ }, async (args) => { /* ... */ });
+server.registerTool("mouth_explain", { /* Multi-provider */ }, async (args) => { /* ... */ });
+server.registerTool("mouth_customize", { /* Multi-provider */ }, async (args) => { /* ... */ });
 
-// Music Generation (2 tools - Minimax and ElevenLabs)
-server.registerTool("minimax_gen_music", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("elevenlabs_gen_music", { /* ... */ }, async (args) => { /* ... */ });
+// Hands Tools - Content Generation + Editing (17 tools, 4 providers)
 
-// Sound Effects Generation (1 tool - ElevenLabs-only)
-server.registerTool("elevenlabs_gen_sfx", { /* ... */ }, async (args) => { /* ... */ });
+// Image Generation (1 tool, 2 providers: Gemini Imagen 3.1/3/Nano, ZhipuAI CogView-4)
+server.registerTool("gemini_gen_image", {
+  /* provider: gemini|zhipuai, models: imagen-3.1-pro|imagen-3-flash|nano-banana-2|cogview-4 */
+}, async (args) => { /* Multi-provider routing */ });
+
+// Video Generation (2 tools, 3 providers: Gemini Veo 3.0, Minimax Hailuo 2.3, ZhipuAI CogVideoX-3)
+server.registerTool("gemini_gen_video", {
+  /* provider: gemini|minimax|zhipuai */
+}, async (args) => { /* Multi-provider routing */ });
+server.registerTool("gemini_image_to_video", {
+  /* provider: gemini|minimax|zhipuai */
+}, async (args) => { /* Multi-provider image-to-video */ });
+
+// Music Generation (2 tools, 2 providers: Minimax Music 2.5, ElevenLabs Music)
+server.registerTool("minimax_gen_music", { /* Minimax Music 2.5, lyrics + vocals, 4min */ }, async (args) => { /* ... */ });
+server.registerTool("elevenlabs_gen_music", { /* ElevenLabs Music API, text-to-music, 10min */ }, async (args) => { /* ... */ });
+
+// Sound Effects Generation (1 tool, ElevenLabs only)
+server.registerTool("elevenlabs_gen_sfx", { /* ElevenLabs SFX, 0.5-30s, looping */ }, async (args) => { /* ... */ });
 
 // AI Image Editing - Gemini-powered (5 tools)
-server.registerTool("gemini_edit_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_inpaint_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_outpaint_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_style_transfer_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_compose_images", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_edit_image", { /* 5 operations: inpaint, outpaint, style_transfer, object_manipulation, multi_image_compose */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_inpaint_image", { /* No mask required, text-based */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_outpaint_image", { /* Directional expansion */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_style_transfer_image", { /* Style from text/reference */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_compose_images", { /* Multi-image composition */ }, async (args) => { /* ... */ });
 
 // Jimp Image Processing - Local manipulation (4 tools)
-server.registerTool("jimp_crop_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("jimp_resize_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("jimp_rotate_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("jimp_mask_image", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_crop_image", { /* 6 modes */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_resize_image", { /* 5 algorithms */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_rotate_image", { /* Any angle */ }, async (args) => { /* ... */ });
+server.registerTool("jimp_mask_image", { /* Grayscale alpha */ }, async (args) => { /* ... */ });
 
-// Playwright Screenshot Capture - Browser automation (3 tools - NEW in v2.12.0)
-server.registerTool("playwright_capture_screenshot", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("playwright_capture_fullpage", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("playwright_capture_element", { /* ... */ }, async (args) => { /* ... */ });
+// Playwright Screenshot Capture - Browser automation (3 tools)
+server.registerTool("playwright_capture_screenshot", { /* Standard viewport */ }, async (args) => { /* ... */ });
+server.registerTool("playwright_capture_fullpage", { /* Full scrollable page */ }, async (args) => { /* ... */ });
+server.registerTool("playwright_capture_element", { /* CSS selector-based */ }, async (args) => { /* ... */ });
 
-// Background Removal - AI-powered (1 tool)
-server.registerTool("rmbg_remove_background", { /* ... */ }, async (args) => { /* ... */ });
+// Background Removal - AI-powered (1 tool, 3 quality levels)
+server.registerTool("rmbg_remove_background", { /* U2Net+, ModNet, BRIAI */ }, async (args) => { /* ... */ });
 ```
 
 ### 3. Strategy Pattern for Media Processing

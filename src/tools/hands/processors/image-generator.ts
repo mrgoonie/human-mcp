@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GeminiClient } from "../../eyes/utils/gemini-client.js";
 import type { ImageGenerationOptions, ImageGenerationResult } from "../schemas.js";
+import { generateWithZhipuAI } from "../providers/zhipuai-image-provider.js";
+import { ZhipuAIClient } from "@/utils/zhipuai-client.js";
 import { logger } from "@/utils/logger.js";
 import { saveBase64ToFile } from "@/utils/file-storage.js";
 import type { Config } from "@/utils/config.js";
@@ -11,6 +13,18 @@ export async function generateImage(
   config?: Config
 ): Promise<ImageGenerationResult> {
   const startTime = Date.now();
+
+  // Provider routing: ZhipuAI
+  const provider = config?.providers?.image || "gemini";
+  if (provider === "zhipuai" && config && ZhipuAIClient.isConfigured(config)) {
+    return generateWithZhipuAI({
+      prompt: options.prompt,
+      aspectRatio: options.aspectRatio,
+      outputFormat: options.outputFormat,
+      uploadToR2: options.uploadToR2,
+      config,
+    });
+  }
 
   try {
     // Build the enhanced prompt with style and aspect ratio

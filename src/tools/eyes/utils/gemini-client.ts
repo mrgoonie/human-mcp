@@ -109,6 +109,10 @@ export class GeminiClient {
   private provider: IGeminiProvider;
   private documentCache: Map<string, { data: any; timestamp: number }> = new Map();
 
+  private isGemini3Series(modelName: string): boolean {
+    return /^gemini-3(\.\d+)?/.test(modelName);
+  }
+
   constructor(private config: Config) {
     // Initialize the appropriate provider based on configuration
     if (config.gemini.useVertexAI) {
@@ -147,14 +151,14 @@ export class GeminiClient {
       ? this.config.gemini.model
       : "gemini-2.5-flash";
 
+    // Gemini 3 series: omit temperature per Google migration guide (values < 1.0 cause looping)
+    const generationConfig = this.isGemini3Series(modelName)
+      ? { topK: 1, topP: 0.95, maxOutputTokens: 8192 }
+      : { temperature: 0.1, topK: 1, topP: 0.95, maxOutputTokens: 8192 };
+
     return this.provider.getGenerativeModel({
       model: modelName,
-      generationConfig: {
-        temperature: 0.1,
-        topK: 1,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
+      generationConfig,
     });
   }
 
@@ -162,14 +166,14 @@ export class GeminiClient {
     // Use config.gemini.imageModel instead of hardcoded value
     const imageModelName = modelName || this.config.gemini.imageModel || "gemini-2.5-flash-image-preview";
 
+    // Gemini 3 series: omit temperature per Google migration guide
+    const generationConfig = this.isGemini3Series(imageModelName)
+      ? { topK: 32, topP: 0.95, maxOutputTokens: 8192 }
+      : { temperature: 0.7, topK: 32, topP: 0.95, maxOutputTokens: 8192 };
+
     return this.provider.getGenerativeModel({
       model: imageModelName,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 32,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
+      generationConfig,
     });
   }
   
@@ -241,14 +245,16 @@ export class GeminiClient {
    * Get document-specific model for processing
    */
   getDocumentModel(): GenerativeModel {
+    const modelName = this.config.documentProcessing.geminiModel;
+
+    // Gemini 3 series: omit temperature per Google migration guide
+    const generationConfig = this.isGemini3Series(modelName)
+      ? { topK: 1, topP: 0.95, maxOutputTokens: 8192 }
+      : { temperature: 0.1, topK: 1, topP: 0.95, maxOutputTokens: 8192 };
+
     return this.provider.getGenerativeModel({
-      model: this.config.documentProcessing.geminiModel,
-      generationConfig: {
-        temperature: 0.1,
-        topK: 1,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
+      model: modelName,
+      generationConfig,
     });
   }
 
@@ -1423,14 +1429,14 @@ Extract as much metadata as possible from the document properties and content.`;
   getSpeechModel(modelName?: string): GenerativeModel {
     const speechModelName = modelName || "gemini-2.5-flash-preview-tts";
 
+    // Gemini 3 series: omit temperature per Google migration guide
+    const generationConfig = this.isGemini3Series(speechModelName)
+      ? { topK: 32, topP: 0.95, maxOutputTokens: 8192 }
+      : { temperature: 0.7, topK: 32, topP: 0.95, maxOutputTokens: 8192 };
+
     return this.provider.getGenerativeModel({
       model: speechModelName,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 32,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
+      generationConfig,
     });
   }
 
@@ -1687,14 +1693,14 @@ Extract as much metadata as possible from the document properties and content.`;
   getVideoGenerationModel(modelName?: string): GenerativeModel {
     const videoModelName = modelName || "veo-3.0-generate-001";
 
+    // Gemini 3 series: omit temperature per Google migration guide
+    const generationConfig = this.isGemini3Series(videoModelName)
+      ? { topK: 32, topP: 0.95, maxOutputTokens: 8192 }
+      : { temperature: 0.7, topK: 32, topP: 0.95, maxOutputTokens: 8192 };
+
     return this.provider.getGenerativeModel({
       model: videoModelName,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 32,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
+      generationConfig,
     });
   }
 

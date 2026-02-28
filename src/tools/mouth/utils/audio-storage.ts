@@ -126,19 +126,26 @@ export class AudioStorage {
       }
       result.size = Math.floor((base64Data.length * 3) / 4);
 
-      // Always save locally first - convert PCM to proper WAV
+      // Always save locally first
       try {
         const localPath = path.join(this.localStoragePath, finalFilename);
+        const audioBuffer = Buffer.from(base64Data, 'base64');
 
-        // Convert base64 to buffer (raw PCM data from Gemini)
-        const pcmBuffer = Buffer.from(base64Data, 'base64');
-
-        // Convert PCM to proper WAV format
-        await this.convertPcmToWav(pcmBuffer, localPath);
-
-        result.localPath = localPath;
-        result.storage.local = true;
-        logger.info(`Audio saved locally as WAV: ${localPath}`);
+        if (format === "mp3" || format === "flac" || format === "ogg") {
+          // Non-WAV formats: write buffer directly (no PCM conversion needed)
+          const fs = await import('fs/promises');
+          await fs.writeFile(localPath, audioBuffer);
+          result.localPath = localPath;
+          result.storage.local = true;
+          result.size = audioBuffer.length;
+          logger.info(`Audio saved locally as ${format.toUpperCase()}: ${localPath}`);
+        } else {
+          // WAV: convert PCM to proper WAV format
+          await this.convertPcmToWav(audioBuffer, localPath);
+          result.localPath = localPath;
+          result.storage.local = true;
+          logger.info(`Audio saved locally as WAV: ${localPath}`);
+        }
       } catch (error) {
         logger.warn(`Failed to save audio locally:`, error);
         // Continue with cloud upload even if local save fails

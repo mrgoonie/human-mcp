@@ -8,10 +8,12 @@ Transform AI coding agents with human-like sensory capabilities by providing sop
 
 ## Executive Summary
 
-Human MCP is a Model Context Protocol server that empowers AI coding agents with advanced multimodal capabilities. Currently focused on visual analysis (Eyes), the project roadmap extends to encompass complete human-like sensory capabilities including document understanding, audio processing, speech generation, and content creation.
+Human MCP is a Model Context Protocol server that empowers AI coding agents with advanced multimodal capabilities across multiple AI providers. The project supports comprehensive visual analysis, document understanding, speech generation, content creation (images, videos, music, sound effects), image editing, and advanced reasoning.
 
-**Current Status**: Version 2.16.0 - Visual Analysis + Document Processing + Content Generation + Speech Generation + Advanced Reasoning + Multi-Provider Integration (Minimax, ElevenLabs) Complete
-**Next Milestone**: Audio Processing (Ears)
+**Current Status**: Version 2.16.0 - Multi-Provider Integration Complete (Gemini, Minimax, ZhipuAI, ElevenLabs)
+**Total MCP Tools**: 29 production-ready tools across 4 capability areas
+**AI Providers**: 4 providers with automatic routing and fallback support
+**Next Milestone**: Audio Processing (Ears - Phase 3)
 **Target Completion**: Q1 2025 for full human capabilities suite
 
 ## Current Capabilities
@@ -41,7 +43,7 @@ Human MCP is a Model Context Protocol server that empowers AI coding agents with
 **Status**: Production Ready (v2.14.0)
 **Completion Date**: February 28, 2026
 
-#### Eyes Features (Phase 1)
+#### Eyes Features (Phase 1) - Multi-Provider Vision
 - **Image Analysis**: PNG, JPEG, WebP, GIF static image processing
 - **Video Analysis**: MP4, WebM, MOV, AVI video processing with frame extraction
 - **GIF Analysis**: Animated GIF frame-by-frame analysis
@@ -49,6 +51,7 @@ Human MCP is a Model Context Protocol server that empowers AI coding agents with
 - **Analysis Types**: UI debugging, error detection, accessibility, performance, layout analysis
 - **Detail Levels**: Quick (< 10s) and detailed (< 30s) analysis modes
 - **Input Sources**: File paths, URLs, and base64 data URIs
+- **Providers**: Gemini Vision (default), ZhipuAI GLM-4.6V (images only, alternate provider)
 
 #### Document Understanding Features (Phase 2)
 - **Document Processing**: PDF, DOCX, XLSX, PPTX, TXT, MD, RTF, ODT, CSV, JSON, XML, HTML
@@ -59,32 +62,41 @@ Human MCP is a Model Context Protocol server that empowers AI coding agents with
 - **Table Processing**: Extract and analyze tabular data from spreadsheets and documents
 - **Image Extraction**: Extract embedded images from documents (optional)
 
-#### Speech Generation Features (Phase 4)
-- **Text-to-Speech**: Natural speech synthesis with 30+ voice options (Gemini) or 40+ premium voices (ElevenLabs)
-- **Multi-Provider Support**: Gemini (default), Minimax (300+ voices), ElevenLabs (premium quality, 70+ languages)
+#### Speech Generation Features (Phase 4) - Multi-Provider TTS
+- **Text-to-Speech**: Natural speech synthesis across 3 providers
+  - Gemini Speech (default, 30+ voices, 24 languages)
+  - Minimax Speech 2.6 HD/Turbo (300+ voices, high quality)
+  - ElevenLabs TTS (40+ premium voices, 70+ languages, best quality)
 - **Long-form Narration**: Chapter breaks and style control for extended content
 - **Code Explanation**: Technical content with spoken analysis and examples
 - **Voice Customization**: Style prompts, voice comparison, and provider-specific tuning
-- **Multi-language**: Support for 24+ languages (Gemini), 70+ languages (ElevenLabs)
-- **Audio Export**: Professional WAV/MP3 format output with configurable quality
+- **Multi-language**: Support for 24-70+ languages depending on provider
+- **Audio Export**: Professional WAV/MP3 format output with configurable quality and file storage
 
-#### Hands Features (Phase 5)
-- **Image Generation**: High-quality image creation from text descriptions using Gemini Imagen API
-- **Video Generation**: Create videos from text prompts using Veo 3.0 or Minimax Hailuo 2.3
+#### Hands Features (Phase 5) - Multi-Provider Content Generation
+- **Image Generation**: Multi-provider high-quality image creation
+  - Gemini Imagen 3.1 Pro / 3 Flash (default, 1:1 to 9:1 aspect ratios)
+  - Gemini Nano Banana 2 (fast, experimental)
+  - ZhipuAI CogView-4 / GLM-Image (alternate provider)
+- **Video Generation**: Multi-provider video creation
+  - Gemini Veo 3.0 (default, highest quality)
+  - Minimax Hailuo 2.3 (alternate provider)
+  - ZhipuAI CogVideoX-3 (alternate provider)
 - **Image-to-Video**: Convert static images to animated videos with provider selection
-- **Music Generation**: Create music with vocals from lyrics using Minimax Music 2.5 or ElevenLabs Music API
-- **Sound Effects Generation**: Generate sound effects (0.5-30s) from text descriptions using ElevenLabs SFX API
-- **AI Image Editing**: Advanced image manipulation (5 tools)
-- **Jimp Processing**: Image processing and transformation (4 tools)
-- **Background Removal**: Intelligent background removal
-- **Browser Automation**: Playwright-based automation (3 tools)
-- **Provider Support**: Gemini (default), Minimax (speech, video, music), ElevenLabs (speech, music, SFX)
-- **Style Control**: Multiple artistic styles (photorealistic, artistic, cartoon, sketch, digital_art)
-- **Aspect Ratios**: Flexible output formats (1:1, 16:9, 9:16, 4:3, 3:4)
-- **Prompt Engineering**: Advanced prompt processing with negative prompts for exclusion
+- **Music Generation**: Two provider options
+  - Minimax Music 2.5 (lyrics support, vocals, up to 4 minutes)
+  - ElevenLabs Music API (text-to-music, up to 10 minutes)
+- **Sound Effects Generation**: ElevenLabs SFX API (0.5-30s, looping support)
+- **AI Image Editing**: Gemini-powered advanced image manipulation (5 tools)
+- **Jimp Processing**: Local image processing and transformation (4 tools)
+- **Background Removal**: AI-powered intelligent background removal (3 quality levels)
+- **Browser Automation**: Playwright-based screenshot capture (3 tools)
+- **Style Control**: Multiple artistic styles across providers
+- **Aspect Ratios**: Extended flexible output formats (1:1 to 9:1)
+- **Prompt Engineering**: Advanced prompt processing with negative prompts
 - **Seed Support**: Reproducible generation with seed parameters
-- **Output Format**: Base64 data URI with future URL support planned
-- **Error Handling**: Comprehensive validation and error recovery
+- **Output Format**: Base64 data URI with automatic file storage and optional R2 cloud upload
+- **Error Handling**: Comprehensive validation and error recovery with provider fallback
 
 #### Technical Implementation
 ```typescript
@@ -142,19 +154,20 @@ Human MCP is a Model Context Protocol server that empowers AI coding agents with
 - **Image Analysis**: < 10s (quick) / < 30s (detailed)
 - **Video Processing**: < 2 minutes for 30-second clips
 - **Document Processing**: < 60s for standard documents
-- **Speech Generation**: < 45s for typical text (Gemini/Minimax), < 60s (ElevenLabs)
-- **Image Generation**: < 30s for high-quality images
-- **Video Generation**: < 2 minutes for short videos (Gemini/Minimax)
+- **Speech Generation**: < 45s (Gemini/Minimax), < 60s (ElevenLabs premium)
+- **Image Generation**: < 30s for high-quality images (all providers)
+- **Video Generation**: < 2 minutes for short videos (Gemini/Minimax/ZhipuAI)
 - **Music Generation**: < 3 minutes for 4-minute songs (Minimax), < 5 minutes for 10-minute tracks (ElevenLabs)
 - **Sound Effects Generation**: < 60s for typical SFX (ElevenLabs)
 - **Image Editing**: < 20s for AI edits, < 5s for Jimp operations
-- **Background Removal**: < 15s per image
-- **Browser Automation**: < 10s for typical operations
+- **Background Removal**: < 15s per image (3 quality levels)
+- **Browser Automation**: < 10s for typical screenshot captures
 - **Sequential Thinking**: < 30s for complex reasoning
-- **Success Rate**: 98.5% for visual analysis, 95%+ for document processing, 99%+ for hands tools
+- **Success Rate**: 98.5% (visual analysis), 95%+ (document processing), 99%+ (hands tools)
 - **Memory Usage**: < 100MB for typical operations
-- **API Response Time**: 95th percentile < 30 seconds
-- **Total Tools Available**: 30 production-ready MCP tools
+- **API Response Time**: 95th percentile < 60s
+- **Total Tools Available**: 29 production-ready MCP tools
+- **AI Providers**: 4 (Gemini, Minimax, ZhipuAI, ElevenLabs) with automatic routing
 
 ## Development Phases & Roadmap
 
@@ -703,24 +716,30 @@ src/tools/hands/
 
 ## Conclusion
 
-The Human MCP project represents a significant advancement in AI-agent capabilities, providing comprehensive human-like sensory analysis and cognitive processing through the Model Context Protocol. With **30 production-ready tools** across five completed phases (Eyes, Documents, Mouth, Hands, Brain), the project has achieved major milestones in v2.16.0:
+The Human MCP project represents a significant advancement in AI-agent capabilities, providing comprehensive human-like sensory analysis, content creation, and cognitive processing through the Model Context Protocol with multi-provider support. With **29 production-ready tools** across five completed phases (Eyes, Documents, Mouth, Hands, Brain) and **4 AI providers** (Gemini, Minimax, ZhipuAI, ElevenLabs), the project has achieved major milestones in v2.16.0:
 
-- **Phase 1 (Eyes)**: Visual analysis - 5 tools ✅
+- **Phase 1 (Eyes)**: Visual analysis - 5 tools with Gemini + ZhipuAI GLM-4.6V providers ✅
 - **Phase 2 (Documents)**: Document processing integrated with Eyes ✅
-- **Phase 4 (Mouth)**: Speech generation - 4 tools (Gemini, Minimax, ElevenLabs providers) ✅
-- **Phase 5 (Hands)**: Content creation - 19 tools (image gen, video gen, music gen, SFX gen, AI editing, Jimp, background removal, browser automation) ✅
+- **Phase 4 (Mouth)**: Speech generation - 4 tools with Gemini + Minimax + ElevenLabs providers ✅
+- **Phase 5 (Hands)**: Content creation - 17 tools with multi-provider support ✅
+  - Image Gen: Gemini Imagen 3.1/3 Flash/Nano Banana 2 + ZhipuAI CogView-4
+  - Video Gen: Gemini Veo 3.0 + Minimax Hailuo 2.3 + ZhipuAI CogVideoX-3
+  - Music Gen: Minimax Music 2.5 + ElevenLabs Music API
+  - SFX Gen: ElevenLabs Sound Effects API
+  - AI Image Editing (5 tools), Jimp Processing (4 tools), Background Removal (1 tool)
 - **Phase 6 (Brain)**: Reasoning and thinking - 3 tools ✅
 
 The roadmap now focuses on expanding to audio processing (Phase 3 - Ears) to complete the full human capabilities suite.
 
-The phased approach ensures steady progress while maintaining high quality and reliability. Success depends on careful API integration, performance optimization, and active community engagement. With the addition of Vertex AI, Minimax, and ElevenLabs provider support in v2.16.0, Human MCP now offers enterprise-grade AI capabilities alongside its comprehensive toolset.
+The phased approach ensures steady progress while maintaining high quality and reliability. Success depends on careful multi-provider API integration, performance optimization, and active community engagement. With the addition of Minimax, ZhipuAI, and ElevenLabs provider support in v2.15.0-v2.16.0, Human MCP now offers enterprise-grade AI capabilities with provider choice and automatic routing across its comprehensive toolset.
 
 **Key Success Factors**:
 - Maintaining high performance and reliability standards (98.5%+ success rate)
 - Building strong community adoption and feedback loops
-- Staying ahead of AI API evolution (Gemini, Imagen, Veo 3.0, Vertex AI, Minimax, ElevenLabs)
-- Multi-provider architecture for flexibility and resilience
-- Delivering practical value to AI agent developers (30 production tools)
+- Staying ahead of AI API evolution (Gemini 3, Minimax, ZhipuAI, ElevenLabs)
+- Multi-provider architecture for flexibility, resilience, and cost optimization
+- Delivering practical value to AI agent developers (29 production tools, 4 providers)
 - Comprehensive documentation and developer experience
+- Provider routing and fallback mechanisms for high availability
 
-The project positions Human MCP as the definitive multimodal analysis, creation, and reasoning solution for AI agents, enabling sophisticated debugging, content analysis, content generation workflows (including music and sound effects generation), and advanced cognitive processing that bridge the gap between artificial and human intelligence. With Minimax and ElevenLabs integration, Human MCP now offers provider choice for speech, video, music, and sound effects generation capabilities.
+The project positions Human MCP as the definitive multimodal analysis, creation, and reasoning solution for AI agents with multi-provider support, enabling sophisticated debugging, content analysis, content generation workflows (including images, videos, music, and sound effects), and advanced cognitive processing that bridge the gap between artificial and human intelligence. With support for Gemini, Minimax, ZhipuAI, and ElevenLabs, Human MCP offers unparalleled provider choice and flexibility for diverse use cases.

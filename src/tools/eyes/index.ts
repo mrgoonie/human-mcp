@@ -5,6 +5,8 @@ import { processVideo } from "./processors/video.js";
 import { processGif } from "./processors/gif.js";
 import { DocumentProcessorFactory } from "./processors/factory.js";
 import { GeminiClient } from "./utils/gemini-client.js";
+import { analyzeWithZhipuAI } from "./providers/zhipuai-vision-provider.js";
+import { ZhipuAIClient } from "@/utils/zhipuai-client.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
@@ -131,6 +133,15 @@ async function handleOptimizedAnalyze(
 
   // Auto-detect media type from source
   const mediaType = detectMediaType(source);
+
+  // Route to ZhipuAI for image analysis when configured (video/gif fallback to Gemini)
+  if (config.providers.vision === "zhipuai" && mediaType === "image" && ZhipuAIClient.isConfigured(config)) {
+    const zhipuResult = await analyzeWithZhipuAI({ source, focus, detail, config });
+    return {
+      content: [{ type: "text" as const, text: formatAnalysisResult(zhipuResult, focus) }],
+      isError: false
+    };
+  }
 
   const model = geminiClient.getModel(detail as "quick" | "detailed");
   const options = {

@@ -5,12 +5,16 @@ This directory contains comprehensive documentation for the Human MCP project. N
 ## Documentation Index
 
 ### 📋 Project Overview
-- **[Project Roadmap](project-roadmap.md)** - Complete development roadmap, phases, and vision through 2025
-- **[Project Overview & PDR](project-overview-pdr.md)** - Project overview and product development requirements
-- **[Codebase Summary](codebase-summary.md)** - Comprehensive overview of the current codebase
+- **[Project Roadmap](project-roadmap.md)** - Development roadmap, phases, and vision
+- **[Project Overview & PDR](project-overview-pdr.md)** - Product development requirements and specifications
+- **[Codebase Summary](codebase-summary.md)** - Auto-generated codebase snapshot (Repomix)
 
 ### 🏗️ Architecture & Development
 - **[Architecture & Code Standards](codebase-structure-architecture-code-standards.md)** - Technical architecture, code organization, and development standards
+
+### 📚 Additional References
+- **[Playwright Screenshot Usage](playwright-screenshot-usage.md)** - Browser automation screenshot guide
+- **[Research: Jimp & RMBG Tools](research-jimp-rmbg-image-editing-tools.md)** - Image editing tools research
 
 ## Quick Navigation
 
@@ -43,7 +47,7 @@ All documentation follows these principles:
 
 ## Last Updated
 
-This documentation structure was established to support the project roadmap and ensure comprehensive coverage of the Human MCP development vision through 2025.
+Documentation last synced with codebase at **v2.14.0** (February 2026).
 
 ---
 

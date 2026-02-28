@@ -105,3 +105,8 @@ export function getCloudflareR2(): CloudflareR2Client | null {
   }
   return cloudflareR2Instance;
 }
+
+/** Reset singleton for testing only */
+export function _resetCloudflareR2(): void {
+  cloudflareR2Instance = null;
+}

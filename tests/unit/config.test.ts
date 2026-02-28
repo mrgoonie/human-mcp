@@ -52,4 +52,23 @@ describe("Config", () => {
     expect(config.gemini.vertexProjectId).toBe("test-project");
     expect(config.gemini.vertexLocation).toBe("us-central1");
   });
+
+  it("should parse ELEVENLABS_API_KEY from env", () => {
+    process.env.ELEVENLABS_API_KEY = "test-el-key";
+    const config = loadConfig();
+    expect(config.elevenlabs?.apiKey).toBe("test-el-key");
+    delete process.env.ELEVENLABS_API_KEY;
+  });
+
+  it("should default ElevenLabs apiHost to https://api.elevenlabs.io", () => {
+    const config = loadConfig();
+    expect(config.elevenlabs?.apiHost).toBe("https://api.elevenlabs.io");
+  });
+
+  it("should accept elevenlabs as speech provider", () => {
+    process.env.SPEECH_PROVIDER = "elevenlabs";
+    const config = loadConfig();
+    expect(config.providers.speech).toBe("elevenlabs");
+    delete process.env.SPEECH_PROVIDER;
+  });
 });
