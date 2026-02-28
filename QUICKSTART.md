@@ -12,7 +12,7 @@ bun install
 
 # 2. Set up environment
 cp .env.example .env
-# Edit .env and add your GOOGLE_GEMINI_API_KEY
+# Edit .env and add your API keys (only GOOGLE_GEMINI_API_KEY is required)
 
 # 3. Start the server
 bun run dev
@@ -32,19 +32,25 @@ Add this to your Claude Desktop config file:
       "command": "bun",
       "args": ["run", "/path/to/human-mcp/src/index.ts"],
       "env": {
-        "GOOGLE_GEMINI_API_KEY": "your_actual_api_key_here"
+        "GOOGLE_GEMINI_API_KEY": "your_gemini_key",
+        "MINIMAX_API_KEY": "optional_minimax_key",
+        "ZHIPUAI_API_KEY": "optional_zhipuai_key",
+        "ELEVENLABS_API_KEY": "optional_elevenlabs_key"
       }
     }
   }
 }
 ```
 
-## 🔧 Get Your Gemini API Key
+## 🔧 Get Your API Keys
 
-1. Visit [Google AI Studio](https://aistudio.google.com/)
-2. Click "Get API Key"
-3. Create a new project or use existing one
-4. Copy your API key
+**Required:**
+1. Visit [Google AI Studio](https://aistudio.google.com/) → Get `GOOGLE_GEMINI_API_KEY`
+
+**Optional (unlock more providers):**
+- [Minimax](https://platform.minimaxi.com/) → Speech 2.6, Music 2.5, Hailuo 2.3 Video
+- [ZhipuAI](https://open.bigmodel.cn/) → GLM-4.6V Vision, CogView-4 Image, CogVideoX-3 Video
+- [ElevenLabs](https://elevenlabs.io/) → TTS (70+ languages), Music, Sound Effects
 
 ## ✅ Test Your Installation
 
