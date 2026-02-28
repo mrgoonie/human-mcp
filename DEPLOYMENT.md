@@ -6,7 +6,8 @@ This guide explains how to deploy the Human MCP Server on a VPS using Docker and
 
 - VPS with Docker and Docker Compose installed
 - Domain name (optional, for SSL/HTTPS)
-- Google Gemini API key
+- Google Gemini API key (required)
+- Optional: Minimax, ZhipuAI, ElevenLabs API keys for additional providers
 
 ## Quick Start
 
@@ -31,6 +32,11 @@ nano .env
 - Set your `GOOGLE_GEMINI_API_KEY`
 - Update `DOMAIN` if using Traefik with SSL
 - Set `ACME_EMAIL` for Let's Encrypt certificates
+
+**Optional Provider API Keys:**
+- `MINIMAX_API_KEY` — Speech 2.6, Music 2.5, Hailuo 2.3 Video
+- `ZHIPUAI_API_KEY` — GLM-4.6V Vision, CogView-4 Image, CogVideoX-3 Video
+- `ELEVENLABS_API_KEY` — TTS (70+ languages), Music, Sound Effects
 
 ### 3. Deploy with Docker Compose
 
@@ -97,6 +103,17 @@ Key environment variables in `.env`:
 GOOGLE_GEMINI_API_KEY=your_api_key_here
 DOMAIN=your-domain.com
 ACME_EMAIL=admin@your-domain.com
+
+# Optional Provider API Keys
+MINIMAX_API_KEY=your_minimax_key
+ZHIPUAI_API_KEY=your_zhipuai_key
+ELEVENLABS_API_KEY=your_elevenlabs_key
+
+# Default provider per capability (all default to "gemini")
+SPEECH_PROVIDER=gemini       # Options: gemini, minimax, elevenlabs
+VIDEO_PROVIDER=gemini        # Options: gemini, minimax, zhipuai
+VISION_PROVIDER=gemini       # Options: gemini, zhipuai
+IMAGE_PROVIDER=gemini        # Options: gemini, zhipuai
 
 # Security
 HTTP_CORS_ORIGINS=https://your-domain.com

@@ -1,10 +1,10 @@
 # Human MCP 👁️
 
-> Bringing Human Capabilities to Coding Agents
+> Bringing Human Capabilities to AI Agents
 
 ![Human MCP](human-mcp.png)
 
-Human MCP v2.14.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, browser automation, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
+Human MCP v2.16.0 is a comprehensive Model Context Protocol server that provides AI coding agents with human-like capabilities including visual analysis, document processing, speech generation, content creation, image editing, browser automation, and advanced reasoning for debugging, understanding, and enhancing multimodal content.
 
 ## "Human MCP" is a part of [ClaudeKit](https://claudekit.cc)
 ![ClaudeKit.cc](claudekit.png)
@@ -57,6 +57,68 @@ Human MCP v2.14.0 is a comprehensive Model Context Protocol server that provides
 - **Playwright** - Browser automation for web screenshots
 - **Jimp** - Fast local image processing
 - **rmbg** - AI-powered background removal (U2Net+, ModNet, BRIAI models)
+
+### Supported Providers & Models
+
+Human MCP supports multiple AI providers per capability. Set via per-request `provider` parameter or environment variable defaults.
+
+#### Vision (Eyes)
+
+| Provider | Models | Features | Env Var |
+|----------|--------|----------|---------|
+| **Google Gemini** (default) | `gemini-2.5-flash`, `gemini-2.5-pro` | Image, video, GIF analysis; document processing | `GOOGLE_GEMINI_API_KEY` |
+| **ZhipuAI** | `glm-4.6v`, `glm-4.6v-flash` (FREE) | Image analysis via GLM-4.6V vision | `ZHIPUAI_API_KEY` |
+
+#### Image Generation (Hands)
+
+| Provider | Models | Features | Env Var |
+|----------|--------|----------|---------|
+| **Google Gemini** (default) | `gemini-2.5-flash-image-preview`, `gemini-3.1-flash-image-preview` | Text-to-image, 14 aspect ratios, 5 styles | `GOOGLE_GEMINI_API_KEY` |
+| **ZhipuAI** | `cogview-4-250304` | Text-to-image, CogView-4 | `ZHIPUAI_API_KEY` |
+
+#### Video Generation (Hands)
+
+| Provider | Models | Features | Env Var |
+|----------|--------|----------|---------|
+| **Google Gemini** (default) | `veo-3.0-generate-001` | Text-to-video, image-to-video, 4-12s, camera controls | `GOOGLE_GEMINI_API_KEY` |
+| **Minimax** | `MiniMax-Hailuo-2.3`, `MiniMax-Hailuo-2.3-Fast` | Text-to-video, image-to-video, 768P/1080P | `MINIMAX_API_KEY` |
+| **ZhipuAI** | `cogvideox-3` | Text-to-video, image-to-video, async polling | `ZHIPUAI_API_KEY` |
+
+#### Speech / TTS (Mouth)
+
+| Provider | Models | Features | Env Var |
+|----------|--------|----------|---------|
+| **Google Gemini** (default) | `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-preview-tts` | 31 voices, 24 languages, style prompts | `GOOGLE_GEMINI_API_KEY` |
+| **Minimax** | `speech-2.6-hd`, `speech-2.6-turbo` | Emotion control, speed adjustment | `MINIMAX_API_KEY` |
+| **ElevenLabs** | `eleven_v3`, `eleven_multilingual_v2`, `eleven_flash_v2_5`, `eleven_turbo_v2_5` | 70+ languages, voice cloning, stability/style controls | `ELEVENLABS_API_KEY` |
+
+#### Music Generation (Hands)
+
+| Provider | Models | Features | Env Var |
+|----------|--------|----------|---------|
+| **Minimax** | `music-2.5` | Vocals from lyrics, structure tags, MP3/WAV | `MINIMAX_API_KEY` |
+| **ElevenLabs** | Music API | Instrumental mode, 3s-10min, prompt-based | `ELEVENLABS_API_KEY` |
+
+#### Sound Effects (Hands)
+
+| Provider | Models | Features | Env Var |
+|----------|--------|----------|---------|
+| **ElevenLabs** | Sound Generation API | Text-to-SFX, 0.5-30s, looping, prompt influence | `ELEVENLABS_API_KEY` |
+
+#### Provider Configuration
+
+```bash
+# Default provider per capability (optional, all default to "gemini")
+SPEECH_PROVIDER=gemini      # Options: gemini, minimax, elevenlabs
+VIDEO_PROVIDER=gemini       # Options: gemini, minimax, zhipuai
+VISION_PROVIDER=gemini      # Options: gemini, zhipuai
+IMAGE_PROVIDER=gemini       # Options: gemini, zhipuai
+```
+
+Or override per request:
+```json
+{ "provider": "minimax", "prompt": "..." }
+```
 
 ### Google Gemini Documentation
 - [Gemini API](https://ai.google.dev/gemini-api/docs?hl=en)
@@ -1443,7 +1505,7 @@ HTTP_ENABLE_RATE_LIMITING=false
 ## Architecture
 
 ```
-Human MCP Server v2.14.0
+Human MCP Server v2.16.0
 ├── 👁️ Eyes Tools (4) - Visual Analysis & Document Processing
 │   ├── eyes_analyze - Images, videos, GIFs analysis
 │   ├── eyes_compare - Image comparison
@@ -1504,7 +1566,7 @@ Total: 29 MCP Tools
 
 **Mission**: Transform AI coding agents with complete human-like sensory capabilities, bridging the gap between artificial and human intelligence through sophisticated multimodal analysis.
 
-### Current Status: v2.14.0 - 29 Production-Ready MCP Tools
+### Current Status: v2.16.0 - 29 Production-Ready MCP Tools
 
 **👁️ Eyes (4 tools)** - Visual Analysis & Document Processing
 - ✅ Image, video, GIF analysis with UI debugging and accessibility auditing
@@ -1544,38 +1606,39 @@ Only remaining capability to complete the human sensory suite:
 
 **Note:** Phases 1, 2, 4, 5, and 6 are complete with 27 production-ready tools
 
-### System Architecture (v2.14.0)
+### System Architecture (v2.16.0)
 
-Complete human-like capabilities through 27 MCP tools:
+Complete human-like capabilities through 29 MCP tools with multi-provider support:
 
 ```
 ┌─────────────────┐    ┌──────────────────────────┐    ┌─────────────────────────┐
-│   AI Agent      │◄──►│    Human MCP Server      │◄──►│  Google AI Services     │
-│  (MCP Client)   │    │        v2.14.0           │    │ • Gemini 2.5 Flash      │
-└─────────────────┘    │                          │    │ • Gemini Imagen API     │
-                       │  👁️ Eyes (4 tools) ✅   │    │ • Gemini Veo 3.0 API    │
-                       │  • Visual Analysis        │    │ • Gemini Speech API     │
+│   AI Agent      │◄──►│    Human MCP Server      │◄──►│  Google Gemini          │
+│  (MCP Client)   │    │        v2.16.0           │    │ • Gemini 2.5/3.1 Flash  │
+└─────────────────┘    │                          │    │ • Imagen API            │
+                       │  👁️ Eyes (4 tools) ✅   │    │ • Veo 3.0 API           │
+                       │  • Visual Analysis        │    │ • Speech API            │
                        │  • Document Processing    │    └─────────────────────────┘
                        │                          │
-                       │  ✋ Hands (16 tools) ✅  │    ┌─────────────────────────┐
-                       │  • Image Generation       │    │  Processing Libraries   │
-                       │  • Video Generation       │    │ • Playwright (browser)  │
-                       │  • AI Image Editing       │    │ • Jimp (image proc)     │
-                       │  • Jimp Processing        │    │ • rmbg (bg removal)     │
-                       │  • Background Removal     │    │ • ffmpeg (video)        │
-                       │  • Browser Automation     │    │ • Sharp (GIF)           │
-                       │                          │    └─────────────────────────┘
-                       │  🗣️ Mouth (4 tools) ✅   │
-                       │  • Text-to-Speech         │
-                       │  • Narration              │
-                       │  • Code Explanation       │
+                       │  ✋ Hands (18 tools) ✅  │    ┌─────────────────────────┐
+                       │  • Image Generation       │    │  Minimax                │
+                       │  • Video Generation       │    │ • Speech 2.6 (HD/Turbo) │
+                       │  • Music & SFX            │    │ • Music 2.5             │
+                       │  • AI Image Editing       │    │ • Hailuo 2.3 Video      │
+                       │  • Jimp Processing        │    └─────────────────────────┘
+                       │  • Background Removal     │
+                       │  • Browser Automation     │    ┌─────────────────────────┐
+                       │                          │    │  ZhipuAI (Z.AI)         │
+                       │  🗣️ Mouth (4 tools) ✅   │    │ • GLM-4.6V Vision       │
+                       │  • Text-to-Speech         │    │ • CogView-4 Image      │
+                       │  • Narration              │    │ • CogVideoX-3 Video    │
+                       │  • Code Explanation       │    └─────────────────────────┘
                        │                          │
-                       │  🧠 Brain (3 tools) ✅   │
-                       │  • Sequential Thinking    │
-                       │  • Pattern Analysis       │
-                       │  • AI Reflection          │
-                       │                          │
-                       │  👂 Ears (Planned 2025)  │
+                       │  🧠 Brain (3 tools) ✅   │    ┌─────────────────────────┐
+                       │  • Sequential Thinking    │    │  ElevenLabs             │
+                       │  • Pattern Analysis       │    │ • TTS (70+ languages)   │
+                       │  • AI Reflection          │    │ • Music Generation      │
+                       │                          │    │ • Sound Effects         │
+                       │  👂 Ears (Planned)       │    └─────────────────────────┘
                        └──────────────────────────┘
 ```
 
@@ -1599,20 +1662,21 @@ Complete human-like capabilities through 27 MCP tools:
 - Complex reasoning with thought revision and reflection
 - Pattern-based analysis for common problems
 
-### Current Achievements (v2.14.0)
+### Current Achievements (v2.16.0)
 
 **Completed Phases:**
-- ✅ Phase 1: Eyes - Visual Analysis (4 tools)
+- ✅ Phase 1: Eyes - Visual Analysis (4 tools) — Gemini + ZhipuAI providers
 - ✅ Phase 2: Document Understanding (integrated into Eyes)
-- ✅ Phase 4: Mouth - Speech Generation (4 tools)
-- ✅ Phase 5: Hands - Content Generation, Image Editing & Browser Automation (16 tools)
+- ✅ Phase 4: Mouth - Speech Generation (4 tools) — Gemini + Minimax + ElevenLabs providers
+- ✅ Phase 5: Hands - Content Generation, Image Editing & Browser Automation (18 tools) — Gemini + Minimax + ZhipuAI + ElevenLabs providers
 - ✅ Phase 6: Brain - Advanced Reasoning (3 tools)
 
 **Remaining:**
-- ⏳ Phase 3: Ears - Audio Processing (planned Q1 2025)
+- ⏳ Phase 3: Ears - Audio Processing (planned)
 
 **Goals Achieved:**
 - ✅ 29 production-ready MCP tools
+- ✅ 4 AI providers: Google Gemini, Minimax, ZhipuAI, ElevenLabs
 - ✅ Support for 30+ file formats (images, videos, documents, audio)
 - ✅ Browser automation for automated web screenshots
 - ✅ Sub-30 second response times for most operations
@@ -1643,9 +1707,9 @@ Human MCP is built for the developer community. Whether you're integrating with 
 - **Auto-detection**: Automatic format detection from content and extensions
 
 **Speech Generation Formats**:
-- **Output**: WAV (Base64 encoded), 24kHz mono
-- **Languages**: 24+ languages supported
-- **Voices**: 30+ voice options with style control
+- **Gemini Output**: WAV (Base64 encoded), 24kHz mono, 31 voices, 24 languages
+- **Minimax Output**: MP3/WAV, emotion control, speed adjustment
+- **ElevenLabs Output**: MP3, 70+ languages, voice cloning, stability/style controls
 
 **Content Generation Formats**:
 - **Images**: PNG, JPEG (Base64 output)

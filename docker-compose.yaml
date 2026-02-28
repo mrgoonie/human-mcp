@@ -15,7 +15,21 @@ services:
       - NODE_ENV=production
       - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
       - GOOGLE_GEMINI_MODEL=${GOOGLE_GEMINI_MODEL:-gemini-2.5-flash}
-      
+
+      # Optional Provider API Keys
+      - MINIMAX_API_KEY=${MINIMAX_API_KEY:-}
+      - MINIMAX_API_HOST=${MINIMAX_API_HOST:-https://api.minimax.io}
+      - ZHIPUAI_API_KEY=${ZHIPUAI_API_KEY:-}
+      - ZHIPUAI_API_HOST=${ZHIPUAI_API_HOST:-https://api.z.ai/api/paas/v4}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - ELEVENLABS_API_HOST=${ELEVENLABS_API_HOST:-https://api.elevenlabs.io}
+
+      # Default Provider Selection (all default to "gemini")
+      - SPEECH_PROVIDER=${SPEECH_PROVIDER:-gemini}
+      - VIDEO_PROVIDER=${VIDEO_PROVIDER:-gemini}
+      - VISION_PROVIDER=${VISION_PROVIDER:-gemini}
+      - IMAGE_PROVIDER=${IMAGE_PROVIDER:-gemini}
+
       # Transport Configuration
       - TRANSPORT_TYPE=http
       - HTTP_PORT=3000
