@@ -6,7 +6,7 @@
 
 Human MCP follows a modular, event-driven architecture built around the Model Context Protocol (MCP). The system is designed as a server that exposes multimodal analysis capabilities through standardized MCP tools.
 
-#### Current Architecture (v2.2.0 - Multi-Modal + Advanced Reasoning Complete)
+#### Current Architecture (v2.14.0 - Multi-Modal + Advanced Reasoning Complete)
 ```
 ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
 │   MCP Client    │◄──►│    Human MCP         │◄──►│  Google AI Services     │
@@ -47,11 +47,11 @@ The final phase completes all human sensory capabilities:
    - **Eyes Tools**: Visual analysis (`eyes_analyze`, `eyes_compare`) + Document processing (`eyes_read_document`, `eyes_extract_data`, `eyes_summarize`)
    - **Brain Tools**: Advanced reasoning (`brain_think`, `brain_analyze`, `brain_solve`, `brain_reflect`)
    - **Mouth Tools**: Speech generation (`mouth_speak`, `mouth_narrate`, `mouth_explain`, `mouth_customize`)
-   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`) + AI image editing (`gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`) + Jimp processing (`jimp_crop_image`, `jimp_resize_image`, `jimp_rotate_image`, `jimp_mask_image`) + Background removal (`rmbg_remove_background`)
+   - **Hands Tools**: Content generation (`gemini_gen_image`, `gemini_gen_video`, `gemini_image_to_video`) + AI image editing (`gemini_edit_image`, `gemini_inpaint_image`, `gemini_outpaint_image`, `gemini_style_transfer_image`, `gemini_compose_images`) + Jimp processing (`jimp_crop_image`, `jimp_resize_image`, `jimp_rotate_image`, `jimp_mask_image`) + Background removal (`rmbg_remove_background`) + Playwright screenshot capture (`playwright_capture_screenshot`, `playwright_capture_fullpage`, `playwright_capture_element`)
    - **Ears Tools**: Audio processing (planned Phase 3)
-3. **Processing Layer**: Media, document, and reasoning processors with factory patterns
+3. **Processing Layer**: Media, document, reasoning, and Playwright screenshot processors with factory patterns
 4. **Transport Layer**: STDIO and HTTP transports with SSE fallback
-5. **Integration Layer**: Google AI services integration (Vision, Document, Speech, Imagen, Veo3, Advanced Reasoning)
+5. **Integration Layer**: Google AI services integration (Vision, Document, Speech, Imagen, Veo3, Advanced Reasoning via Google AI Studio and Vertex AI)
 6. **Utility Layer**: Configuration, logging, error handling, validation, and security
 
 ## Directory Structure
@@ -93,19 +93,24 @@ human-mcp/
 │   │   │   │   ├── text.ts   # Text file processing
 │   │   │   │   └── factory.ts # Document processor factory
 │   │   │   └── utils/        # Tool-specific utilities
-│   │   │       ├── gemini-client.ts # Google Gemini API integration
-│   │   │       └── formatters.ts    # Output formatting utilities
+│   │   │       ├── gemini-provider.ts # Base Gemini provider interface
+│   │   │       ├── formatters.ts    # Output formatting utilities
+│   │   │       └── providers/      # Gemini API provider implementations
+│   │   │           ├── google-ai-studio-provider.ts # Google AI Studio provider
+│   │   │           └── vertex-ai-provider.ts # Vertex AI provider
 │   │   ├── hands/            # Content generation and image editing tools
-│   │   │   ├── index.ts      # Hands tool registration (13 tools total)
+│   │   │   ├── index.ts      # Hands tool registration (16 tools total)
 │   │   │   ├── schemas.ts    # Content generation and editing schemas
 │   │   │   ├── processors/   # Generation and processing processors
 │   │   │   │   ├── image-generator.ts  # Imagen API image generation
 │   │   │   │   ├── video-generator.ts  # Veo 3.0 API video generation
 │   │   │   │   ├── image-editor.ts     # Gemini-powered image editing (5 operations)
 │   │   │   │   ├── jimp-processor.ts   # Jimp-based image manipulation (crop, resize, rotate, mask)
+│   │   │   │   ├── playwright-screenshot.ts # Playwright-based screenshot capture
 │   │   │   │   └── background-remover.ts # AI background removal (rmbg package)
 │   │   │   └── utils/        # Image editing utilities
 │   │   │       ├── jimp-helpers.ts     # Jimp helper functions and converters
+│   │   │       ├── playwright-helpers.ts # Playwright utility functions
 │   │   │       └── validation.ts       # Image editing parameter validation
 │   │   └── mouth/            # Speech generation tools
 │   │       ├── index.ts      # Mouth tool registration
@@ -120,6 +125,19 @@ human-mcp/
 │   ├── transports/           # Transport layer implementations
 │   │   ├── stdio/            # Standard I/O transport
 │   │   └── http/             # HTTP transport with SSE fallback
+│   ├── providers/            # Third-party AI provider integrations
+│   │   ├── minimax/          # Minimax provider implementations
+│   │   │   ├── speech-provider.ts # Minimax Speech 2.6 HD/Turbo TTS
+│   │   │   ├── music-provider.ts  # Minimax Music 2.5 generation
+│   │   │   └── video-provider.ts  # Minimax Hailuo 2.3 video generation
+│   │   ├── zhipuai/          # ZhipuAI (Z.AI) provider implementations
+│   │   │   ├── vision-provider.ts # GLM-4.6V vision analysis
+│   │   │   ├── image-provider.ts  # GLM-Image / CogView-4 image generation
+│   │   │   └── video-provider.ts  # CogVideoX-3 video generation
+│   │   └── elevenlabs/       # ElevenLabs provider implementations
+│   │       ├── speech-provider.ts # ElevenLabs TTS
+│   │       ├── music-provider.ts  # ElevenLabs Music API
+│   │       └── sfx-provider.ts    # ElevenLabs Sound Effects API
 │   ├── prompts/              # Pre-built debugging prompts
 │   │   ├── index.ts          # Prompt registration
 │   │   └── debugging-prompts.ts      # Debugging workflow templates
@@ -131,7 +149,11 @@ human-mcp/
 │   └── utils/                # Core utilities
 │       ├── config.ts         # Environment-based configuration
 │       ├── logger.ts         # Structured logging
-│       └── errors.ts         # Error handling and formatting
+│       ├── errors.ts         # Error handling and formatting
+│       ├── minimax-client.ts # Shared Minimax HTTP client
+│       ├── zhipuai-client.ts # Shared ZhipuAI (Z.AI) HTTP client
+│       ├── elevenlabs-client.ts # Shared ElevenLabs HTTP client
+│       └── file-storage.ts   # File storage with audio MIME support
 ├── tests/                    # Test suites
 │   ├── setup.ts             # Test environment setup
 │   ├── unit/                # Unit tests
@@ -158,19 +180,19 @@ human-mcp/
 - **Resource Exposure**: Documentation and examples exposed as MCP resources
 
 ```typescript
-// MCP Server Setup Pattern (v2.2.0)
+// MCP Server Setup Pattern (v2.14.0)
 export async function createServer() {
   const config = loadConfig();
   const server = new McpServer({
     name: "human-mcp",
-    version: "2.2.0",
+    version: "2.14.0",
   });
 
   // Register all human capability tools
   await registerEyesTool(server, config);      // Visual analysis + document processing
-  await registerBrainTools(server, config);   // Advanced reasoning (NEW in v2.2.0)
+  await registerBrainTools(server, config);   // Advanced reasoning
   await registerMouthTool(server, config);    // Speech generation
-  await registerHandsTool(server, config);    // Content generation
+  await registerHandsTool(server, config);    // Content generation + screenshot capture (16 tools)
   // await registerEarsTool(server, config);  // Audio processing (Phase 3)
 
   await registerPrompts(server);
@@ -188,31 +210,39 @@ export async function createServer() {
 - **Configuration Injection**: Environment-based configuration passed to tools
 
 ```typescript
-// Tool Registration Pattern (Multi-Modal + Advanced Reasoning v2.2.0)
-// Eyes Tools - Visual Analysis + Document Processing
+// Tool Registration Pattern (Multi-Modal + Advanced Reasoning v2.14.0)
+// Eyes Tools - Visual Analysis + Document Processing (5 tools)
 server.registerTool("eyes_analyze", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_compare", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_read_document", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_extract_data", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("eyes_summarize", { /* ... */ }, async (args) => { /* ... */ });
 
-// Brain Tools - Advanced Reasoning (NEW in v2.2.0)
+// Brain Tools - Advanced Reasoning (4 tools)
 server.registerTool("brain_think", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("brain_analyze", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("brain_solve", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("brain_reflect", { /* ... */ }, async (args) => { /* ... */ });
 
-// Mouth Tools - Speech Generation
-server.registerTool("mouth_speak", { /* ... */ }, async (args) => { /* ... */ });
+// Mouth Tools - Speech Generation (4 tools with provider support)
+server.registerTool("mouth_speak", { /* provider: gemini|minimax|elevenlabs */ }, async (args) => { /* ... */ });
+// Note: ZhipuAI has no TTS API, so speech only supports gemini|minimax|elevenlabs
 server.registerTool("mouth_narrate", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("mouth_explain", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("mouth_customize", { /* ... */ }, async (args) => { /* ... */ });
 
-// Hands Tools - Content Generation + AI Image Editing + Jimp Processing + Background Removal
-// Content Generation (3 tools)
+// Hands Tools - Content Generation + AI Image Editing + Jimp Processing + Background Removal + Screenshot Capture (18 tools)
+// Content Generation (3 tools with provider support)
 server.registerTool("gemini_gen_image", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_gen_video", { /* ... */ }, async (args) => { /* ... */ });
-server.registerTool("gemini_image_to_video", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_gen_video", { /* provider: gemini|minimax|zhipuai */ }, async (args) => { /* ... */ });
+server.registerTool("gemini_image_to_video", { /* provider: gemini|minimax|zhipuai */ }, async (args) => { /* ... */ });
+
+// Music Generation (2 tools - Minimax and ElevenLabs)
+server.registerTool("minimax_gen_music", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("elevenlabs_gen_music", { /* ... */ }, async (args) => { /* ... */ });
+
+// Sound Effects Generation (1 tool - ElevenLabs-only)
+server.registerTool("elevenlabs_gen_sfx", { /* ... */ }, async (args) => { /* ... */ });
 
 // AI Image Editing - Gemini-powered (5 tools)
 server.registerTool("gemini_edit_image", { /* ... */ }, async (args) => { /* ... */ });
@@ -226,6 +256,11 @@ server.registerTool("jimp_crop_image", { /* ... */ }, async (args) => { /* ... *
 server.registerTool("jimp_resize_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("jimp_rotate_image", { /* ... */ }, async (args) => { /* ... */ });
 server.registerTool("jimp_mask_image", { /* ... */ }, async (args) => { /* ... */ });
+
+// Playwright Screenshot Capture - Browser automation (3 tools - NEW in v2.12.0)
+server.registerTool("playwright_capture_screenshot", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("playwright_capture_fullpage", { /* ... */ }, async (args) => { /* ... */ });
+server.registerTool("playwright_capture_element", { /* ... */ }, async (args) => { /* ... */ });
 
 // Background Removal - AI-powered (1 tool)
 server.registerTool("rmbg_remove_background", { /* ... */ }, async (args) => { /* ... */ });
@@ -263,7 +298,7 @@ switch (type) {
 - **Unified Interface**: Common interface for all document processors
 
 ```typescript
-// Document Processing Factory Pattern (v2.0.0)
+// Document Processing Factory Pattern (v2.14.0)
 class DocumentProcessorFactory {
   static create(format: DocumentFormat, geminiClient: GeminiClient): DocumentProcessor {
     switch (format) {
@@ -282,7 +317,7 @@ class DocumentProcessorFactory {
   }
 }
 
-// Usage Pattern
+// Usage Pattern with Vertex AI or Google AI Studio provider
 const processor = DocumentProcessorFactory.create(detectedFormat, geminiClient);
 const result = await processor.process(source, options);
 ```
@@ -466,7 +501,69 @@ export async function cropImage(options: CropOptions, config?: Config): Promise<
 - **Transparency Masking**: Apply custom transparency patterns using grayscale masks
 - **Batch Processing**: Fast, local processing without API calls
 
-#### 5.3 Background Removal
+#### 5.3 Playwright Screenshot Capture
+
+**Pattern**: Automated Browser Screenshot Capture with Headless Chrome
+- **Core Library**: Playwright for Chromium browser automation
+- **Screenshot Types**: Three capture modes
+  - **Standard Screenshot**: Capture viewport or specific dimensions
+  - **Full Page Screenshot**: Capture entire scrollable page content
+  - **Element Screenshot**: Capture specific DOM element by CSS selector
+- **Configuration Options**:
+  - Viewport dimensions and device emulation
+  - Wait conditions (networkidle, load, domcontentloaded)
+  - JavaScript execution and cookie injection
+  - Custom user agents and extra HTTP headers
+- **Output Options**: PNG, JPEG, or WebP formats with quality control
+- **Use Cases**: Web page capture, UI testing screenshots, visual regression testing
+
+```typescript
+// Playwright Screenshot Pattern
+export async function captureScreenshot(
+  options: PlaywrightScreenshotOptions,
+  config?: Config
+): Promise<PlaywrightScreenshotResult> {
+  // Launch headless browser
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    viewport: options.viewport,
+    userAgent: options.userAgent,
+  });
+
+  // Navigate to URL with optional wait conditions
+  const page = await context.newPage();
+  await page.goto(options.url, { waitUntil: options.waitUntil || 'networkidle' });
+
+  // Execute custom JavaScript if provided
+  if (options.executeScript) {
+    await page.evaluate(options.executeScript);
+  }
+
+  // Capture screenshot based on type
+  let screenshotBuffer: Buffer;
+  if (options.captureType === 'element') {
+    const element = await page.locator(options.selector);
+    screenshotBuffer = await element.screenshot({ type: options.format });
+  } else if (options.captureType === 'fullpage') {
+    screenshotBuffer = await page.screenshot({ fullPage: true, type: options.format });
+  } else {
+    screenshotBuffer = await page.screenshot({ type: options.format });
+  }
+
+  await browser.close();
+
+  return { screenshot, format, dimensions, processingTime, filePath };
+}
+```
+
+**Playwright Screenshot Use Cases**:
+- **Web Page Archival**: Capture full page screenshots of websites
+- **UI Testing**: Generate screenshots for visual regression testing
+- **Documentation**: Create visual documentation of web interfaces
+- **Monitoring**: Capture periodic screenshots for change detection
+- **Responsive Testing**: Test layouts across different viewport sizes
+
+#### 5.4 Background Removal
 
 **Pattern**: AI-Powered Segmentation with Multiple Models
 - **Core Library**: rmbg package with three AI model options
@@ -513,9 +610,10 @@ export async function removeImageBackground(
 
 **Pattern**: Environment-based Configuration with Validation
 - **Schema Validation**: Zod schemas for runtime configuration validation
-- **Environment Variables**: All configuration via environment variables
+- **Environment Variables**: All configuration via environment variables (including provider selection)
 - **Default Values**: Sensible defaults with override capability
 - **Type Safety**: Full TypeScript typing for configuration objects
+- **Provider Configuration**: Support for multiple AI service providers (Gemini, Minimax, ZhipuAI, ElevenLabs)
 
 ## Code Standards & Best Practices
 

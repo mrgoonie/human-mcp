@@ -4,6 +4,10 @@ import { APIError } from "@/utils/errors.js";
 import type { SpeechGenerationResult } from "../schemas.js";
 import { createAudioStorage } from "../utils/audio-storage.js";
 import type { Config } from "@/utils/config.js";
+import { generateMinimaxSpeech } from "../providers/minimax-speech-provider.js";
+import { MinimaxClient } from "@/utils/minimax-client.js";
+import { generateElevenLabsSpeech } from "../providers/elevenlabs-speech-provider.js";
+import { ElevenLabsClient } from "@/utils/elevenlabs-client.js";
 
 export interface SpeechOptions {
   text: string;
@@ -36,6 +40,41 @@ export async function generateSpeech(
       fetchTimeout = 60000,
       config
     } = options;
+
+    // Provider routing: check for Minimax provider
+    const provider = (options as any).provider || config.providers?.speech || "gemini";
+
+    if (provider === "minimax") {
+      if (!MinimaxClient.isConfigured(config)) {
+        throw new APIError("MINIMAX_API_KEY required when provider is 'minimax'");
+      }
+      return generateMinimaxSpeech({
+        text,
+        voice: (options as any).minimax_voice || voice,
+        model: (options as any).minimax_model || "speech-2.6-hd",
+        language: (options as any).minimax_language || "auto",
+        emotion: (options as any).emotion,
+        speed: (options as any).speed,
+        config,
+      });
+    }
+
+    if (provider === "elevenlabs") {
+      if (!ElevenLabsClient.isConfigured(config)) {
+        throw new APIError("ELEVENLABS_API_KEY required when provider is 'elevenlabs'");
+      }
+      return generateElevenLabsSpeech({
+        text,
+        voice_id: (options as any).elevenlabs_voice,
+        model: (options as any).elevenlabs_model,
+        language_code: (options as any).elevenlabs_language,
+        stability: (options as any).stability,
+        similarity_boost: (options as any).similarity_boost,
+        style: (options as any).elevenlabs_style,
+        speed: (options as any).speed,
+        config,
+      });
+    }
 
     logger.info(`Generating speech: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}" with voice: ${voice}`);
 

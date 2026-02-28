@@ -13,6 +13,9 @@ import {
   PlaywrightFullPageScreenshotInputSchema,
   PlaywrightViewportScreenshotInputSchema,
   PlaywrightElementScreenshotInputSchema,
+  MusicGenerationInputSchema,
+  SfxGenerationInputSchema,
+  ElevenLabsMusicGenerationInputSchema,
   type ImageGenerationInput,
   type VideoGenerationInput,
   type ImageEditingInput,
@@ -23,7 +26,10 @@ import {
   type BackgroundRemovalInput,
   type PlaywrightFullPageScreenshotInput,
   type PlaywrightViewportScreenshotInput,
-  type PlaywrightElementScreenshotInput
+  type PlaywrightElementScreenshotInput,
+  type MusicGenerationInput,
+  type SfxGenerationInput,
+  type ElevenLabsMusicGenerationInput,
 } from "./schemas.js";
 import { generateImage } from "./processors/image-generator.js";
 import { generateVideo, generateImageToVideo, pollVideoGeneration } from "./processors/video-generator.js";
@@ -35,6 +41,11 @@ import {
   captureViewportScreenshot,
   captureElementScreenshot
 } from "./processors/playwright-screenshot.js";
+import { generateMinimaxMusic } from "./providers/minimax-music-provider.js";
+import { generateElevenLabsSfx } from "./providers/elevenlabs-sfx-provider.js";
+import { generateElevenLabsMusic } from "./providers/elevenlabs-music-provider.js";
+import { MinimaxClient } from "@/utils/minimax-client.js";
+import { ElevenLabsClient } from "@/utils/elevenlabs-client.js";
 import { logger } from "@/utils/logger.js";
 import { handleError } from "@/utils/errors.js";
 import type { Config } from "@/utils/config.js";
@@ -51,11 +62,11 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       description: "Generate images from text descriptions using Gemini Imagen API",
       inputSchema: {
         prompt: z.string().describe("Text description of the image to generate"),
-        model: z.enum(["gemini-2.5-flash-image-preview"]).optional().default("gemini-2.5-flash-image-preview").describe("Image generation model"),
+        model: z.enum(["gemini-2.5-flash-image-preview", "gemini-3.1-flash-image-preview"]).optional().default("gemini-2.5-flash-image-preview").describe("Image generation model"),
         output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format for the generated image"),
         negative_prompt: z.string().optional().describe("Text describing what should NOT be in the image"),
         style: z.enum(["photorealistic", "artistic", "cartoon", "sketch", "digital_art"]).optional().describe("Style of the generated image"),
-        aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("1:1").describe("Aspect ratio of the generated image"),
+        aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2", "4:5", "5:4", "21:9", "1:4", "4:1", "1:8", "8:1"]).optional().default("1:1").describe("Aspect ratio of the generated image"),
         seed: z.number().optional().describe("Random seed for reproducible generation")
       }
     },
@@ -81,19 +92,23 @@ export async function registerHandsTool(server: McpServer, config: Config) {
   server.registerTool(
     "gemini_gen_video",
     {
-      title: "Gemini Video Generation Tool",
-      description: "Generate videos from text descriptions using Gemini Veo 3.0 API",
+      title: "Video Generation Tool",
+      description: "Generate videos from text descriptions using Gemini Veo 3.0 or Minimax Hailuo 2.3. Set provider='minimax' for Minimax (requires MINIMAX_API_KEY).",
       inputSchema: {
         prompt: z.string().describe("Text description of the video to generate"),
-        model: z.enum(["veo-3.0-generate-001"]).optional().default("veo-3.0-generate-001").describe("Video generation model"),
+        provider: z.enum(["gemini", "minimax"]).optional().describe("Video provider (default: gemini)"),
+        model: z.enum(["veo-3.0-generate-001"]).optional().default("veo-3.0-generate-001").describe("Video generation model (Gemini)"),
+        minimax_model: z.enum(["MiniMax-Hailuo-2.3", "MiniMax-Hailuo-2.3-Fast"]).optional().describe("Minimax video model (Fast is I2V only)"),
         duration: z.enum(["4s", "8s", "12s"]).optional().default("4s").describe("Duration of the generated video"),
         output_format: z.enum(["mp4", "webm"]).optional().default("mp4").describe("Output format for the generated video"),
-        aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("16:9").describe("Aspect ratio of the generated video"),
+        aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2", "4:5", "5:4", "21:9", "1:4", "4:1", "1:8", "8:1"]).optional().default("16:9").describe("Aspect ratio of the generated video"),
         fps: z.number().int().min(1).max(60).optional().default(24).describe("Frames per second"),
         image_input: z.string().optional().describe("Base64 encoded image or image URL to use as starting frame"),
         style: z.enum(["realistic", "cinematic", "artistic", "cartoon", "animation"]).optional().describe("Style of the generated video"),
         camera_movement: z.enum(["static", "pan_left", "pan_right", "zoom_in", "zoom_out", "dolly_forward", "dolly_backward"]).optional().describe("Camera movement type"),
-        seed: z.number().optional().describe("Random seed for reproducible generation")
+        seed: z.number().optional().describe("Random seed for reproducible generation"),
+        resolution: z.enum(["768P", "1080P"]).optional().describe("Resolution for Minimax video (768P supports 10s, 1080P max 6s)"),
+        prompt_optimizer: z.boolean().optional().describe("Enable Minimax prompt optimization (default: true)")
       }
     },
     async (args) => {
@@ -118,19 +133,23 @@ export async function registerHandsTool(server: McpServer, config: Config) {
   server.registerTool(
     "gemini_image_to_video",
     {
-      title: "Gemini Image-to-Video Tool",
-      description: "Generate videos from images and text descriptions using Gemini Imagen + Veo 3.0 APIs",
+      title: "Image-to-Video Tool",
+      description: "Generate videos from images using Gemini Veo 3.0 or Minimax Hailuo 2.3. Set provider='minimax' for Minimax (requires MINIMAX_API_KEY).",
       inputSchema: {
         prompt: z.string().describe("Text description of the video animation"),
         image_input: z.string().describe("Base64 encoded image or image URL to use as starting frame"),
-        model: z.enum(["veo-3.0-generate-001"]).optional().default("veo-3.0-generate-001").describe("Video generation model"),
+        provider: z.enum(["gemini", "minimax"]).optional().describe("Video provider (default: gemini)"),
+        model: z.enum(["veo-3.0-generate-001"]).optional().default("veo-3.0-generate-001").describe("Video generation model (Gemini)"),
+        minimax_model: z.enum(["MiniMax-Hailuo-2.3", "MiniMax-Hailuo-2.3-Fast"]).optional().describe("Minimax video model"),
         duration: z.enum(["4s", "8s", "12s"]).optional().default("4s").describe("Duration of the generated video"),
         output_format: z.enum(["mp4", "webm"]).optional().default("mp4").describe("Output format for the generated video"),
-        aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("16:9").describe("Aspect ratio of the generated video"),
+        aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2", "4:5", "5:4", "21:9", "1:4", "4:1", "1:8", "8:1"]).optional().default("16:9").describe("Aspect ratio of the generated video"),
         fps: z.number().int().min(1).max(60).optional().default(24).describe("Frames per second"),
         style: z.enum(["realistic", "cinematic", "artistic", "cartoon", "animation"]).optional().describe("Style of the generated video"),
         camera_movement: z.enum(["static", "pan_left", "pan_right", "zoom_in", "zoom_out", "dolly_forward", "dolly_backward"]).optional().describe("Camera movement type"),
-        seed: z.number().optional().describe("Random seed for reproducible generation")
+        seed: z.number().optional().describe("Random seed for reproducible generation"),
+        resolution: z.enum(["768P", "1080P"]).optional().describe("Resolution for Minimax video"),
+        prompt_optimizer: z.boolean().optional().describe("Enable Minimax prompt optimization (default: true)")
       }
     },
     async (args) => {
@@ -145,6 +164,92 @@ export async function registerHandsTool(server: McpServer, config: Config) {
             type: "text" as const,
             text: `Error: ${mcpError.message}`
           }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register minimax_gen_music tool
+  server.registerTool(
+    "minimax_gen_music",
+    {
+      title: "Minimax Music Generation Tool",
+      description: "Generate music with vocals from lyrics using Minimax Music 2.5 API. Supports structure tags like [verse], [chorus], [bridge], [outro]. Requires MINIMAX_API_KEY.",
+      inputSchema: {
+        lyrics: z.string().min(1).max(3500).describe("Song lyrics with optional structure tags: [verse], [chorus], [pre-chorus], [bridge], [outro], [intro], [hook], [interlude], [solo], [ad-lib], [break], [drop], [ending]"),
+        prompt: z.string().max(2000).optional().describe("Style/genre description (e.g. 'upbeat pop with acoustic guitar')"),
+        model: z.enum(["music-2.5"]).optional().default("music-2.5").describe("Music generation model"),
+        audio_format: z.enum(["mp3", "wav"]).optional().default("mp3").describe("Output audio format"),
+        sample_rate: z.enum(["16000", "24000", "32000", "44100"]).optional().default("44100").describe("Audio sample rate"),
+        bitrate: z.enum(["32000", "64000", "128000", "256000"]).optional().default("256000").describe("Audio bitrate"),
+      }
+    },
+    async (args) => {
+      try {
+        return await handleMusicGeneration(args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool minimax_gen_music error:`, mcpError);
+
+        return {
+          content: [{
+            type: "text" as const,
+            text: `Error: ${mcpError.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register elevenlabs_gen_sfx tool
+  server.registerTool(
+    "elevenlabs_gen_sfx",
+    {
+      title: "ElevenLabs Sound Effects Generation Tool",
+      description: "Generate sound effects from text descriptions using ElevenLabs API. Supports 0.5-30s duration, looping, and prompt influence control. Requires ELEVENLABS_API_KEY (paid plan).",
+      inputSchema: {
+        text: z.string().min(1).max(500).describe("Text prompt describing the sound effect (e.g., 'Glass shattering on concrete', 'Forest ambience with birds')"),
+        duration_seconds: z.number().min(0.5).max(30).optional().describe("Duration in seconds (0.5-30). Omit for auto-length."),
+        prompt_influence: z.number().min(0).max(1).optional().default(0.3).describe("How closely to follow the prompt (0=creative, 1=literal)"),
+        loop: z.boolean().optional().default(false).describe("Create seamless looping audio"),
+      }
+    },
+    async (args) => {
+      try {
+        return await handleSfxGeneration(args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool elevenlabs_gen_sfx error:`, mcpError);
+        return {
+          content: [{ type: "text" as const, text: `Error: ${mcpError.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Register elevenlabs_gen_music tool
+  server.registerTool(
+    "elevenlabs_gen_music",
+    {
+      title: "ElevenLabs Music Generation Tool",
+      description: "Generate music tracks from text descriptions using ElevenLabs Music API. Supports 3s-10min duration, instrumental mode. Requires ELEVENLABS_API_KEY (paid plan). May take several minutes for long tracks.",
+      inputSchema: {
+        prompt: z.string().min(1).max(2000).describe("Text description of the music (e.g., 'A chill lo-fi hip hop beat with vinyl crackle and soft piano')"),
+        music_length_ms: z.number().int().min(3000).max(600000).optional().default(30000).describe("Duration in ms (3000-600000). Default: 30000 (30s)"),
+        force_instrumental: z.boolean().optional().default(false).describe("Generate instrumental only (no vocals)"),
+      }
+    },
+    async (args) => {
+      try {
+        return await handleElevenLabsMusicGeneration(args, config);
+      } catch (error) {
+        const mcpError = handleError(error);
+        logger.error(`Tool elevenlabs_gen_music error:`, mcpError);
+        return {
+          content: [{ type: "text" as const, text: `Error: ${mcpError.message}` }],
           isError: true
         };
       }
@@ -696,12 +801,13 @@ async function handleVideoGeneration(
   args: unknown,
   config: Config
 ) {
+  const rawArgs = args as Record<string, unknown>;
   const input = VideoGenerationInputSchema.parse(args) as VideoGenerationInput;
   const { prompt, model, duration, output_format, aspect_ratio, fps, image_input, style, camera_movement, seed } = input;
 
   logger.info(`Generating video with prompt: "${prompt}" using model: ${model}`);
 
-  const generationOptions = {
+  const generationOptions: Record<string, unknown> = {
     prompt,
     model: model || "veo-3.0-generate-001",
     duration: duration || "4s",
@@ -713,12 +819,16 @@ async function handleVideoGeneration(
     cameraMovement: camera_movement,
     seed,
     fetchTimeout: config.server.fetchTimeout,
-    saveToFile: true, // Always save to file to reduce token usage
-    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
-    filePrefix: 'gemini-video'
+    saveToFile: true,
+    uploadToR2: config.cloudflare?.accessKey ? true : false,
+    filePrefix: 'gemini-video',
+    provider: rawArgs.provider,
+    minimax_model: rawArgs.minimax_model,
+    resolution: rawArgs.resolution,
+    prompt_optimizer: rawArgs.prompt_optimizer,
   };
 
-  const result = await generateVideo(geminiClient, generationOptions, config);
+  const result = await generateVideo(geminiClient, generationOptions as any, config);
 
   // Format response based on transport type
   const contextText = `✅ Video generated successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration}\n- Aspect Ratio: ${result.aspectRatio}\n- FPS: ${result.fps}\n- Generation Time: ${result.generationTime}ms\n- Operation ID: ${result.operationId}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
@@ -745,13 +855,14 @@ async function handleImageToVideoGeneration(
   args: unknown,
   config: Config
 ) {
+  const rawArgs = args as Record<string, unknown>;
   const input = z.object({
     prompt: z.string(),
     image_input: z.string(),
     model: z.enum(["veo-3.0-generate-001"]).optional().default("veo-3.0-generate-001"),
     duration: z.enum(["4s", "8s", "12s"]).optional().default("4s"),
     output_format: z.enum(["mp4", "webm"]).optional().default("mp4"),
-    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("16:9"),
+    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2", "4:5", "5:4", "21:9", "1:4", "4:1", "1:8", "8:1"]).optional().default("16:9"),
     fps: z.number().int().min(1).max(60).optional().default(24),
     style: z.enum(["realistic", "cinematic", "artistic", "cartoon", "animation"]).optional(),
     camera_movement: z.enum(["static", "pan_left", "pan_right", "zoom_in", "zoom_out", "dolly_forward", "dolly_backward"]).optional(),
@@ -762,7 +873,7 @@ async function handleImageToVideoGeneration(
 
   logger.info(`Generating video from image with prompt: "${prompt}" using model: ${model}`);
 
-  const generationOptions = {
+  const generationOptions: Record<string, unknown> = {
     prompt,
     model: model || "veo-3.0-generate-001",
     duration: duration || "4s",
@@ -774,12 +885,16 @@ async function handleImageToVideoGeneration(
     cameraMovement: camera_movement,
     seed,
     fetchTimeout: config.server.fetchTimeout,
-    saveToFile: true, // Always save to file to reduce token usage
-    uploadToR2: config.cloudflare?.accessKey ? true : false, // Upload to R2 if configured
-    filePrefix: 'gemini-image-to-video'
+    saveToFile: true,
+    uploadToR2: config.cloudflare?.accessKey ? true : false,
+    filePrefix: 'gemini-image-to-video',
+    provider: rawArgs.provider,
+    minimax_model: rawArgs.minimax_model,
+    resolution: rawArgs.resolution,
+    prompt_optimizer: rawArgs.prompt_optimizer,
   };
 
-  const result = await generateImageToVideo(geminiClient, prompt, image_input, generationOptions, config);
+  const result = await generateImageToVideo(geminiClient, prompt, image_input, generationOptions as any, config);
 
   // Format response based on transport type
   const contextText = `✅ Video generated from image successfully!\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration}\n- Aspect Ratio: ${result.aspectRatio}\n- FPS: ${result.fps}\n- Generation Time: ${result.generationTime}ms\n- Operation ID: ${result.operationId}\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
@@ -789,6 +904,44 @@ async function handleImageToVideoGeneration(
       url: result.fileUrl,
       filePath: result.filePath,
       mimeType: `video/${result.format}`,
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
+  return {
+    content: formattedResponse as any,
+    isError: false
+  };
+}
+
+async function handleMusicGeneration(args: unknown, config: Config) {
+  const input = MusicGenerationInputSchema.parse(args) as MusicGenerationInput;
+
+  if (!MinimaxClient.isConfigured(config)) {
+    throw new Error("MINIMAX_API_KEY is required for music generation");
+  }
+
+  logger.info(`Generating music with lyrics: "${input.lyrics.substring(0, 50)}..."`);
+
+  const result = await generateMinimaxMusic({
+    lyrics: input.lyrics,
+    prompt: input.prompt,
+    model: input.model || "music-2.5",
+    audioFormat: input.audio_format || "mp3",
+    sampleRate: parseInt(input.sample_rate || "44100"),
+    bitrate: parseInt(input.bitrate || "256000"),
+    config,
+  });
+
+  const contextText = `Music generated successfully!\n\n**Generation Details:**\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration}s\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      mimeType: `audio/${result.format}`,
       size: result.fileSize,
     },
     config,
@@ -1284,6 +1437,71 @@ async function handlePlaywrightViewportScreenshot(args: unknown, config: Config)
     content: formattedResponse as any,
     isError: false
   };
+}
+
+async function handleSfxGeneration(args: unknown, config: Config) {
+  const input = SfxGenerationInputSchema.parse(args) as SfxGenerationInput;
+
+  if (!ElevenLabsClient.isConfigured(config)) {
+    throw new Error("ELEVENLABS_API_KEY is required for sound effects generation");
+  }
+
+  logger.info(`Generating SFX: "${input.text.substring(0, 50)}..."`);
+
+  const result = await generateElevenLabsSfx({
+    text: input.text,
+    duration_seconds: input.duration_seconds,
+    prompt_influence: input.prompt_influence,
+    loop: input.loop,
+    config,
+  });
+
+  const contextText = `Sound effect generated successfully!\n\n**Generation Details:**\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration ?? "auto"}s\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      mimeType: "audio/mpeg",
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
+  return { content: formattedResponse as any, isError: false };
+}
+
+async function handleElevenLabsMusicGeneration(args: unknown, config: Config) {
+  const input = ElevenLabsMusicGenerationInputSchema.parse(args) as ElevenLabsMusicGenerationInput;
+
+  if (!ElevenLabsClient.isConfigured(config)) {
+    throw new Error("ELEVENLABS_API_KEY is required for music generation");
+  }
+
+  logger.info(`Generating ElevenLabs music: "${input.prompt.substring(0, 50)}..."`);
+
+  const result = await generateElevenLabsMusic({
+    prompt: input.prompt,
+    music_length_ms: input.music_length_ms,
+    force_instrumental: input.force_instrumental,
+    config,
+  });
+
+  const contextText = `Music generated successfully!\n\n**Generation Details:**\n- Model: ${result.model}\n- Format: ${result.format}\n- Duration: ${result.duration}s\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
+
+  const formattedResponse = formatMediaResponse(
+    {
+      url: result.fileUrl,
+      filePath: result.filePath,
+      mimeType: "audio/mpeg",
+      size: result.fileSize,
+    },
+    config,
+    contextText
+  );
+
+  return { content: formattedResponse as any, isError: false };
 }
 
 async function handlePlaywrightElementScreenshot(args: unknown, config: Config) {

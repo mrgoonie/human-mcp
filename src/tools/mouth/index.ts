@@ -29,19 +29,31 @@ export async function registerMouthTool(server: McpServer, config: Config) {
     "mouth_speak",
     {
       title: "Text-to-Speech Generation",
-      description: "Generate speech from text using Gemini Speech Generation API with voice customization",
+      description: "Generate speech from text. Providers: gemini (default), minimax (Speech 2.6, 300+ voices), elevenlabs (70+ languages, premium voices). Set provider param to select.",
       inputSchema: {
-        text: z.string().min(1).max(32000).describe("Text to convert to speech (max 32k tokens)"),
+        text: z.string().min(1).max(32000).describe("Text to convert to speech (max 32k tokens for Gemini, 10k for Minimax/ElevenLabs)"),
         voice: z.enum([
           "Astrid", "Charon", "Fenrir", "Kore", "Odin", "Puck", "Sage", "Vox", "Zephyr",
           "Aoede", "Apollo", "Elektra", "Iris", "Nemesis", "Perseus", "Selene", "Thalia",
           "Argus", "Ares", "Demeter", "Dione", "Echo", "Eros", "Hephaestus", "Hermes",
           "Hyperion", "Iapetus", "Kronos", "Leto", "Maia", "Mnemosyne"
-        ]).optional().default("Zephyr").describe("Voice to use for speech generation"),
-        model: z.enum(["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]).optional().default("gemini-2.5-flash-preview-tts").describe("Speech generation model"),
+        ]).optional().default("Zephyr").describe("Gemini voice to use for speech generation"),
+        model: z.enum(["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]).optional().default("gemini-2.5-flash-preview-tts").describe("Gemini speech generation model"),
         language: z.enum(SupportedLanguages).optional().default("en-US").describe("Language for speech generation"),
         output_format: z.enum(["wav", "base64", "url"]).optional().default("base64").describe("Output format for generated audio"),
-        style_prompt: z.string().optional().describe("Natural language prompt to control speaking style")
+        style_prompt: z.string().optional().describe("Natural language prompt to control speaking style"),
+        provider: z.enum(["gemini", "minimax", "elevenlabs"]).optional().describe("Speech provider (default: gemini, options: minimax, elevenlabs)"),
+        minimax_voice: z.string().optional().describe("Minimax voice ID (e.g., 'English_Graceful_Lady')"),
+        minimax_model: z.enum(["speech-2.6-hd", "speech-2.6-turbo"]).optional().describe("Minimax speech model"),
+        minimax_language: z.string().optional().describe("Minimax language boost (e.g., 'English', 'auto')"),
+        emotion: z.enum(["happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral"]).optional().describe("Emotion for Minimax speech"),
+        speed: z.number().min(0.5).max(2.0).optional().describe("Speech speed (0.5-2.0, Minimax/ElevenLabs)"),
+        elevenlabs_voice: z.string().optional().describe("ElevenLabs voice name (rachel, adam, brian, charlotte, george, lily, matilda, sarah, daniel, alice) or raw voice ID"),
+        elevenlabs_model: z.enum(["eleven_v3", "eleven_multilingual_v2", "eleven_flash_v2_5", "eleven_turbo_v2_5"]).optional().describe("ElevenLabs TTS model"),
+        elevenlabs_language: z.string().optional().describe("ElevenLabs language code (e.g., 'en', 'es')"),
+        stability: z.number().min(0).max(1).optional().describe("ElevenLabs voice stability (0=expressive, 1=consistent)"),
+        similarity_boost: z.number().min(0).max(1).optional().describe("ElevenLabs similarity boost (0=creative, 1=faithful)"),
+        elevenlabs_style: z.number().min(0).max(1).optional().describe("ElevenLabs style exaggeration (0=neutral, 1=exaggerated)"),
       }
     },
     async (args) => {

@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export const ImageGenerationInputSchema = z.object({
   prompt: z.string().min(1, "Prompt cannot be empty"),
-  model: z.enum(["gemini-2.5-flash-image-preview"]).optional().default("gemini-2.5-flash-image-preview"),
+  model: z.enum(["gemini-2.5-flash-image-preview", "gemini-3.1-flash-image-preview"]).optional().default("gemini-2.5-flash-image-preview"),
   output_format: z.enum(["base64", "url"]).optional().default("base64"),
   negative_prompt: z.string().optional(),
   style: z.enum(["photorealistic", "artistic", "cartoon", "sketch", "digital_art"]).optional(),
-  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("1:1"),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2", "4:5", "5:4", "21:9", "1:4", "4:1", "1:8", "8:1"]).optional().default("1:1"),
   seed: z.number().int().min(0).optional()
 });
 
@@ -45,7 +45,7 @@ export const VideoGenerationInputSchema = z.object({
   model: z.enum(["veo-3.0-generate-001"]).optional().default("veo-3.0-generate-001"),
   duration: z.enum(["4s", "8s", "12s"]).optional().default("4s"),
   output_format: z.enum(["mp4", "webm"]).optional().default("mp4"),
-  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]).optional().default("16:9"),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2", "4:5", "5:4", "21:9", "1:4", "4:1", "1:8", "8:1"]).optional().default("16:9"),
   fps: z.number().int().min(1).max(60).optional().default(24),
   image_input: z.string().optional().describe("Starting frame image - supports file paths, URLs, or base64 data URIs"),
   style: z.enum(["realistic", "cinematic", "artistic", "cartoon", "animation"]).optional(),
@@ -295,3 +295,62 @@ export const PlaywrightElementScreenshotInputSchema = z.object({
 });
 
 export type PlaywrightElementScreenshotInput = z.infer<typeof PlaywrightElementScreenshotInputSchema>;
+
+// ---- Music Generation Schemas (Minimax Music 2.5) ----
+
+export const MusicGenerationInputSchema = z.object({
+  lyrics: z.string().min(1).max(3500)
+    .describe("Song lyrics with optional structure tags like [Verse], [Chorus], [Bridge]. Use \\n for line breaks. Required, 1-3500 chars."),
+  prompt: z.string().max(2000).optional()
+    .describe("Music style/mood description (e.g., 'Pop, melancholic, piano-driven ballad'). Optional, 0-2000 chars."),
+  model: z.enum(["music-2.5"]).optional().default("music-2.5")
+    .describe("Music generation model"),
+  audio_format: z.enum(["mp3", "wav"]).optional().default("mp3")
+    .describe("Output audio format"),
+  sample_rate: z.enum(["16000", "24000", "32000", "44100"]).optional().default("44100")
+    .describe("Audio sample rate in Hz"),
+  bitrate: z.enum(["32000", "64000", "128000", "256000"]).optional().default("256000")
+    .describe("Audio bitrate in bps"),
+});
+
+export type MusicGenerationInput = z.infer<typeof MusicGenerationInputSchema>;
+
+export interface MusicGenerationResult {
+  audioUrl: string;
+  format: string;
+  model: string;
+  duration: number;
+  generationTime: number;
+  filePath?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
+}
+
+// ---- ElevenLabs Sound Effects Schemas ----
+
+export const SfxGenerationInputSchema = z.object({
+  text: z.string().min(1).max(500)
+    .describe("Text prompt describing the sound effect (e.g., 'Thunder rumbling with heavy rain')"),
+  duration_seconds: z.number().min(0.5).max(30).optional()
+    .describe("Duration in seconds (0.5-30). If omitted, AI decides optimal length."),
+  prompt_influence: z.number().min(0).max(1).optional().default(0.3)
+    .describe("How closely to follow the prompt (0=creative, 1=literal). Default: 0.3"),
+  loop: z.boolean().optional().default(false)
+    .describe("Create seamless looping audio (great for ambient sounds)"),
+});
+
+export type SfxGenerationInput = z.infer<typeof SfxGenerationInputSchema>;
+
+// ---- ElevenLabs Music Generation Schemas ----
+
+export const ElevenLabsMusicGenerationInputSchema = z.object({
+  prompt: z.string().min(1).max(2000)
+    .describe("Text description of the music to generate (e.g., 'An upbeat electronic track with synth pads and driving bass')"),
+  music_length_ms: z.number().int().min(3000).max(600000).optional().default(30000)
+    .describe("Duration in milliseconds (3000-600000, i.e., 3s to 10min). Default: 30000 (30s)"),
+  force_instrumental: z.boolean().optional().default(false)
+    .describe("Remove vocals and generate instrumental only"),
+});
+
+export type ElevenLabsMusicGenerationInput = z.infer<typeof ElevenLabsMusicGenerationInputSchema>;
