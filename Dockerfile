@@ -11,11 +11,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and postinstall script
 COPY package.json bun.lock ./
+COPY scripts/postinstall.js scripts/
 
-# Install dependencies (production only)
-RUN bun install --frozen-lockfile --production
+# Install dependencies (production only, skip postinstall in Docker)
+RUN SKIP_PLAYWRIGHT_INSTALL=1 bun install --frozen-lockfile --production
 
 # Copy source code
 COPY . .
