@@ -164,7 +164,7 @@ export class GeminiClient {
 
   getImageGenerationModel(modelName?: string): GenerativeModel {
     // Use config.gemini.imageModel instead of hardcoded value
-    const imageModelName = modelName || this.config.gemini.imageModel || "gemini-2.5-flash-image-preview";
+    const imageModelName = modelName || this.config.gemini.imageModel || "gemini-2.5-flash-image";
 
     // Gemini 3 series: omit temperature per Google migration guide
     const generationConfig = this.isGemini3Series(imageModelName)

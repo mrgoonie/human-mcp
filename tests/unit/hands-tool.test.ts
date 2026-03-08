@@ -6,7 +6,7 @@ import { MockHelpers, TestDataGenerators } from '../utils/index.js';
 const mockGenerateImage = mock(async () => ({
   imageData: TestDataGenerators.createMockImageGenerationResponse().image,
   format: 'base64_data_uri',
-  model: 'gemini-2.5-flash-image-preview',
+  model: 'gemini-2.5-flash-image',
   generationTime: Math.floor(Math.random() * 5000) + 1000, // 1-6 seconds
   size: '1024x1024'
 }));
@@ -89,7 +89,7 @@ describe('Hands Tool', () => {
 
       expect(result.imageData).toBeDefined();
       expect(result.format).toBe('base64_data_uri');
-      expect(result.model).toBe('gemini-2.5-flash-image-preview');
+      expect(result.model).toBe('gemini-2.5-flash-image');
     });
 
     it('should handle mock Gemini client calls', () => {
@@ -105,7 +105,7 @@ describe('Hands Tool', () => {
       // The schema validation happens within the tool handler
       // This test ensures the mock data is valid
       expect(request.prompt).toBeDefined();
-      expect(request.model).toBe('gemini-2.5-flash-image-preview');
+      expect(request.model).toBe('gemini-2.5-flash-image');
     });
 
     it('should handle all supported styles', () => {
@@ -156,7 +156,7 @@ describe('Hands Tool', () => {
       expect(response.success).toBe(true);
       expect(response.image).toBeDefined();
       expect(response.format).toBe('base64_data_uri');
-      expect(response.model).toBe('gemini-2.5-flash-image-preview');
+      expect(response.model).toBe('gemini-2.5-flash-image');
       expect(response.metadata).toBeDefined();
       expect(response.metadata.timestamp).toBeDefined();
       expect(response.metadata.generation_time).toBeGreaterThan(0);

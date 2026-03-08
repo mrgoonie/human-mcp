@@ -62,7 +62,7 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       description: "Generate images from text descriptions using Gemini Imagen API",
       inputSchema: {
         prompt: z.string().describe("Text description of the image to generate"),
-        model: z.enum(["gemini-2.5-flash-image-preview", "gemini-3.1-flash-image-preview"]).optional().default("gemini-2.5-flash-image-preview").describe("Image generation model"),
+        model: z.enum(["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview"]).optional().default("gemini-2.5-flash-image").describe("Image generation model"),
         output_format: z.enum(["base64", "url"]).optional().default("base64").describe("Output format for the generated image"),
         negative_prompt: z.string().optional().describe("Text describing what should NOT be in the image"),
         style: z.enum(["photorealistic", "artistic", "cartoon", "sketch", "digital_art"]).optional().describe("Style of the generated image"),
@@ -749,7 +749,7 @@ async function handleImageGeneration(
 
   const generationOptions = {
     prompt,
-    model: model || "gemini-2.5-flash-image-preview",
+    model: model || "gemini-2.5-flash-image",
     outputFormat: output_format || "base64",
     negativePrompt: negative_prompt,
     style,

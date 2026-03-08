@@ -62,7 +62,7 @@ describe('Image Generation Integration Tests', () => {
     it('should generate image with basic options', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A beautiful sunset over mountains',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -73,7 +73,7 @@ describe('Image Generation Integration Tests', () => {
       expect(result).toBeDefined();
       expect(result.imageData).toBeDefined();
       expect(result.format).toBe('base64_data_uri');
-      expect(result.model).toBe('gemini-2.5-flash-image-preview');
+      expect(result.model).toBe('gemini-2.5-flash-image');
       expect(result.generationTime).toBeGreaterThan(0);
       expect(result.size).toBeDefined();
     });
@@ -81,7 +81,7 @@ describe('Image Generation Integration Tests', () => {
     it('should enhance prompt with style', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A portrait of a person',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         style: 'photorealistic',
@@ -98,7 +98,7 @@ describe('Image Generation Integration Tests', () => {
     it('should enhance prompt with aspect ratio', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A landscape scene',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '16:9',
         fetchTimeout: 60000
@@ -114,7 +114,7 @@ describe('Image Generation Integration Tests', () => {
     it('should handle negative prompt', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A beautiful flower',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         negativePrompt: 'blurry, distorted',
@@ -131,7 +131,7 @@ describe('Image Generation Integration Tests', () => {
     it('should combine all prompt enhancements', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A serene lake',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '4:3',
         style: 'artistic',
@@ -153,7 +153,7 @@ describe('Image Generation Integration Tests', () => {
       for (const style of styles) {
         const options: ImageGenerationOptions = {
           prompt: 'Test image',
-          model: 'gemini-2.5-flash-image-preview',
+          model: 'gemini-2.5-flash-image',
           outputFormat: 'base64',
           aspectRatio: '1:1',
           style: style as any,
@@ -175,7 +175,7 @@ describe('Image Generation Integration Tests', () => {
     it('should use correct model configuration', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Test prompt',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -183,13 +183,13 @@ describe('Image Generation Integration Tests', () => {
 
       await generateImage(mockGeminiClient, options);
 
-      expect(mockGeminiClient.getImageGenerationModel).toHaveBeenCalledWith('gemini-2.5-flash-image-preview');
+      expect(mockGeminiClient.getImageGenerationModel).toHaveBeenCalledWith('gemini-2.5-flash-image');
     });
 
     it('should measure generation time', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Test timing',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -204,7 +204,7 @@ describe('Image Generation Integration Tests', () => {
     it('should estimate image size', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Test sizing',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -224,7 +224,7 @@ describe('Image Generation Integration Tests', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'Test error',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -242,7 +242,7 @@ describe('Image Generation Integration Tests', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'Test quota error',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -260,7 +260,7 @@ describe('Image Generation Integration Tests', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'Test safety error',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -281,7 +281,7 @@ describe('Image Generation Integration Tests', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'Test no candidates',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -308,7 +308,7 @@ describe('Image Generation Integration Tests', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'Test invalid response',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -326,7 +326,7 @@ describe('Image Generation Integration Tests', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'Test generic error',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -342,7 +342,7 @@ describe('Image Generation Integration Tests', () => {
     it('should return base64 data URI for base64 format', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Test base64 output',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -357,7 +357,7 @@ describe('Image Generation Integration Tests', () => {
     it('should fallback to base64 for URL format (not yet implemented)', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Test URL output',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'url',
         aspectRatio: '1:1',
         fetchTimeout: 60000

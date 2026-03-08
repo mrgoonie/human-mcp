@@ -73,7 +73,7 @@ Human MCP supports multiple AI providers per capability. Set via per-request `pr
 
 | Provider | Models | Features | Env Var |
 |----------|--------|----------|---------|
-| **Google Gemini** (default) | `gemini-2.5-flash-image-preview`, `gemini-3.1-flash-image-preview` | Text-to-image, 14 aspect ratios, 5 styles | `GOOGLE_GEMINI_API_KEY` |
+| **Google Gemini** (default) | `gemini-2.5-flash-image`, `gemini-3.1-flash-image-preview` | Text-to-image, 14 aspect ratios, 5 styles | `GOOGLE_GEMINI_API_KEY` |
 | **ZhipuAI** | `cogview-4-250304` | Text-to-image, CogView-4 | `ZHIPUAI_API_KEY` |
 
 #### Video Generation (Hands)
@@ -1486,7 +1486,7 @@ ELEVENLABS_API_KEY=your_elevenlabs_api_key
 
 # Optional Core Configuration
 GOOGLE_GEMINI_MODEL=gemini-2.5-flash
-GOOGLE_GEMINI_IMAGE_MODEL=gemini-2.5-flash-image-preview
+GOOGLE_GEMINI_IMAGE_MODEL=gemini-2.5-flash-image
 LOG_LEVEL=info
 PORT=3000
 MAX_REQUEST_SIZE=50MB
