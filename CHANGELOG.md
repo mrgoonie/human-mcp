@@ -1,3 +1,12 @@
+## [2.15.1](https://github.com/mrgoonie/human-mcp/compare/v2.15.0...v2.15.1) (2026-03-08)
+
+
+### Bug Fixes
+
+* **docker:** fix Docker build failure by copying postinstall script and skipping Playwright install ([aa89c32](https://github.com/mrgoonie/human-mcp/commit/aa89c3200e4c3dc6c4bba2934ab1c0f299645041))
+* **hands:** correct Gemini image generation model ID ([13bcfcc](https://github.com/mrgoonie/human-mcp/commit/13bcfccde8f5dab194b29d12f315a255b7203ab8))
+* **hands:** use raw REST API for Gemini image generation ([a11ab89](https://github.com/mrgoonie/human-mcp/commit/a11ab89c3dd867d23b89de1920af92e88713f6a4))
+
 # [2.15.0](https://github.com/mrgoonie/human-mcp/compare/v2.14.0...v2.15.0) (2026-02-28)
 
 
