@@ -17,6 +17,10 @@ const mockGeminiImageModel = {
 
 const mockGeminiClient = {
   getModel: mock(() => ({})),
+  generateImageContent: mock(async () => ({
+    imageData: "iVBORw0KGgoAAAANSUhEUg==",
+    mimeType: "image/png"
+  })),
   getImageGenerationModel: mock(() => mockGeminiImageModel)
 };
 

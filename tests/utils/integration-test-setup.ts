@@ -60,6 +60,7 @@ export function createLocalGeminiMock() {
   };
 
   const localMockClient = {
+    generateImageContent: mock(async () => ({ imageData: "iVBORw0KGgoAAAANSUhEUg==", mimeType: "image/png" })),
     getImageGenerationModel: mock(() => localMockModel),
     getGenerativeModel: mock(() => localMockModel)
   };

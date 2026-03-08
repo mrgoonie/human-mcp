@@ -176,6 +176,119 @@ export class GeminiClient {
       generationConfig,
     });
   }
+
+  /**
+   * Generate image using raw REST API with responseModalities: ["TEXT", "IMAGE"]
+   * The @google/generative-ai SDK v0.21.0 does not support responseModalities,
+   * so we bypass the SDK and call the REST API directly (same pattern as TTS).
+   */
+  async generateImageContent(options: {
+    prompt: string;
+    model?: string;
+    aspectRatio?: string;
+  }): Promise<{
+    imageData: string;
+    mimeType: string;
+    textResponse?: string;
+  }> {
+    const modelName = options.model || this.config.gemini.imageModel || "gemini-2.5-flash-image";
+
+    logger.debug(`Generating image with model: ${modelName} (provider: ${this.provider.getProviderName()})`);
+
+    const requestBody: Record<string, any> = {
+      contents: [{
+        parts: [{ text: options.prompt }]
+      }],
+      generationConfig: {
+        responseModalities: ["TEXT", "IMAGE"],
+      }
+    };
+
+    let response: Response;
+
+    if (this.config.gemini.useVertexAI) {
+      const location = this.config.gemini.vertexLocation;
+      const projectId = this.config.gemini.vertexProjectId;
+      const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelName}:generateContent`;
+
+      const { GoogleAuth } = await import('google-auth-library');
+      const auth = new GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/cloud-platform']
+      });
+      const client = await auth.getClient();
+      const accessToken = await client.getAccessToken();
+
+      if (!accessToken.token) {
+        throw new APIError(
+          "Failed to obtain access token from Application Default Credentials."
+        );
+      }
+
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken.token}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } else {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+
+      if (!this.config.gemini.apiKey) {
+        throw new APIError(
+          "Google Gemini API key is required for image generation. Set GOOGLE_GEMINI_API_KEY."
+        );
+      }
+
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.config.gemini.apiKey
+        },
+        body: JSON.stringify(requestBody)
+      });
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error(`Image generation API error (${response.status}):`, errorText);
+      throw new APIError(
+        `Gemini image generation failed (${response.status}): ${errorText}`
+      );
+    }
+
+    const data = await response.json() as any;
+    const candidates = data.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new APIError("No image candidates returned from Gemini API");
+    }
+
+    const parts = candidates[0]?.content?.parts;
+    if (!parts || parts.length === 0) {
+      throw new APIError("Invalid response format from Gemini API");
+    }
+
+    let imageData: string | null = null;
+    let mimeType = "image/png";
+    let textResponse: string | undefined;
+
+    for (const part of parts) {
+      if (part.inlineData) {
+        imageData = part.inlineData.data;
+        mimeType = part.inlineData.mimeType || "image/png";
+      } else if (part.text) {
+        textResponse = part.text;
+      }
+    }
+
+    if (!imageData) {
+      throw new APIError("No image data found in Gemini response");
+    }
+
+    return { imageData, mimeType, textResponse };
+  }
   
   async analyzeContent(
     model: GenerativeModel,

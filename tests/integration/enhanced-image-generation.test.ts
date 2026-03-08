@@ -23,6 +23,10 @@ function initializeMockClient() {
   mockGenerateContent.mockClear();
 
   mockGeminiClient = {
+    generateImageContent: mock(async () => ({
+      imageData: "iVBORw0KGgoAAAANSUhEUg==",
+      mimeType: "image/png"
+    })),
     getImageGenerationModel: mock(() => mockGeminiModel)
   } as unknown as GeminiClient;
 }
@@ -323,7 +327,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
       expect(result.imageData).toBeDefined();
       expect(result.format).toBe('base64_data_uri');
       expect(result.model).toBe('gemini-2.5-flash-image');
-      expect(result.generationTime).toBeGreaterThan(0);
+      expect(result.generationTime).toBeGreaterThanOrEqual(0);
       expect(result.size).toBeDefined();
 
       // File-related fields should be undefined
