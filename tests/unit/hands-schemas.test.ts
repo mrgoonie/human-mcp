@@ -12,7 +12,7 @@ describe('Hands Tool Schemas', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.prompt).toBeDefined();
-        expect(result.data.model).toBe('gemini-2.5-flash-image-preview');
+        expect(result.data.model).toBe('gemini-2.5-flash-image');
         expect(result.data.output_format).toBe('base64');
       }
     });
@@ -26,7 +26,7 @@ describe('Hands Tool Schemas', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.model).toBe('gemini-2.5-flash-image-preview');
+        expect(result.data.model).toBe('gemini-2.5-flash-image');
         expect(result.data.output_format).toBe('base64');
         expect(result.data.aspect_ratio).toBe('1:1');
       }
@@ -198,7 +198,7 @@ describe('Hands Tool Schemas', () => {
     it('should handle complex valid input with all fields', () => {
       const input = {
         prompt: 'A photorealistic portrait of a young woman in natural lighting',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         output_format: 'base64',
         negative_prompt: 'blurry, distorted, low quality, artificial',
         style: 'photorealistic',
@@ -211,7 +211,7 @@ describe('Hands Tool Schemas', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.prompt).toBe(input.prompt);
-        expect(result.data.model).toBe(input.model as 'gemini-2.5-flash-image-preview');
+        expect(result.data.model).toBe(input.model as 'gemini-2.5-flash-image');
         expect(result.data.output_format).toBe(input.output_format as 'base64' | 'url');
         expect(result.data.negative_prompt).toBe(input.negative_prompt);
         expect(result.data.style).toBe(input.style as 'photorealistic' | 'artistic' | 'cartoon' | 'sketch' | 'digital_art');

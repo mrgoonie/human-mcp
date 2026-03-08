@@ -24,7 +24,7 @@ export async function editImage(
     logger.info(`Editing prompt: "${editingPrompt}"`);
 
     // Get the appropriate model for image editing
-    // Image editing requires gemini-2.5-flash-image-preview model
+    // Image editing requires gemini-2.5-flash-image model
     const model = geminiClient.getImageGenerationModel();
 
     // Build the request content based on operation type

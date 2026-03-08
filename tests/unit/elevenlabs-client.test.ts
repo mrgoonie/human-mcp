@@ -4,7 +4,7 @@ import type { Config } from "../../src/utils/config.js";
 
 function createTestConfig(apiKey?: string): Config {
   return {
-    gemini: { apiKey: "", model: "gemini-2.5-flash", imageModel: "gemini-2.5-flash-image-preview", useVertexAI: false, vertexLocation: "us-central1" },
+    gemini: { apiKey: "", model: "gemini-2.5-flash", imageModel: "gemini-2.5-flash-image", useVertexAI: false, vertexLocation: "us-central1" },
     transport: { type: "stdio" },
     server: { port: 3000, maxRequestSize: "50MB", enableCaching: true, cacheTTL: 3600, requestTimeout: 300000, fetchTimeout: 60000 },
     security: { rateLimitRequests: 100, rateLimitWindow: 60000 },

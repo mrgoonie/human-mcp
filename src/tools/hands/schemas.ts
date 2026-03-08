@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const ImageGenerationInputSchema = z.object({
   prompt: z.string().min(1, "Prompt cannot be empty"),
-  model: z.enum(["gemini-2.5-flash-image-preview", "gemini-3.1-flash-image-preview"]).optional().default("gemini-2.5-flash-image-preview"),
+  model: z.enum(["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview"]).optional().default("gemini-2.5-flash-image"),
   output_format: z.enum(["base64", "url"]).optional().default("base64"),
   negative_prompt: z.string().optional(),
   style: z.enum(["photorealistic", "artistic", "cartoon", "sketch", "digital_art"]).optional(),

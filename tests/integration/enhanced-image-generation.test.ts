@@ -23,6 +23,10 @@ function initializeMockClient() {
   mockGenerateContent.mockClear();
 
   mockGeminiClient = {
+    generateImageContent: mock(async () => ({
+      imageData: "iVBORw0KGgoAAAANSUhEUg==",
+      mimeType: "image/png"
+    })),
     getImageGenerationModel: mock(() => mockGeminiModel)
   } as unknown as GeminiClient;
 }
@@ -89,7 +93,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should save image to file automatically by default', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A beautiful sunset over mountains',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000,
@@ -118,7 +122,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should include file metadata in response', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A portrait of a person',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000,
@@ -142,7 +146,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should respect saveToFile=false option', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A landscape scene',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '16:9',
         fetchTimeout: 60000,
@@ -161,7 +165,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should generate unique filenames for multiple requests', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'A serene lake',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '4:3',
         fetchTimeout: 60000,
@@ -197,7 +201,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should handle URL output format with file saving', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Modern architecture building',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'url',
         aspectRatio: '16:9',
         fetchTimeout: 60000,
@@ -226,7 +230,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
       for (const prefix of prefixes) {
         const options: ImageGenerationOptions = {
           prompt: `A ${prefix} style image`,
-          model: 'gemini-2.5-flash-image-preview',
+          model: 'gemini-2.5-flash-image',
           outputFormat: 'base64',
           aspectRatio: '1:1',
           fetchTimeout: 60000,
@@ -257,7 +261,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
         : '/proc/1/root/invalid/path';
       const options: ImageGenerationOptions = {
         prompt: 'Fallback test image',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000,
@@ -279,7 +283,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should include all expected fields in enhanced response', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Complete response test',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000,
@@ -310,7 +314,7 @@ describe('Enhanced Image Generation Integration Tests', () => {
     it('should maintain backward compatibility', async () => {
       const options: ImageGenerationOptions = {
         prompt: 'Backward compatibility test',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000,
@@ -322,8 +326,8 @@ describe('Enhanced Image Generation Integration Tests', () => {
       // Should have original response structure without file fields
       expect(result.imageData).toBeDefined();
       expect(result.format).toBe('base64_data_uri');
-      expect(result.model).toBe('gemini-2.5-flash-image-preview');
-      expect(result.generationTime).toBeGreaterThan(0);
+      expect(result.model).toBe('gemini-2.5-flash-image');
+      expect(result.generationTime).toBeGreaterThanOrEqual(0);
       expect(result.size).toBeDefined();
 
       // File-related fields should be undefined

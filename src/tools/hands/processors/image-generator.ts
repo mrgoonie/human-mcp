@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GeminiClient } from "../../eyes/utils/gemini-client.js";
 import type { ImageGenerationOptions, ImageGenerationResult } from "../schemas.js";
 import { generateWithZhipuAI } from "../providers/zhipuai-image-provider.js";
@@ -54,46 +53,16 @@ export async function generateImage(
 
     logger.info(`Enhanced prompt: "${enhancedPrompt}"`);
 
-    // Get the image generation model
-    const model = geminiClient.getImageGenerationModel(options.model);
+    // Generate image using raw REST API with responseModalities: ["TEXT", "IMAGE"]
+    // The @google/generative-ai SDK v0.21.0 does not support responseModalities
+    const imageResult = await geminiClient.generateImageContent({
+      prompt: enhancedPrompt,
+      model: options.model,
+      aspectRatio: options.aspectRatio,
+    });
 
-    // Generate the image using Gemini API
-    const response = await model.generateContent([
-      {
-        text: enhancedPrompt
-      }
-    ]);
-
-    const result = response.response;
-
-    // Extract image data from the response
-    // Note: The actual implementation will depend on how Gemini returns image data
-    // This is a placeholder implementation based on expected API behavior
-    const candidates = result.candidates;
-    if (!candidates || candidates.length === 0) {
-      throw new Error("No image candidates returned from Gemini API");
-    }
-
-    const candidate = candidates[0];
-    if (!candidate || !candidate.content || !candidate.content.parts) {
-      throw new Error("Invalid response format from Gemini API");
-    }
-
-    // Look for image data in the response parts
-    let imageData: string | null = null;
-    let mimeType = "image/jpeg";
-
-    for (const part of candidate.content.parts) {
-      if ('inlineData' in part && part.inlineData) {
-        imageData = part.inlineData.data;
-        mimeType = part.inlineData.mimeType || "image/jpeg";
-        break;
-      }
-    }
-
-    if (!imageData) {
-      throw new Error("No image data found in Gemini response");
-    }
+    const imageData = imageResult.imageData;
+    const mimeType = imageResult.mimeType;
 
     const generationTime = Date.now() - startTime;
 

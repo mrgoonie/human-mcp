@@ -111,7 +111,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A simple geometric shape, a blue circle on white background',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -123,7 +123,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       expect(result.imageData).toBeDefined();
       expect(isValidBase64Image(result.imageData)).toBe(true);
       expect(result.format).toBe('base64_data_uri');
-      expect(result.model).toBe('gemini-2.5-flash-image-preview');
+      expect(result.model).toBe('gemini-2.5-flash-image');
       expect(result.generationTime).toBeGreaterThan(0);
       expect(result.size).toBeDefined();
 
@@ -138,7 +138,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A professional headshot of a person in business attire',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '4:3',
         style: 'photorealistic',
@@ -162,7 +162,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'An abstract painting with flowing colors and dynamic brush strokes',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '16:9',
         style: 'artistic',
@@ -186,7 +186,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A clean, minimal workspace with a laptop',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         negativePrompt: 'cluttered, messy, chaotic, dark',
@@ -213,7 +213,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       for (const ratio of ratios) {
         const options: ImageGenerationOptions = {
           prompt: `A simple landscape scene in ${ratio} format`,
-          model: 'gemini-2.5-flash-image-preview',
+          model: 'gemini-2.5-flash-image',
           outputFormat: 'base64',
           aspectRatio: ratio as any,
           fetchTimeout: 60000
@@ -237,7 +237,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A friendly cartoon character waving hello',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         style: 'cartoon',
@@ -263,7 +263,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'unsafe content that violates policies',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -289,7 +289,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: longPrompt,
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -315,7 +315,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A quick test image - simple red square',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -343,7 +343,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       const requests = Array.from({ length: 3 }, (_, i) => {
         const options: ImageGenerationOptions = {
           prompt: `Concurrent test image ${i + 1} - simple shape`,
-          model: 'gemini-2.5-flash-image-preview',
+          model: 'gemini-2.5-flash-image',
           outputFormat: 'base64',
           aspectRatio: '1:1',
           fetchTimeout: 60000
@@ -372,7 +372,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A test image for format validation',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -400,7 +400,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
 
       const options: ImageGenerationOptions = {
         prompt: 'A test image for metadata validation',
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         outputFormat: 'base64',
         aspectRatio: '1:1',
         fetchTimeout: 60000
@@ -409,7 +409,7 @@ describe('Hands Tool E2E Tests with Real Gemini API', () => {
       const result = await generateImage(geminiClient, options);
 
       expect(result.format).toBe('base64_data_uri');
-      expect(result.model).toBe('gemini-2.5-flash-image-preview');
+      expect(result.model).toBe('gemini-2.5-flash-image');
       expect(result.generationTime).toBeGreaterThan(0);
       expect(result.size).toMatch(/^\d+x\d+\+?$/);
 

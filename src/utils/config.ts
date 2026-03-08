@@ -4,7 +4,7 @@ const ConfigSchema = z.object({
   gemini: z.object({
     apiKey: z.string().optional(), // Optional since Vertex AI doesn't need it
     model: z.string().default("gemini-2.5-flash"),
-    imageModel: z.string().default("gemini-2.5-flash-image-preview"),
+    imageModel: z.string().default("gemini-2.5-flash-image"),
     // Vertex AI configuration
     useVertexAI: z.boolean().default(false),
     vertexProjectId: z.string().optional(),
@@ -118,7 +118,7 @@ export function loadConfig(): Config {
       // API key is optional when using Vertex AI
       apiKey: process.env.GOOGLE_GEMINI_API_KEY || "",
       model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.5-flash",
-      imageModel: process.env.GOOGLE_GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image-preview",
+      imageModel: process.env.GOOGLE_GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image",
       // Vertex AI config
       useVertexAI,
       vertexProjectId: process.env.VERTEX_PROJECT_ID,

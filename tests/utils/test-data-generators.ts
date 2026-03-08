@@ -232,7 +232,7 @@ export class TestDataGenerators {
 
     return {
       prompt: selectedPrompt,
-      model: 'gemini-2.5-flash-image-preview',
+      model: 'gemini-2.5-flash-image',
       output_format: 'base64',
       style: selectedStyle,
       aspect_ratio: selectedRatio,
@@ -249,7 +249,7 @@ export class TestDataGenerators {
       success: true,
       image: base64Image,
       format: 'base64_data_uri',
-      model: 'gemini-2.5-flash-image-preview',
+      model: 'gemini-2.5-flash-image',
       prompt: 'A beautiful landscape scene',
       metadata: {
         timestamp: new Date().toISOString(),
