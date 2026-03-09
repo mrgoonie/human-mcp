@@ -56,7 +56,16 @@ export function createRoutes(
     const transport = await sessionManager.getTransport(sessionId);
     
     if (!transport) {
-      res.status(400).send('Invalid or missing session ID');
+      // Return 404 per MCP spec to trigger client re-initialization
+      logger.warn(`[MCP HTTP] GET SSE: unknown session ${sessionId} - returning 404`);
+      res.status(404).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32001,
+          message: 'Session not found. Please re-initialize.',
+        },
+        id: null,
+      });
       return;
     }
 
@@ -299,11 +308,14 @@ async function handleStatefulRequest(
     transport = session.transport;
     res.setHeader('Mcp-Session-Id', session.sessionId);
   } else if (!transport) {
-    res.status(400).json({
+    // Return 404 per MCP spec for unknown/expired sessions
+    // This signals the client to re-initialize instead of retrying
+    logger.warn(`[MCP HTTP] Unknown session ${sessionId} - returning 404 to trigger re-init`);
+    res.status(404).json({
       jsonrpc: '2.0',
       error: {
-        code: -32000,
-        message: 'Bad Request: No valid session ID provided',
+        code: -32001,
+        message: 'Session not found. Please re-initialize.',
       },
       id: null,
     });
