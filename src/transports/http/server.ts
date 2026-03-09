@@ -9,6 +9,7 @@ import { SessionManager } from "./session.js";
 import { createSecurityMiddleware } from "./middleware.js";
 import { fileInterceptorMiddleware } from "./file-interceptor.js";
 import type { HttpTransportConfig, HttpServerHandle } from "../types.js";
+import { logger } from "@/utils/logger.js";
 
 export async function startHttpTransport(
   mcpServer: McpServer,
@@ -49,11 +50,35 @@ export async function startHttpTransport(
   // Add file interceptor middleware before routes
   app.use(fileInterceptorMiddleware);
 
-  // Anti-buffering headers for MCP endpoint — prevents reverse proxies
-  // (nginx, traefik, cloudflare) from buffering SSE responses
+  // Debug: intercept MCP responses to log what actually leaves the server
   app.use('/mcp', (req, res, next) => {
+    // Anti-buffering headers for reverse proxies
     res.setHeader('X-Accel-Buffering', 'no');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
+
+    const startTime = Date.now();
+    const originalEnd = res.end.bind(res);
+    const originalWrite = res.write.bind(res);
+
+    // Intercept res.write() to log SSE events
+    res.write = function(chunk: any, ...args: any[]) {
+      const data = typeof chunk === 'string' ? chunk : chunk?.toString?.('utf-8')?.substring(0, 500);
+      logger.info(`[MCP HTTP] res.write (${Date.now() - startTime}ms): contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 200)}`);
+      return originalWrite(chunk, ...args);
+    } as any;
+
+    // Intercept res.end() to log final response
+    res.end = function(chunk: any, ...args: any[]) {
+      const data = chunk ? (typeof chunk === 'string' ? chunk : chunk?.toString?.('utf-8')?.substring(0, 500)) : '(empty)';
+      logger.info(`[MCP HTTP] res.end (${Date.now() - startTime}ms): status=${res.statusCode}, contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 300)}`);
+      return originalEnd(chunk, ...args);
+    } as any;
+
+    // Log connection close
+    res.on('close', () => {
+      logger.info(`[MCP HTTP] connection closed (${Date.now() - startTime}ms): finished=${res.writableFinished}, status=${res.statusCode}`);
+    });
+
     next();
   });
 
