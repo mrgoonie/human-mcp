@@ -71,11 +71,14 @@ export async function registerHandsTool(server: McpServer, config: Config) {
       }
     },
     async (args) => {
+      const startTime = Date.now();
       try {
-        return await handleImageGeneration(geminiClient, args, config);
+        const result = await handleImageGeneration(geminiClient, args, config);
+        logger.info(`Tool gemini_gen_image completed in ${Date.now() - startTime}ms, content types: ${result.content.map((c: any) => c.type).join(', ')}`);
+        return result;
       } catch (error) {
         const mcpError = handleError(error);
-        logger.error(`Tool gemini_gen_image error:`, mcpError);
+        logger.error(`Tool gemini_gen_image error after ${Date.now() - startTime}ms:`, mcpError);
 
         return {
           content: [{
@@ -775,6 +778,8 @@ async function handleImageGeneration(
     }
   }
 
+  logger.info(`Image generation complete. fileUrl: ${result.fileUrl}, format: ${result.format}, fileSize: ${result.fileSize}`);
+
   // Format response based on transport type
   const contextText = `✅ Image generated successfully using ${result.model}\n\n**Generation Details:**\n- Prompt: "${prompt}"\n- Model: ${result.model}\n- Format: ${result.format}\n- Size: ${result.size}\n- Generation Time: ${result.generationTime}ms\n- Timestamp: ${new Date().toISOString()}${result.filePath ? `\n\n**File Information:**\n- File Path: ${result.filePath}\n- File Name: ${result.fileName}\n- File Size: ${result.fileSize} bytes` : ''}${result.fileUrl ? `\n- Public URL: ${result.fileUrl}` : ''}`;
 
@@ -789,6 +794,9 @@ async function handleImageGeneration(
     config,
     contextText
   );
+
+  // Debug: log response structure for diagnosing Claude Desktop errors
+  logger.info(`MCP response structure: ${JSON.stringify(formattedResponse.map(r => ({ type: r.type, textLength: r.text?.length, hasData: !!r.data })))}`);
 
   return {
     content: formattedResponse as any,

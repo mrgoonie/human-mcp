@@ -11,6 +11,7 @@
  */
 
 import type { Config } from "./config.js";
+import { logger } from "./logger.js";
 
 export interface MediaResult {
   url?: string;
@@ -42,6 +43,8 @@ export function formatMediaResponse(
 ): FormattedResponse[] {
   const isHttpTransport = config.transport.type === "http" ||
                          (config.transport.type === "both" && config.transport.http?.enabled);
+
+  logger.info(`formatMediaResponse: transport=${config.transport.type}, isHttp=${isHttpTransport}, hasUrl=${!!result.url}, hasBase64=${!!result.base64}, base64Length=${result.base64?.length || 0}`);
 
   // For HTTP transport, use text with URL to minimize response size
   // NOTE: "type: resource" (EmbeddedResource) is NOT supported in CallToolResult.content
