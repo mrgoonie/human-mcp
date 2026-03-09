@@ -19,12 +19,22 @@ export async function startHttpTransport(
 
   // Apply middleware
   app.use(express.json({ limit: '50mb' }));
-  app.use(compression());
+
+  // Disable compression for MCP SSE endpoints to prevent response buffering.
+  // compression() buffers SSE events, causing Claude Desktop to not receive responses.
+  app.use(compression({
+    filter: (req, res) => {
+      // Skip compression for MCP endpoint (uses SSE for streaming responses)
+      if (req.path === '/mcp' || req.path.startsWith('/mcp/')) return false;
+      return compression.filter(req, res);
+    }
+  }));
+
   app.use(helmet({
     contentSecurityPolicy: false, // Disable CSP for API server
     crossOriginEmbedderPolicy: false
   }));
-  
+
   if (config.security?.enableCors !== false) {
     app.use(cors({
       origin: config.security?.corsOrigins || '*',
@@ -35,9 +45,17 @@ export async function startHttpTransport(
   }
 
   app.use(createSecurityMiddleware(config.security));
-  
+
   // Add file interceptor middleware before routes
   app.use(fileInterceptorMiddleware);
+
+  // Anti-buffering headers for MCP endpoint — prevents reverse proxies
+  // (nginx, traefik, cloudflare) from buffering SSE responses
+  app.use('/mcp', (req, res, next) => {
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    next();
+  });
 
   // Create SSE routes first if enabled to get SSE manager reference
   let sseManager: any = undefined;
