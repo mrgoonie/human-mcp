@@ -57,11 +57,10 @@ export async function startHttpTransport(
     const sessionId = req.headers['mcp-session-id'] as string || '(none)';
     logger.info(`[MCP HTTP] >>> ${method} ${req.originalUrl || req.url} sessionId=${sessionId}`);
 
-    // Anti-buffering headers only for SSE (GET) responses
-    if (method === 'GET') {
-      res.setHeader('X-Accel-Buffering', 'no');
-      res.setHeader('Cache-Control', 'no-cache, no-transform');
-    }
+    // Anti-buffering headers for all /mcp requests
+    // POST responses use SSE (text/event-stream) when enableJsonResponse=false
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
 
     // Log when connection closes (without wrapping res methods)
     const startTime = Date.now();
