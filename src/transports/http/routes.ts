@@ -25,7 +25,9 @@ export function createRoutes(
   router.post('/', async (req, res) => {
     try {
       const sessionId = req.headers['mcp-session-id'] as string | undefined;
-      
+      const rpcMethod = req.body?.method || '(unknown)';
+      logger.info(`[MCP HTTP] POST handler: rpcMethod=${rpcMethod}, sessionId=${sessionId || '(none)'}`);
+
       if (config.sessionMode === 'stateless') {
         await handleStatelessRequest(mcpServer, req, res);
       } else {
@@ -76,6 +78,35 @@ export function createRoutes(
     }
 
     const sessionId = req.headers['mcp-session-id'] as string;
+
+    if (!sessionId) {
+      logger.warn('[MCP HTTP] DELETE without session ID - ignoring');
+      res.status(400).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32000,
+          message: "Bad Request: No session ID provided"
+        },
+        id: null
+      });
+      return;
+    }
+
+    const transport = await sessionManager.getTransport(sessionId);
+    if (!transport) {
+      logger.warn(`[MCP HTTP] DELETE for unknown session ${sessionId} - ignoring`);
+      res.status(400).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32000,
+          message: "Bad Request: No valid session ID provided"
+        },
+        id: null
+      });
+      return;
+    }
+
+    logger.info(`[MCP HTTP] Terminating session ${sessionId} via DELETE`);
     await sessionManager.terminateSession(sessionId);
     res.status(204).send();
   });

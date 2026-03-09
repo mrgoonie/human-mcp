@@ -57,26 +57,32 @@ export async function startHttpTransport(
     res.setHeader('Cache-Control', 'no-cache, no-transform');
 
     const startTime = Date.now();
+    const method = req.method;
+    const sessionId = req.headers['mcp-session-id'] as string || '(none)';
+    const url = req.originalUrl || req.url;
+
+    logger.info(`[MCP HTTP] >>> ${method} ${url} sessionId=${sessionId}`);
+
     const originalEnd = res.end.bind(res);
     const originalWrite = res.write.bind(res);
 
     // Intercept res.write() to log SSE events
     res.write = function(chunk: any, ...args: any[]) {
       const data = typeof chunk === 'string' ? chunk : chunk?.toString?.('utf-8')?.substring(0, 500);
-      logger.info(`[MCP HTTP] res.write (${Date.now() - startTime}ms): contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 200)}`);
+      logger.info(`[MCP HTTP] res.write ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 200)}`);
       return originalWrite(chunk, ...args);
     } as any;
 
     // Intercept res.end() to log final response
     res.end = function(chunk: any, ...args: any[]) {
       const data = chunk ? (typeof chunk === 'string' ? chunk : chunk?.toString?.('utf-8')?.substring(0, 500)) : '(empty)';
-      logger.info(`[MCP HTTP] res.end (${Date.now() - startTime}ms): status=${res.statusCode}, contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 300)}`);
+      logger.info(`[MCP HTTP] res.end ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, status=${res.statusCode}, contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 300)}`);
       return originalEnd(chunk, ...args);
     } as any;
 
     // Log connection close
     res.on('close', () => {
-      logger.info(`[MCP HTTP] connection closed (${Date.now() - startTime}ms): finished=${res.writableFinished}, status=${res.statusCode}`);
+      logger.info(`[MCP HTTP] connection closed ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, finished=${res.writableFinished}, status=${res.statusCode}`);
     });
 
     next();
