@@ -2,9 +2,12 @@
  * Response formatter for MCP tools
  * Handles different response formats based on transport type (stdio vs HTTP)
  *
- * For HTTP transport with large media content:
- * - Use resource links instead of embedded base64 to reduce response size
- * - This prevents timeouts and "Tool execution failed" errors in Claude Desktop
+ * For HTTP transport: Returns text with URL (lightweight, avoids base64 payload)
+ * For stdio transport: Returns embedded image (rich inline display)
+ *
+ * NOTE: MCP CallToolResult.content only supports TextContent, ImageContent, AudioContent.
+ * EmbeddedResource (type: "resource") is NOT valid for tool results and will cause
+ * "Error occurred during tool execution" in Claude Desktop.
  */
 
 import type { Config } from "./config.js";
@@ -20,13 +23,8 @@ export interface MediaResult {
 }
 
 export interface FormattedResponse {
-  type: "text" | "resource" | "image";
+  type: "text" | "image";
   text?: string;
-  resource?: {
-    uri: string;
-    mimeType?: string;
-    text?: string;
-  };
   data?: string;
   mimeType?: string;
 }
@@ -34,7 +32,7 @@ export interface FormattedResponse {
 /**
  * Format media response based on transport type
  *
- * For HTTP transport: Returns resource link (lightweight, ~2KB)
+ * For HTTP transport: Returns text with URL (lightweight, ~2KB)
  * For stdio transport: Returns embedded image (rich, but larger)
  */
 export function formatMediaResponse(
@@ -45,21 +43,10 @@ export function formatMediaResponse(
   const isHttpTransport = config.transport.type === "http" ||
                          (config.transport.type === "both" && config.transport.http?.enabled);
 
-  // For HTTP transport, use resource links to minimize response size
+  // For HTTP transport, use text with URL to minimize response size
+  // NOTE: "type: resource" (EmbeddedResource) is NOT supported in CallToolResult.content
+  // by Claude Desktop - only TextContent, ImageContent, AudioContent are valid for tool results.
   if (isHttpTransport && result.url) {
-    const response: FormattedResponse[] = [];
-
-    // Add resource link
-    response.push({
-      type: "resource",
-      resource: {
-        uri: result.url,
-        mimeType: result.mimeType || "image/png",
-        text: contextText || `Generated media available at: ${result.url}`,
-      },
-    });
-
-    // Add human-readable text
     const details: string[] = [];
     if (result.size) {
       details.push(`Size: ${(result.size / 1024).toFixed(2)} KB`);
@@ -68,12 +55,16 @@ export function formatMediaResponse(
       details.push(`Dimensions: ${result.width}x${result.height}`);
     }
 
-    response.push({
-      type: "text",
-      text: `✅ Media generated successfully!\n\nURL: ${result.url}${details.length > 0 ? '\n' + details.join(', ') : ''}`,
-    });
+    const summaryText = contextText
+      ? `${contextText}\n\nURL: ${result.url}${details.length > 0 ? '\n' + details.join(', ') : ''}`
+      : `✅ Media generated successfully!\n\nURL: ${result.url}${details.length > 0 ? '\n' + details.join(', ') : ''}`;
 
-    return response;
+    return [
+      {
+        type: "text",
+        text: summaryText,
+      },
+    ];
   }
 
   // For stdio transport, use embedded image for richer experience
