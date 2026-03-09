@@ -50,39 +50,23 @@ export async function startHttpTransport(
   // Add file interceptor middleware before routes
   app.use(fileInterceptorMiddleware);
 
-  // Debug: intercept MCP responses to log what actually leaves the server
+  // Request logging (no response wrapping - wrapping res.end/res.write
+  // can interfere with SDK response delivery through reverse proxies)
   app.use('/mcp', (req, res, next) => {
-    // Anti-buffering headers for reverse proxies
-    res.setHeader('X-Accel-Buffering', 'no');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-
-    const startTime = Date.now();
     const method = req.method;
     const sessionId = req.headers['mcp-session-id'] as string || '(none)';
-    const url = req.originalUrl || req.url;
+    logger.info(`[MCP HTTP] >>> ${method} ${req.originalUrl || req.url} sessionId=${sessionId}`);
 
-    logger.info(`[MCP HTTP] >>> ${method} ${url} sessionId=${sessionId}`);
+    // Anti-buffering headers only for SSE (GET) responses
+    if (method === 'GET') {
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+    }
 
-    const originalEnd = res.end.bind(res);
-    const originalWrite = res.write.bind(res);
-
-    // Intercept res.write() to log SSE events
-    res.write = function(chunk: any, ...args: any[]) {
-      const data = typeof chunk === 'string' ? chunk : chunk?.toString?.('utf-8')?.substring(0, 500);
-      logger.info(`[MCP HTTP] res.write ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 200)}`);
-      return originalWrite(chunk, ...args);
-    } as any;
-
-    // Intercept res.end() to log final response
-    res.end = function(chunk: any, ...args: any[]) {
-      const data = chunk ? (typeof chunk === 'string' ? chunk : chunk?.toString?.('utf-8')?.substring(0, 500)) : '(empty)';
-      logger.info(`[MCP HTTP] res.end ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, status=${res.statusCode}, contentType=${res.getHeader('content-type')}, dataLength=${chunk?.length || 0}, preview=${data?.substring(0, 300)}`);
-      return originalEnd(chunk, ...args);
-    } as any;
-
-    // Log connection close
+    // Log when connection closes (without wrapping res methods)
+    const startTime = Date.now();
     res.on('close', () => {
-      logger.info(`[MCP HTTP] connection closed ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, finished=${res.writableFinished}, status=${res.statusCode}`);
+      logger.info(`[MCP HTTP] <<< ${method} (${Date.now() - startTime}ms): sessionId=${sessionId}, status=${res.statusCode}, finished=${res.writableFinished}`);
     });
 
     next();
