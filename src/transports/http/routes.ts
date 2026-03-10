@@ -39,37 +39,20 @@ export function createRoutes(
   });
 
   // GET /mcp - SSE endpoint for notifications
-  router.get('/', async (req, res) => {
-    if (config.sessionMode === 'stateless') {
-      res.status(405).json({
-        jsonrpc: "2.0",
-        error: {
-          code: -32000,
-          message: "SSE not supported in stateless mode"
-        },
-        id: null
-      });
-      return;
-    }
-
-    const sessionId = req.headers['mcp-session-id'] as string;
-    const transport = await sessionManager.getTransport(sessionId);
-    
-    if (!transport) {
-      // Return 404 per MCP spec to trigger client re-initialization
-      logger.warn(`[MCP HTTP] GET SSE: unknown session ${sessionId} - returning 404`);
-      res.status(404).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32001,
-          message: 'Session not found. Please re-initialize.',
-        },
-        id: null,
-      });
-      return;
-    }
-
-    await transport.handleRequest(req, res);
+  // Return 405 per MCP spec: SSE notification channel is optional.
+  // nginx reverse proxy (HTTP/2) does not forward SSE headers correctly,
+  // causing Claude Desktop to hang. Disabling SSE forces Claude Desktop
+  // to use POST-only mode which works reliably through the proxy.
+  router.get('/', (req, res) => {
+    logger.info(`[MCP HTTP] GET SSE rejected (405) - SSE disabled for proxy compatibility`);
+    res.writeHead(405, { Allow: 'POST, DELETE' }).end(JSON.stringify({
+      jsonrpc: "2.0",
+      error: {
+        code: -32000,
+        message: "SSE notifications not available. Use POST for all communication."
+      },
+      id: null
+    }));
   });
 
   // DELETE /mcp - Session termination
