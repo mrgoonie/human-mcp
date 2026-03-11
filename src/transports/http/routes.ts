@@ -38,50 +38,20 @@ export function createRoutes(
     }
   });
 
-  // GET /mcp - SSE notification channel (Streamable HTTP transport)
-  router.get('/', async (req, res) => {
-    if (config.sessionMode === 'stateless') {
-      res.status(405).json({
-        jsonrpc: "2.0",
-        error: {
-          code: -32000,
-          message: "SSE not supported in stateless mode"
-        },
-        id: null
-      });
-      return;
-    }
-
-    const sessionId = req.headers['mcp-session-id'] as string;
-    const transport = await sessionManager.getTransport(sessionId);
-
-    if (!transport) {
-      logger.warn(`[MCP HTTP] GET SSE: unknown session ${sessionId} - returning 404`);
-      res.status(404).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32001,
-          message: 'Session not found. Please re-initialize.',
-        },
-        id: null,
-      });
-      return;
-    }
-
-    // Intercept writeHead to send SSE keep-alive immediately after headers.
-    // nginx HTTP/2 does not forward HEADERS frame without accompanying DATA.
-    // Sending a SSE comment forces nginx to deliver both frames to the client.
-    const origWriteHead = res.writeHead.bind(res);
-    res.writeHead = function(statusCode: number, ...args: any[]) {
-      const result = origWriteHead(statusCode, ...args);
-      const ct = res.getHeader('content-type');
-      if (ct && String(ct).includes('text/event-stream')) {
-        res.write(':ok\n\n');
-      }
-      return result;
-    } as any;
-
-    await transport.handleRequest(req, res);
+  // GET /mcp - Disabled: returns 405 to force POST-only mode.
+  // The SDK's StreamableHTTPServerTransport returns 409 when a GET SSE
+  // connection already exists (e.g. after proxy drops it silently),
+  // causing Claude Desktop to drop the session entirely.
+  // POST responses use inline SSE which works reliably through nginx HTTP/2.
+  router.get('/', (_req, res) => {
+    res.status(405).json({
+      jsonrpc: '2.0',
+      error: {
+        code: -32000,
+        message: 'GET SSE not supported. Use POST for all requests.',
+      },
+      id: null,
+    });
   });
 
   // DELETE /mcp - Session termination

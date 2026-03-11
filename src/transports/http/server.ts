@@ -62,6 +62,20 @@ export async function startHttpTransport(
     res.setHeader('X-Accel-Buffering', 'no');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
 
+    // Intercept writeHead to send SSE keep-alive immediately after headers.
+    // nginx HTTP/2 does not forward HEADERS frame without accompanying DATA.
+    // Sending a SSE comment forces nginx to deliver both frames to the client.
+    // This applies to BOTH GET and POST SSE responses.
+    const origWriteHead = res.writeHead.bind(res);
+    res.writeHead = function(statusCode: number, ...args: any[]) {
+      const result = origWriteHead(statusCode, ...args);
+      const ct = res.getHeader('content-type');
+      if (ct && String(ct).includes('text/event-stream')) {
+        res.write(':ok\n\n');
+      }
+      return result;
+    } as any;
+
     // Log when connection closes (without wrapping res methods)
     const startTime = Date.now();
     res.on('close', () => {
