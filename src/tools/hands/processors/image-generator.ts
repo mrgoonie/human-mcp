@@ -18,6 +18,7 @@ export async function generateImage(
   if (provider === "zhipuai" && config && ZhipuAIClient.isConfigured(config)) {
     return generateWithZhipuAI({
       prompt: options.prompt,
+      model: options.model || config.zhipuai?.imageModel,
       aspectRatio: options.aspectRatio,
       outputFormat: options.outputFormat,
       uploadToR2: options.uploadToR2,

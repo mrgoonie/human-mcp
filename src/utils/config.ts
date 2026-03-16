@@ -57,6 +57,7 @@ const ConfigSchema = z.object({
   zhipuai: z.object({
     apiKey: z.string().optional(),
     apiHost: z.string().default("https://api.z.ai/api/paas/v4"),
+    imageModel: z.string().default("glm-image"),
   }).optional(),
   elevenlabs: z.object({
     apiKey: z.string().optional(),
@@ -171,6 +172,7 @@ export function loadConfig(): Config {
     zhipuai: {
       apiKey: process.env.ZHIPUAI_API_KEY,
       apiHost: process.env.ZHIPUAI_API_HOST || "https://api.z.ai/api/paas/v4",
+      imageModel: process.env.ZHIPUAI_IMAGE_MODEL || "glm-image",
     },
     elevenlabs: {
       apiKey: process.env.ELEVENLABS_API_KEY,
