@@ -49,7 +49,7 @@ export async function generateElevenLabsSfx(
 
   const body: Record<string, unknown> = {
     text,
-    model_id: "eleven_text_to_sound_v2",
+    model_id: config.elevenlabs?.sfxModel || "eleven_text_to_sound_v2",
     prompt_influence,
     loop,
   };

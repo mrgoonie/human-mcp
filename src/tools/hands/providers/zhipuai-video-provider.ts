@@ -72,7 +72,7 @@ export async function generateZhipuAIVideo(
 
   const {
     prompt,
-    model = "cogvideox-3",
+    model = options.config?.zhipuai?.videoModel || "cogvideox-3",
     quality = "quality",
     withAudio = false,
     fps = 30,

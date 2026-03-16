@@ -52,7 +52,7 @@ export async function generateElevenLabsMusic(
   const body: Record<string, unknown> = {
     prompt,
     music_length_ms,
-    model_id: "music_v1",
+    model_id: config.elevenlabs?.musicModel || "music_v1",
     force_instrumental,
   };
 

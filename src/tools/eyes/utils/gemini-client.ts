@@ -139,7 +139,7 @@ export class GeminiClient {
         );
       }
 
-      this.provider = new GoogleAIStudioProvider(config.gemini.apiKey);
+      this.provider = new GoogleAIStudioProvider(config.gemini.apiKey, config.gemini.baseUrl);
       logger.info("Using Google AI Studio");
     }
 
@@ -233,7 +233,8 @@ export class GeminiClient {
         body: JSON.stringify(requestBody)
       });
     } else {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+      const geminiBaseUrl = this.config.gemini.baseUrl || "https://generativelanguage.googleapis.com/v1beta";
+      const url = `${geminiBaseUrl}/models/${modelName}:generateContent`;
 
       if (!this.config.gemini.apiKey) {
         throw new APIError(
@@ -1540,7 +1541,7 @@ Extract as much metadata as possible from the document properties and content.`;
    * Get speech generation model for text-to-speech
    */
   getSpeechModel(modelName?: string): GenerativeModel {
-    const speechModelName = modelName || "gemini-2.5-flash-preview-tts";
+    const speechModelName = modelName || this.config.gemini.ttsModel || "gemini-2.5-flash-preview-tts";
 
     // Gemini 3 series: omit temperature per Google migration guide
     const generationConfig = this.isGemini3Series(speechModelName)
@@ -1569,7 +1570,7 @@ Extract as much metadata as possible from the document properties and content.`;
     try {
       const {
         voice = "Zephyr",
-        model = "gemini-2.5-flash-preview-tts",
+        model = this.config.gemini.ttsModel || "gemini-2.5-flash-preview-tts",
         language = "en-US",
         stylePrompt
       } = options;
@@ -1632,7 +1633,8 @@ Extract as much metadata as possible from the document properties and content.`;
         });
       } else {
         // Google AI Studio mode - use API key authentication
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const geminiBaseUrl = this.config.gemini.baseUrl || "https://generativelanguage.googleapis.com/v1beta";
+        const url = `${geminiBaseUrl}/models/${model}:generateContent`;
 
         if (!this.config.gemini.apiKey) {
           throw new APIError(
@@ -1804,7 +1806,7 @@ Extract as much metadata as possible from the document properties and content.`;
    * Get video generation model for Veo 3.0
    */
   getVideoGenerationModel(modelName?: string): GenerativeModel {
-    const videoModelName = modelName || "veo-3.0-generate-001";
+    const videoModelName = modelName || this.config.gemini.videoModel || "veo-3.0-generate-001";
 
     // Gemini 3 series: omit temperature per Google migration guide
     const generationConfig = this.isGemini3Series(videoModelName)
@@ -1845,7 +1847,7 @@ Extract as much metadata as possible from the document properties and content.`;
   ): Promise<{ videoData: string; metadata: any; operationId: string }> {
     try {
       const {
-        model = "veo-3.0-generate-001",
+        model = this.config.gemini.videoModel || "veo-3.0-generate-001",
         duration = "4s",
         aspectRatio = "16:9",
         fps = 24,

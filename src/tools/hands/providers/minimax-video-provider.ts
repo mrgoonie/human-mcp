@@ -19,7 +19,7 @@ export interface MinimaxVideoOptions {
   config: Config;
 }
 
-const DEFAULT_MODEL = "MiniMax-Hailuo-2.3";
+const DEFAULT_MODEL = process.env.MINIMAX_VIDEO_MODEL || "MiniMax-Hailuo-2.3";
 const POLL_INTERVAL_MS = 10_000;
 const MAX_POLL_TIME_MS = 900_000; // 15 minutes
 

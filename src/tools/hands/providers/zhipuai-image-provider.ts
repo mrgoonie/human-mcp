@@ -46,7 +46,7 @@ export async function generateWithZhipuAI(
   options: ZhipuAIImageOptions & { aspectRatio?: string; outputFormat?: string; uploadToR2?: boolean }
 ): Promise<ImageGenerationResult> {
   const startTime = Date.now();
-  const { prompt, model = "glm-image", config, aspectRatio, outputFormat, uploadToR2 } = options;
+  const { prompt, model = process.env.ZHIPUAI_IMAGE_MODEL || "glm-image", config, aspectRatio, outputFormat, uploadToR2 } = options;
 
   const client = new ZhipuAIClient(config);
 
