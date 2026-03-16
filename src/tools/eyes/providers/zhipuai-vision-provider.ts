@@ -30,7 +30,7 @@ export async function analyzeWithZhipuAI(
   options: ZhipuAIVisionOptions
 ): Promise<{ analysis: string; metadata: { processing_time_ms: number } }> {
   const startTime = Date.now();
-  const { source, focus, detail, model = "glm-4.6v-flash", config } = options;
+  const { source, focus, detail, model = options.config?.zhipuai?.visionModel || "glm-4.6v-flash", config } = options;
 
   const client = new ZhipuAIClient(config);
 

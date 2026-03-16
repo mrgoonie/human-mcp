@@ -23,7 +23,7 @@ export interface ElevenLabsSpeechOptions {
 
 /** Default voice: Rachel */
 const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
-const DEFAULT_MODEL = "eleven_multilingual_v2";
+const DEFAULT_MODEL = process.env.ELEVENLABS_SPEECH_MODEL || "eleven_multilingual_v2";
 
 /**
  * Curated voice name -> ID mapping for convenience.

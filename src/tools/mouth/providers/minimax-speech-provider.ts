@@ -20,7 +20,7 @@ export interface MinimaxSpeechOptions {
 }
 
 const DEFAULT_MINIMAX_VOICE = "English_Graceful_Lady";
-const DEFAULT_MINIMAX_MODEL = "speech-2.6-hd";
+const DEFAULT_MINIMAX_MODEL = process.env.MINIMAX_SPEECH_MODEL || "speech-2.6-hd";
 
 export async function generateMinimaxSpeech(
   options: MinimaxSpeechOptions

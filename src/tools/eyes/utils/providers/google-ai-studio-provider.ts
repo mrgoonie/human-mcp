@@ -10,12 +10,16 @@ import { logger } from "@/utils/logger.js";
 export class GoogleAIStudioProvider implements IGeminiProvider {
   private genAI: GoogleGenerativeAI;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, baseUrl?: string) {
     if (!apiKey) {
       throw new APIError("Google Gemini API key is required for Google AI Studio provider");
     }
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    logger.info("Initialized Google AI Studio provider");
+    this.genAI = new GoogleGenerativeAI(apiKey, baseUrl ? { baseUrl } : undefined);
+    if (baseUrl) {
+      logger.info(`Initialized Google AI Studio provider with custom base URL: ${baseUrl}`);
+    } else {
+      logger.info("Initialized Google AI Studio provider");
+    }
   }
 
   getGenerativeModel(params: {

@@ -5,6 +5,10 @@ const ConfigSchema = z.object({
     apiKey: z.string().optional(), // Optional since Vertex AI doesn't need it
     model: z.string().default("gemini-2.5-flash"),
     imageModel: z.string().default("gemini-2.5-flash-image"),
+    ttsModel: z.string().default("gemini-2.5-flash-preview-tts"),
+    videoModel: z.string().default("veo-3.0-generate-001"),
+    // Custom base URL for proxies (e.g. LiteLLM, Yescale, OpenRouter)
+    baseUrl: z.string().optional(),
     // Vertex AI configuration
     useVertexAI: z.boolean().default(false),
     vertexProjectId: z.string().optional(),
@@ -53,15 +57,22 @@ const ConfigSchema = z.object({
   minimax: z.object({
     apiKey: z.string().optional(),
     apiHost: z.string().default("https://api.minimax.io"),
+    videoModel: z.string().default("MiniMax-Hailuo-2.3"),
+    speechModel: z.string().default("speech-2.6-hd"),
   }).optional(),
   zhipuai: z.object({
     apiKey: z.string().optional(),
     apiHost: z.string().default("https://api.z.ai/api/paas/v4"),
     imageModel: z.string().default("glm-image"),
+    visionModel: z.string().default("glm-4.6v-flash"),
+    videoModel: z.string().default("cogvideox-3"),
   }).optional(),
   elevenlabs: z.object({
     apiKey: z.string().optional(),
     apiHost: z.string().default("https://api.elevenlabs.io"),
+    speechModel: z.string().default("eleven_multilingual_v2"),
+    musicModel: z.string().default("music_v1"),
+    sfxModel: z.string().default("eleven_text_to_sound_v2"),
   }).optional(),
   providers: z.object({
     speech: z.enum(["gemini", "minimax", "elevenlabs"]).default("gemini"),
@@ -120,6 +131,9 @@ export function loadConfig(): Config {
       apiKey: process.env.GOOGLE_GEMINI_API_KEY || "",
       model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.5-flash",
       imageModel: process.env.GOOGLE_GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image",
+      ttsModel: process.env.GOOGLE_GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts",
+      videoModel: process.env.GOOGLE_GEMINI_VIDEO_MODEL || "veo-3.0-generate-001",
+      baseUrl: process.env.GOOGLE_GEMINI_BASE_URL,
       // Vertex AI config
       useVertexAI,
       vertexProjectId: process.env.VERTEX_PROJECT_ID,
@@ -168,15 +182,22 @@ export function loadConfig(): Config {
     minimax: {
       apiKey: process.env.MINIMAX_API_KEY,
       apiHost: process.env.MINIMAX_API_HOST || "https://api.minimax.io",
+      videoModel: process.env.MINIMAX_VIDEO_MODEL || "MiniMax-Hailuo-2.3",
+      speechModel: process.env.MINIMAX_SPEECH_MODEL || "speech-2.6-hd",
     },
     zhipuai: {
       apiKey: process.env.ZHIPUAI_API_KEY,
       apiHost: process.env.ZHIPUAI_API_HOST || "https://api.z.ai/api/paas/v4",
       imageModel: process.env.ZHIPUAI_IMAGE_MODEL || "glm-image",
+      visionModel: process.env.ZHIPUAI_VISION_MODEL || "glm-4.6v-flash",
+      videoModel: process.env.ZHIPUAI_VIDEO_MODEL || "cogvideox-3",
     },
     elevenlabs: {
       apiKey: process.env.ELEVENLABS_API_KEY,
       apiHost: process.env.ELEVENLABS_API_HOST || "https://api.elevenlabs.io",
+      speechModel: process.env.ELEVENLABS_SPEECH_MODEL || "eleven_multilingual_v2",
+      musicModel: process.env.ELEVENLABS_MUSIC_MODEL || "music_v1",
+      sfxModel: process.env.ELEVENLABS_SFX_MODEL || "eleven_text_to_sound_v2",
     },
     providers: {
       speech: (process.env.SPEECH_PROVIDER as any) || "gemini",
