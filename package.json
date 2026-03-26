@@ -19,6 +19,7 @@
     "test:parallel": "TEST_TYPE=all bun test 2>&1 | tee -a ./logs.txt",
     "test:safe": "TEST_TYPE=unit bun test tests/unit/ && TEST_TYPE=integration bun test tests/integration/sse-transport.test.ts && TEST_TYPE=integration bun test tests/integration/server.test.ts && TEST_TYPE=integration bun test tests/integration/http-transport-files.test.ts 2>&1 | tee -a ./logs.txt",
     "typecheck": "tsc --noEmit 2>&1 | tee -a ./logs.txt",
+    "verify:native": "node scripts/verify-onnxruntime.js",
     "inspector": "mcp-inspector stdio -- bun run src/index.ts 2>&1 | tee -a ./logs.txt"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "marked": "^16.3.0",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
+    "onnxruntime-node": "1.23.2",
     "playwright": "^1.56.0",
     "pptx-automizer": "^0.7.4",
     "rmbg": "^0.1.0",
@@ -48,6 +50,9 @@
     "wav": "^1.0.2",
     "xlsx": "^0.18.5",
     "zod": "^3.23.0"
+  },
+  "overrides": {
+    "onnxruntime-node": "1.23.2"
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.2.0",

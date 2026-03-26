@@ -736,6 +736,10 @@ cd /path/to/human-mcp && bun run inspector
    - Use `npx` instead of global installation if needed
    - Verify API key has necessary permissions
 
+5. **macOS Intel / `darwin/x64`: crash on startup (`onnxruntime_binding.node` missing)**
+   - Background removal (`rmbg`) depends on `onnxruntime-node`. Some `onnxruntime-node` 1.24.x releases did not ship `darwin/x64` binaries in the npm tarball while Node still runs as `x64`, which makes the server exit immediately.
+   - This package pins `onnxruntime-node` via `overrides` to a release that includes macOS x64 bindings. After `bun install` / `npm install`, you can confirm with: `bun run verify:native` (or `npm run verify:native`).
+
 **Getting Help:**
 - Check [Human MCP Issues](https://github.com/human-mcp/human-mcp/issues) 
 - Review client-specific MCP documentation  
