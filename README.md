@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/mrgoonie-human-mcp-badge.png)](https://mseep.ai/app/mrgoonie-human-mcp)
+
 # Human MCP 👁️
 
 > Bringing Human Capabilities to AI Agents
